@@ -1,0 +1,81 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/core-types",
+  "crates/db",
+  "crates/search",
+  "crates/audio-capture",
+  "crates/audio-store",
+  "crates/stt",
+  "crates/diarize",
+  "crates/llm",
+  "crates/embed",
+  "crates/prompts",
+  "crates/enhance",
+  "crates/calendar",
+  "crates/detect",
+  "crates/speaker-tags",
+  "crates/dictation",
+  "crates/models",
+  "crates/mcp-server",
+  "crates/api-server",
+  "crates/integrations",
+  "apps/desktop/src-tauri",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.85"
+repository = "https://github.com/your-org/granola-rs"
+
+[workspace.dependencies]
+# núcleo
+anyhow = "1"
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "fs"] }
+async-trait = "0.1"
+futures = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+bytes = "1"
+dirs = "6"
+toml = "0.8"
+
+# datos
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "chrono", "uuid", "migrate"] }
+
+# web / integraciones
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+axum = "0.8"
+
+# crates internos
+granola-core-types = { path = "crates/core-types" }
+granola-db = { path = "crates/db" }
+granola-search = { path = "crates/search" }
+granola-audio-capture = { path = "crates/audio-capture" }
+granola-audio-store = { path = "crates/audio-store" }
+granola-stt = { path = "crates/stt" }
+granola-diarize = { path = "crates/diarize" }
+granola-llm = { path = "crates/llm" }
+granola-embed = { path = "crates/embed" }
+granola-prompts = { path = "crates/prompts" }
+granola-enhance = { path = "crates/enhance" }
+granola-calendar = { path = "crates/calendar" }
+granola-detect = { path = "crates/detect" }
+granola-speaker-tags = { path = "crates/speaker-tags" }
+granola-dictation = { path = "crates/dictation" }
+granola-models = { path = "crates/models" }
+granola-mcp-server = { path = "crates/mcp-server" }
+granola-api-server = { path = "crates/api-server" }
+granola-integrations = { path = "crates/integrations" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

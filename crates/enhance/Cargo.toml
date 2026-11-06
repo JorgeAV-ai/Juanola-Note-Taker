@@ -1,0 +1,17 @@
+[package]
+name = "granola-enhance"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+granola-core-types.workspace = true
+granola-llm.workspace = true
+granola-prompts.workspace = true
+granola-search.workspace = true
+granola-embed.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tokio.workspace = true

@@ -1,0 +1,21 @@
+[package]
+name = "granola-llm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+async-trait.workspace = true
+futures.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+reqwest.workspace = true
+tokio.workspace = true
+
+[features]
+default = ["openai-compatible"]
+openai-compatible = []
+# Al activar un backend, sustituye `[]` por `["dep:<crate>"]` y añade la dependencia opcional.
+llamacpp = []    # llama-cpp-2: GGUF local, GBNF/JSON schema, Metal/CUDA/Vulkan
+mistralrs = []   # mistralrs: alternativa puro Rust

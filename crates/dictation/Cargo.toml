@@ -1,0 +1,14 @@
+[package]
+name = "granola-dictation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+granola-audio-capture.workspace = true
+granola-stt.workspace = true
+granola-llm.workspace = true
+granola-prompts.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+serde.workspace = true

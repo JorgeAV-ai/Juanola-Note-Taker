@@ -1,0 +1,27 @@
+/* Tokens de diseño. Los valores definitivos salen de la auditoría de la fase 0
+   (capturas de la app real). Estos son una aproximación al estilo Apple Notes de Granola. */
+:root {
+  --bg: #ffffff;
+  --bg-sidebar: #f5f5f4;
+  --fg: #111111;
+  --fg-ai: #8a8a8a;          /* texto generado por la IA */
+  --fg-muted: #6b6b6b;
+  --border: #e6e6e3;
+  --accent: #22c55e;         /* verde de Granola */
+  --bubble-them: #ececea;
+  --bubble-me: #dcfce7;
+  --radius: 10px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1e;
+    --bg-sidebar: #161617;
+    --fg: #f2f2f2;
+    --fg-ai: #9a9a9a;
+    --fg-muted: #8c8c8c;
+    --border: #2c2c2e;
+    --bubble-them: #2a2a2c;
+    --bubble-me: #1f3a2a;
+  }
+}

@@ -1,0 +1,22 @@
+[package]
+name = "granola-stt"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+granola-core-types.workspace = true
+granola-audio-capture.workspace = true
+thiserror.workspace = true
+async-trait.workspace = true
+tokio.workspace = true
+futures.workspace = true
+serde.workspace = true
+
+[features]
+default = []
+# Backends reales; se activan cuando elijas modelos (ver models.toml).
+# Al activar un backend, sustituye `[]` por `["dep:<crate>"]` y añade la dependencia opcional.
+sherpa = []      # sherpa-onnx: streaming/offline ONNX, VAD, puntuación
+whisper = []     # whisper-rs: whisper.cpp (Metal/CoreML/CUDA/Vulkan)
+transcribe = []  # transcribe-rs: multi-motor (Parakeet, Moonshine, Canary...)

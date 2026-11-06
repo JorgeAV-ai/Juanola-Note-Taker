@@ -1,0 +1,13 @@
+[package]
+name = "granola-search"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+granola-core-types.workspace = true
+thiserror.workspace = true
+async-trait.workspace = true
+anyhow.workspace = true
+# tantivy = "0.24"        # FTS: se activa en fase 3
+# sqlite-vec / usearch     # índice vectorial: fase 3

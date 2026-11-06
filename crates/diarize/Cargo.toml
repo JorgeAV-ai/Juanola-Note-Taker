@@ -1,0 +1,15 @@
+[package]
+name = "granola-diarize"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+granola-core-types.workspace = true
+thiserror.workspace = true
+async-trait.workspace = true
+anyhow.workspace = true
+
+[features]
+default = []
+speakrs = []  # speakrs: pyannote community-1 en Rust (CoreML/ONNX); activar con ["dep:speakrs"]

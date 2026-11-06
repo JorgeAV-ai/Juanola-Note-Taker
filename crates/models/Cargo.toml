@@ -1,0 +1,15 @@
+[package]
+name = "granola-models"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+toml.workspace = true
+reqwest.workspace = true
+tokio.workspace = true
+dirs.workspace = true
+anyhow.workspace = true
+# sha2 = "0.10"

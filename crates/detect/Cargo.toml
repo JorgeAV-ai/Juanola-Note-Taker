@@ -1,0 +1,11 @@
+[package]
+name = "granola-detect"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+tokio.workspace = true
+serde.workspace = true
+# side-huddle = "0.2"   # detecta Zoom/Teams/Meet por bundle id, proceso y título

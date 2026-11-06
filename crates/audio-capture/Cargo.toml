@@ -1,0 +1,21 @@
+[package]
+name = "granola-audio-capture"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+granola-core-types.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+serde.workspace = true
+# cpal = "0.16"                          # micrófono (todas las plataformas), WASAPI loopback, PipeWire
+# rubato = "0.16"                        # resampling a 16 kHz mono
+
+# [target.'cfg(target_os = "macos")'.dependencies]
+# screencapturekit = "..."               # system audio en macOS 13-14.1
+# objc2 / coreaudio-sys                  # Core Audio process taps en macOS 14.2+
+
+# [target.'cfg(target_os = "windows")'.dependencies]
+# wasapi = "0.19"                        # loopback del render device por defecto

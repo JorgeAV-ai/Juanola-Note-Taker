@@ -1,0 +1,9 @@
+[package]
+name = "granola-prompts"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+# minijinja = "2"   # plantillas de prompts

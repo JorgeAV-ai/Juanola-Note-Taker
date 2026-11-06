@@ -1,0 +1,12 @@
+[package]
+name = "granola-audio-store"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+granola-core-types.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+# hound = "3"      # WAV
+# symphonia = "0.5" # decodificar importaciones (MP3/FLAC/M4A)

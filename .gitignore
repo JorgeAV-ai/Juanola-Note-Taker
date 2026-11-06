@@ -1,0 +1,11 @@
+/target
+**/node_modules
+**/dist
+.DS_Store
+*.log
+/apps/desktop/src-tauri/gen/schemas
+# modelos descargados y datos locales nunca van al repo
+/models/
+*.gguf
+*.onnx
+*.bin

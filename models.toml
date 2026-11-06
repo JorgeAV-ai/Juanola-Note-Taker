@@ -1,0 +1,65 @@
+# Catálogo de modelos por slot. Rellena `models` y `default` con los modelos que
+# elijas. `runtime` fija el formato de pesos que acepta el backend Rust:
+#   sherpa-onnx -> ONNX     whisper.cpp -> GGML .bin     llama.cpp -> GGUF
+#   speakrs     -> ONNX/CoreML (descarga automática)     fastembed -> ONNX
+# `backends` admite: metal, coreml, cuda, vulkan, cpu.
+
+[slots.vad]
+description = "Detección de actividad de voz por canal; alimenta el auto-stop (15 min sin audio)."
+runtime = "sherpa-onnx"
+models = []
+
+[slots.stt_streaming]
+description = "Transcripción en vivo, dos canales en paralelo, latencia objetivo < 2 s, multilingüe."
+runtime = "sherpa-onnx"
+models = []
+
+[slots.stt_batch]
+description = "Re-transcripción de calidad al terminar (opcional)."
+runtime = "whisper.cpp"
+models = []
+
+[slots.punctuation]
+description = "Puntuación y mayúsculas si el modelo streaming no las produce."
+runtime = "sherpa-onnx"
+models = []
+
+[slots.diarization]
+description = "Separar hablantes dentro del canal del sistema y en reuniones presenciales."
+runtime = "speakrs"
+models = []
+
+[slots.speaker_embedding]
+description = "Re-identificar hablantes recurrentes entre reuniones."
+runtime = "sherpa-onnx"
+models = []
+
+[slots.llm_main]
+description = "Enhance notes, chat RAG, recipes, rewrite, briefs, follow-ups. Contexto >= 32k, salida JSON."
+runtime = "llama.cpp"
+models = []
+
+[slots.llm_small]
+description = "Limpieza de dictado, títulos, action items en vivo. < 1 s por 100 tokens."
+runtime = "llama.cpp"
+models = []
+
+[slots.text_embedding]
+description = "Embeddings para búsqueda semántica y RAG."
+runtime = "fastembed"
+models = []
+
+[slots.reranker]
+description = "Reordenar fragmentos recuperados antes de citar (opcional)."
+runtime = "fastembed"
+models = []
+
+# Ejemplo de entrada (borrar o adaptar):
+# [[slots.llm_main.models]]
+# name = "mi-modelo-q4"
+# repo = "org/repo-GGUF"
+# files = ["model-q4_k_m.gguf"]
+# sha256 = "..."
+# size_mb = 4800
+# backends = ["metal", "cuda", "vulkan", "cpu"]
+# license = "Apache-2.0"
