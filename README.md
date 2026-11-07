@@ -1,4 +1,4 @@
-# Granola RS
+# Juanola
 
 Réplica de [Granola](https://www.granola.ai) con modelos open source ejecutados en local. Núcleo en Rust, UI en Tauri v2 + React (misma estructura y features que Granola). El plan completo está en [docs/plan.md](docs/plan.md).
 

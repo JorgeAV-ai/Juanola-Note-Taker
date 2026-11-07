@@ -1,0 +1,201 @@
+//! Worker de transcripción en streaming: Silero VAD + Qwen3-ASR sobre MLX.
+//! Protocolo en `juanola_stt::worker`.
+//!
+//! ```text
+//! juanola-stt-worker --model <dir> --vad <dir> [--language Spanish|auto]
+//! ```
+
+use std::io::Write;
+use std::path::PathBuf;
+use std::sync::mpsc;
+use std::time::Instant;
+
+use juanola_core_types::Channel;
+use juanola_stt::backends::qwen3_mlx::Qwen3AsrMlx;
+use juanola_stt::backends::silero_mlx::{SileroMlx, WINDOW};
+use juanola_stt::segmenter::{Action, Segmenter, SegmenterConfig, Span};
+use juanola_stt::worker::{read_frame, WorkerEvent, TARGET_SAMPLE_RATE};
+
+struct ChannelState {
+    channel: Channel,
+    vad: SileroMlx,
+    seg: Segmenter,
+    /// Audio desde `buf_start` (muestra absoluta del canal).
+    buf: Vec<f32>,
+    buf_start: u64,
+    /// Siguiente muestra que pasa por el VAD.
+    vad_pos: u64,
+    next_id: u64,
+    pending: Vec<Action>,
+}
+
+impl ChannelState {
+    fn end(&self) -> u64 {
+        self.buf_start + self.buf.len() as u64
+    }
+
+    fn push(&mut self, samples: &[f32]) -> Result<(), String> {
+        self.buf.extend_from_slice(samples);
+        while self.end() - self.vad_pos >= WINDOW as u64 {
+            let i = (self.vad_pos - self.buf_start) as usize;
+            let p = self.vad.prob(&self.buf[i..i + WINDOW]).map_err(|e| e.to_string())?;
+            self.vad_pos += WINDOW as u64;
+            if let Some(a) = self.seg.push(p, WINDOW as u64, self.vad_pos) {
+                self.pending.push(a);
+            }
+        }
+        Ok(())
+    }
+
+    fn audio(&self, span: Span) -> &[f32] {
+        let from = span.start.max(self.buf_start) - self.buf_start;
+        let to = span.end.min(self.end()) - self.buf_start;
+        &self.buf[from as usize..to as usize]
+    }
+
+    /// Descarta el audio que ya no puede formar parte de ningún tramo.
+    fn trim(&mut self) {
+        if !self.pending.is_empty() {
+            return;
+        }
+        let keep = self.seg.keep_from(self.vad_pos).max(self.buf_start);
+        let n = (keep - self.buf_start) as usize;
+        self.buf.drain(..n.min(self.buf.len()));
+        self.buf_start = keep;
+    }
+}
+
+fn emit(ev: &WorkerEvent) {
+    let mut out = std::io::stdout().lock();
+    let _ = serde_json::to_writer(&mut out, ev);
+    let _ = out.write_all(b"\n");
+    let _ = out.flush();
+}
+
+fn arg(args: &[String], name: &str) -> Option<String> {
+    args.iter().position(|a| a == name).and_then(|i| args.get(i + 1)).cloned()
+}
+
+fn main() {
+    if let Err(e) = run() {
+        emit(&WorkerEvent::Error { message: e });
+        std::process::exit(1);
+    }
+}
+
+fn run() -> Result<(), String> {
+    let args: Vec<String> = std::env::args().collect();
+    let model_dir = PathBuf::from(arg(&args, "--model").ok_or("falta --model")?);
+    let vad_dir = PathBuf::from(arg(&args, "--vad").ok_or("falta --vad")?);
+    let language = arg(&args, "--language").filter(|l| l != "auto");
+
+    let t = Instant::now();
+    let asr = Qwen3AsrMlx::load(&model_dir).map_err(|e| e.to_string())?;
+    let mut channels = Vec::new();
+    for channel in [Channel::Mic, Channel::System] {
+        channels.push(ChannelState {
+            channel,
+            vad: SileroMlx::load(&vad_dir).map_err(|e| e.to_string())?,
+            seg: Segmenter::new(SegmenterConfig::default()),
+            buf: Vec::new(),
+            buf_start: 0,
+            vad_pos: 0,
+            next_id: 0,
+            pending: Vec::new(),
+        });
+    }
+    // Calentar los kernels de Metal para que la primera frase no pague el JIT.
+    let _ = asr.transcribe(&vec![0.0; 16_000], language.as_deref());
+    emit(&WorkerEvent::Ready { load_ms: t.elapsed().as_millis() as u64 });
+
+    let (tx, rx) = mpsc::channel::<Option<(Channel, Vec<f32>)>>();
+    std::thread::spawn(move || {
+        let mut stdin = std::io::BufReader::new(std::io::stdin().lock());
+        loop {
+            match read_frame(&mut stdin) {
+                Ok(Some(f)) => {
+                    if tx.send(Some(f)).is_err() {
+                        return;
+                    }
+                }
+                Ok(None) => {
+                    eprintln!("juanola-stt-worker: fin de la entrada");
+                    let _ = tx.send(None);
+                    return;
+                }
+                Err(e) => {
+                    eprintln!("juanola-stt-worker: entrada no válida ({e}); se termina");
+                    let _ = tx.send(None);
+                    return;
+                }
+            }
+        }
+    });
+
+    let mut eof = false;
+    while !eof {
+        // Bloquear por la primera trama y luego vaciar la cola: si la
+        // decodificación va por detrás, los parciales intermedios se saltan.
+        let Ok(first) = rx.recv() else { break };
+        let mut batch = vec![first];
+        batch.extend(rx.try_iter());
+        for item in batch {
+            match item {
+                Some((channel, samples)) => {
+                    let ch = channels.iter_mut().find(|c| c.channel == channel).expect("canal");
+                    ch.push(&samples)?;
+                }
+                None => eof = true,
+            }
+        }
+        if eof {
+            for ch in channels.iter_mut() {
+                let pos = ch.vad_pos;
+                if let Some(a) = ch.seg.flush(pos) {
+                    ch.pending.push(a);
+                }
+            }
+        }
+        for ch in channels.iter_mut() {
+            run_pending(&asr, ch, language.as_deref());
+            ch.trim();
+        }
+    }
+    Ok(())
+}
+
+fn run_pending(asr: &Qwen3AsrMlx, ch: &mut ChannelState, language: Option<&str>) {
+    let actions = std::mem::take(&mut ch.pending);
+    let last = actions.len().saturating_sub(1);
+    for (i, action) in actions.into_iter().enumerate() {
+        let (span, is_final) = match action {
+            // Un parcial con algo detrás ya está obsoleto.
+            Action::Partial(_) if i < last => continue,
+            Action::Partial(s) => (s, false),
+            Action::Final(s) => (s, true),
+        };
+        let t = Instant::now();
+        let ev = match asr.transcribe(ch.audio(span), language) {
+            Ok(out) => {
+                if !is_final && out.text.is_empty() {
+                    continue;
+                }
+                WorkerEvent::Segment {
+                    channel: ch.channel,
+                    id: ch.next_id,
+                    start: span.start as f64 / TARGET_SAMPLE_RATE,
+                    end: span.end as f64 / TARGET_SAMPLE_RATE,
+                    text: out.text,
+                    is_final,
+                    language: out.language,
+                    decode_ms: t.elapsed().as_millis() as u64,
+                }
+            }
+            Err(e) => WorkerEvent::Error { message: e.to_string() },
+        };
+        emit(&ev);
+        if is_final {
+            ch.next_id += 1;
+        }
+    }
+}

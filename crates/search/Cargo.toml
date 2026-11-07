@@ -1,11 +1,11 @@
 [package]
-name = "granola-search"
+name = "juanola-search"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-granola-core-types.workspace = true
+juanola-core-types.workspace = true
 thiserror.workspace = true
 async-trait.workspace = true
 anyhow.workspace = true

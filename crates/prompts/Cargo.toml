@@ -1,5 +1,5 @@
 [package]
-name = "granola-prompts"
+name = "juanola-prompts"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

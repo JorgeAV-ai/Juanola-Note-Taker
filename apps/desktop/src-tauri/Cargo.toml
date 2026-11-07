@@ -1,11 +1,11 @@
 [package]
-name = "granola-desktop"
+name = "juanola-desktop"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [lib]
-name = "granola_desktop_lib"
+name = "juanola_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -30,15 +30,15 @@ tracing-subscriber.workspace = true
 dirs.workspace = true
 anyhow.workspace = true
 
-granola-core-types.workspace = true
-granola-db.workspace = true
-granola-audio-capture.workspace = true
-granola-stt.workspace = true
-granola-llm.workspace = true
-granola-enhance.workspace = true
-granola-calendar.workspace = true
-granola-detect.workspace = true
-granola-models.workspace = true
-granola-dictation.workspace = true
+juanola-core-types.workspace = true
+juanola-db.workspace = true
+juanola-audio-capture.workspace = true
+juanola-stt.workspace = true
+juanola-llm = { workspace = true, features = ["llamacpp"] }
+juanola-enhance.workspace = true
+juanola-calendar.workspace = true
+juanola-detect.workspace = true
+juanola-models.workspace = true
+juanola-dictation.workspace = true
 chrono.workspace = true
 uuid.workspace = true

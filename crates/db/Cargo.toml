@@ -1,11 +1,11 @@
 [package]
-name = "granola-db"
+name = "juanola-db"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-granola-core-types.workspace = true
+juanola-core-types.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
 thiserror.workspace = true
@@ -13,3 +13,6 @@ serde_json.workspace = true
 uuid.workspace = true
 chrono.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

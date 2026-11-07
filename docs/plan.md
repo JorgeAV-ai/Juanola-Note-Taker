@@ -191,7 +191,7 @@ GPUI es el framework de Zed y rinde muy bien, pero en 2026 el propio GPUI no tra
 ## 4. Arquitectura
 
 ```
-granola-rs/
+juanola/
 ├─ apps/
 │  └─ desktop/            # Tauri v2 (src-tauri + src)
 ├─ crates/

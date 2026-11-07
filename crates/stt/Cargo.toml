@@ -1,22 +1,45 @@
 [package]
-name = "granola-stt"
+name = "juanola-stt"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-granola-core-types.workspace = true
-granola-audio-capture.workspace = true
+juanola-core-types.workspace = true
+juanola-audio-capture.workspace = true
 thiserror.workspace = true
 async-trait.workspace = true
 tokio.workspace = true
 futures.workspace = true
 serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+
+# MLX solo existe en Apple Silicon.
+[target.'cfg(target_os = "macos")'.dependencies]
+mlxrs = { version = "0.2", optional = true, default-features = false, features = [
+  "audio",
+  "qwen3-asr",
+  "qwen3-asr-aligner", # expone el decoder de texto de Qwen3-ASR
+  "whisper",           # frontend log-mel de Whisper (el de Qwen3-ASR)
+  "tokenizer",
+  "vad",               # Silero VAD
+] }
+
+[[bin]]
+name = "juanola-stt-worker"
+required-features = ["mlx"]
+
+[dev-dependencies]
+anyhow.workspace = true
+hound = "3"
+tokio = { workspace = true, features = ["signal"] }
 
 [features]
 default = []
 # Backends reales; se activan cuando elijas modelos (ver models.toml).
 # Al activar un backend, sustituye `[]` por `["dep:<crate>"]` y añade la dependencia opcional.
+mlx = ["dep:mlxrs"]  # Qwen3-ASR sobre MLX (Mac Apple Silicon)
 sherpa = []      # sherpa-onnx: streaming/offline ONNX, VAD, puntuación
 whisper = []     # whisper-rs: whisper.cpp (Metal/CoreML/CUDA/Vulkan)
 transcribe = []  # transcribe-rs: multi-motor (Parakeet, Moonshine, Canary...)

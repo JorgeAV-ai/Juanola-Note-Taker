@@ -2,13 +2,19 @@
 //! medidores de nivel para las barras animadas de la píldora.
 //!
 //! Por plataforma (ver docs/plan.md §5):
-//! - macOS 14.2+: Core Audio process tap (sin permiso de grabación de pantalla).
-//! - macOS 13-14.1: ScreenCaptureKit solo audio.
+//! - macOS 14.6+: Core Audio process tap vía cpal (sin permiso de grabación de pantalla).
+//! - macOS 13-14.5: ScreenCaptureKit solo audio (pendiente).
 //! - Windows: WASAPI loopback.
 //! - Linux: fuente `.monitor` de PipeWire/Pulse.
 
-use granola_core_types::Channel;
+use juanola_core_types::Channel;
 use tokio::sync::broadcast;
+
+mod cpal_backend;
+mod resample;
+
+pub use cpal_backend::CpalCapture;
+pub use resample::MonoResampler;
 
 /// Frecuencia a la que se entregan los frames a los modelos.
 pub const TARGET_SAMPLE_RATE: u32 = 16_000;

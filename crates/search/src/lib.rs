@@ -1,6 +1,6 @@
 //! Búsqueda: texto completo (tantivy) + vectorial (sqlite-vec/usearch). Fase 3.
 
-use granola_core_types::Id;
+use juanola_core_types::Id;
 
 #[derive(Debug, Clone)]
 pub struct Hit {

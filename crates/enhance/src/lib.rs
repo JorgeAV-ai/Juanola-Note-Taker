@@ -1,7 +1,7 @@
 //! Pipelines de IA: enhance notes, templates, chat RAG, recipes, rewrite,
 //! briefs, follow-up emails, live chat ("What did I miss?").
 
-use granola_core_types::{Citation, Note, Segment, Template};
+use juanola_core_types::{Citation, Note, Segment, Template};
 use serde::{Deserialize, Serialize};
 
 /// Salida estructurada del enhance; el frontend la convierte a ProseMirror
@@ -57,11 +57,5 @@ pub fn enhanced_notes_schema() -> serde_json::Value {
     })
 }
 
-pub mod pipelines {
-    pub mod enhance {}
-    pub mod chat {}
-    pub mod recipes {}
-    pub mod briefs {}
-    pub mod follow_up {}
-    pub mod rewrite {}
-}
+pub mod itn;
+pub mod pipelines;

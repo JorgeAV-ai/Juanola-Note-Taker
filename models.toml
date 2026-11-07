@@ -1,65 +1,286 @@
-# Catálogo de modelos por slot. Rellena `models` y `default` con los modelos que
-# elijas. `runtime` fija el formato de pesos que acepta el backend Rust:
-#   sherpa-onnx -> ONNX     whisper.cpp -> GGML .bin     llama.cpp -> GGUF
-#   speakrs     -> ONNX/CoreML (descarga automática)     fastembed -> ONNX
-# `backends` admite: metal, coreml, cuda, vulkan, cpu.
+# Catálogo de modelos por slot. Ver docs/modelos-mvp.md para la justificación.
+#
+# runtime: cómo se ejecuta en Rust.  format: tipo de pesos.
+#   mlx         -> mlxrs (solo macOS Apple Silicon)       format = "mlx"
+#   sherpa-onnx -> sherpa-onnx (CPU, todas)               format = "onnx"
+#   llama.cpp   -> llama-cpp-2 (Metal / Vulkan / CUDA)    format = "gguf"
+#   ort         -> ONNX Runtime directo (embeddings)      format = "onnx"
+#   speakrs     -> speakrs (CoreML en Mac, ONNX en resto) format = "onnx" | "coreml"
+#   fluidaudio  -> sidecar Swift (CoreML/ANE, fase 2)     format = "coreml"
+# platforms: macos-arm64 | macos-x64 | windows-x64 | linux-x64
+# backends:  metal | coreml | ane | cuda | vulkan | cpu
+# ready:     false = el runtime Rust aún no lo ejecuta; el selector lo salta.
+# sha256 vacío = se obtiene del API de Hugging Face (LFS oid) al descargar y se fija aquí.
 
+# ---------------------------------------------------------------- VAD
 [slots.vad]
 description = "Detección de actividad de voz por canal; alimenta el auto-stop (15 min sin audio)."
-runtime = "sherpa-onnx"
-models = []
+default = "silero-vad"
 
+[[slots.vad.models]]
+name = "silero-vad"
+runtime = "mlx"
+format = "mlx"
+repo = "mlx-community/silero-vad"
+files = ["model.safetensors", "config.json"]
+size_mb = 2
+platforms = ["macos-arm64"]
+backends = ["metal"]
+notes = "Usado por juanola-stt-worker (mlxrs, feature vad), en streaming por ventanas de 512 muestras."
+
+[[slots.vad.models]]
+name = "silero-vad"
+runtime = "sherpa-onnx"
+format = "onnx"
+repo = "istupakov/silero-vad-onnx"
+files = ["silero_vad.onnx"]
+size_mb = 2
+platforms = ["macos-arm64", "macos-x64", "windows-x64", "linux-x64"]
+backends = ["cpu"]
+
+# ---------------------------------------------------------------- STT streaming
 [slots.stt_streaming]
-description = "Transcripción en vivo, dos canales en paralelo, latencia objetivo < 2 s, multilingüe."
-runtime = "sherpa-onnx"
-models = []
+description = "Transcripción en vivo, dos canales en paralelo. Qwen3-ASR 0.6B: 30 idiomas con streaming."
+default = "qwen3-asr-0.6b"
 
+[[slots.stt_streaming.models]]
+name = "qwen3-asr-0.6b"
+runtime = "mlx"
+format = "mlx"
+repo = "mlx-community/Qwen3-ASR-0.6B-4bit"
+# El repo no trae tokenizer.json (ni el de Qwen): se genera desde vocab.json + merges.txt
+# + tokenizer_config.json (hoy con `transformers`; pendiente hacerlo en Rust al instalar).
+files = ["model.safetensors", "config.json", "vocab.json", "merges.txt", "tokenizer_config.json", "preprocessor_config.json"]
+size_mb = 710
+notes = "Transcriptor propio sobre mlxrs (crates/stt/src/backends/qwen3_mlx.rs), validado token a token contra mlx-audio."
+platforms = ["macos-arm64"]
+backends = ["metal"]
+wer_en = 6.99
+languages = 30
+
+[[slots.stt_streaming.models]]
+name = "qwen3-asr-0.6b"
+runtime = "sherpa-onnx"
+format = "onnx"
+# Paquete prebuilt de k2-fsa (tar.bz2, no es un repo HF).
+repo = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2"
+files = ["encoder.int8.onnx", "decoder.int8.onnx", "conv_frontend.onnx", "tokens.txt"]
+size_mb = 940
+notes = "sherpa-onnx 2.0.1 solo lo expone offline (OfflineQwen3ASRModelConfig): streaming simulado con VAD, como en Mac."
+platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
+backends = ["cpu"]
+wer_en = 6.99
+languages = 30
+
+# Alternativa "todo Liquid". Streaming (LiveASR) solo en inglés; batch en 18 locales.
+[[slots.stt_streaming.models]]
+name = "lfm3-audio-2b"
+runtime = "llama.cpp"
+format = "gguf"
+repo = "LiquidAI/LFM3-Audio-2B-GGUF"
+files = ["LFM3-Audio-2B-Q4_K_M.gguf", "mmproj-LFM3-Audio-2B-Q4_0.gguf"]
+size_mb = 1261
+platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
+backends = ["vulkan", "cuda", "metal", "cpu"]
+wer_en = 6.23
+languages = 18
+ready = false
+notes = "Requiere soporte mtmd (audio) en llama-cpp-2; verificar en fase 1."
+
+[[slots.stt_streaming.models]]
+name = "lfm3-audio-2b"
+runtime = "fluidaudio"
+format = "coreml"
+repo = "FluidInference/lfm3-audio-2b-coreml"
+files = []
+size_mb = 1300
+platforms = ["macos-arm64"]
+backends = ["ane"]
+wer_en = 6.23
+languages = 18
+ready = false
+notes = "ASR, LiveASR (inglés) y TTS en el Neural Engine vía sidecar FluidAudio (fase 2)."
+
+[[slots.stt_streaming.models]]
+name = "moonshine-v2-small-streaming"
+runtime = "sherpa-onnx"
+format = "onnx"
+repo = "Mer0vin8ian/moonshine-streaming-small-onnx"
+files = []
+size_mb = 340
+platforms = ["macos-arm64", "macos-x64", "windows-x64", "linux-x64"]
+backends = ["cpu"]
+languages = 8
+notes = "Respaldo para equipos donde Qwen3-ASR no alcanza tiempo real en CPU."
+
+# ---------------------------------------------------------------- STT batch (fuera del MVP)
 [slots.stt_batch]
-description = "Re-transcripción de calidad al terminar (opcional)."
-runtime = "whisper.cpp"
-models = []
+description = "Re-transcripción de calidad al terminar. Parakeet v3 en ANE (Mac) u ONNX (Windows)."
 
+[[slots.stt_batch.models]]
+name = "parakeet-tdt-0.6b-v3"
+runtime = "sherpa-onnx"
+format = "onnx"
+repo = "istupakov/parakeet-tdt-0.6b-v3-onnx"
+files = ["encoder-model.int8.onnx", "decoder_joint-model.onnx", "vocab.txt"]
+size_mb = 730
+platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
+backends = ["cpu"]
+wer_en = 7.03
+languages = 25
+
+[[slots.stt_batch.models]]
+name = "parakeet-tdt-0.6b-v3"
+runtime = "fluidaudio"
+format = "coreml"
+repo = "FluidInference/parakeet-tdt-0.6b-v3-coreml"
+files = []
+size_mb = 600
+platforms = ["macos-arm64"]
+backends = ["ane"]
+wer_en = 7.03
+languages = 25
+ready = false
+
+# ---------------------------------------------------------------- Puntuación
 [slots.punctuation]
-description = "Puntuación y mayúsculas si el modelo streaming no las produce."
-runtime = "sherpa-onnx"
-models = []
+description = "No necesario: Qwen3-ASR y LFM3-Audio producen puntuación."
 
+# ---------------------------------------------------------------- Diarización
 [slots.diarization]
-description = "Separar hablantes dentro del canal del sistema y en reuniones presenciales."
+description = "pyannote community-1 implementado en Rust (speakrs). Se ejecuta al terminar la reunión."
+default = "speakrs-community-1"
+
+[[slots.diarization.models]]
+name = "speakrs-community-1"
 runtime = "speakrs"
-models = []
+format = "coreml"
+repo = "avencera/speakrs-models"
+files = []
+size_mb = 60
+platforms = ["macos-arm64"]
+backends = ["coreml"]
+notes = "speakrs descarga solo los ficheros de su backend desde este repo."
 
+[[slots.diarization.models]]
+name = "speakrs-community-1"
+runtime = "speakrs"
+format = "onnx"
+repo = "avencera/speakrs-models"
+files = []
+size_mb = 60
+platforms = ["windows-x64", "linux-x64", "macos-x64"]
+backends = ["cpu"]
+
+# ---------------------------------------------------------------- Embeddings de hablante (fase 4+)
 [slots.speaker_embedding]
-description = "Re-identificar hablantes recurrentes entre reuniones."
-runtime = "sherpa-onnx"
-models = []
+description = "Re-identificar hablantes recurrentes entre reuniones. Fuera del MVP; speakrs ya extrae embeddings."
 
+# ---------------------------------------------------------------- LLM principal: LFM3-1.7B
 [slots.llm_main]
-description = "Enhance notes, chat RAG, recipes, rewrite, briefs, follow-ups. Contexto >= 32k, salida JSON."
-runtime = "llama.cpp"
-models = []
+description = "Enhance notes, chat, recipes. LFM3-1.7B (Liquid AI): 256K contexto, 16 idiomas, ~1 GB a 4-bit."
+default = "lfm3-1.7b"
 
+# Objetivo en Mac. Bloqueado hasta que mlxrs (u otro runtime Rust de MLX) implemente LFM3.
+[[slots.llm_main.models]]
+name = "lfm3-1.7b"
+runtime = "mlx"
+format = "mlx"
+repo = "LiquidAI/LFM3-1.7B-MLX-4bit"
+files = ["model.safetensors", "config.json", "tokenizer.json", "tokenizer_config.json", "chat_template.jinja"]
+size_mb = 973
+platforms = ["macos-arm64"]
+backends = ["metal"]
+context = 262144
+languages = 16
+ready = false
+notes = "mlxrs 0.2 no implementa la arquitectura LFM3 (tri-híbrida). Activar cuando exista soporte."
+
+[[slots.llm_main.models]]
+name = "lfm3-1.7b"
+runtime = "llama.cpp"
+format = "gguf"
+repo = "LiquidAI/LFM3-1.7B-GGUF"
+files = ["LFM3-1.7B-Q4_K_M.gguf"]
+size_mb = 1100
+platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
+backends = ["vulkan", "cuda", "metal", "cpu"]
+context = 262144
+languages = 16
+sha256 = "3793e1e6e2266919d6e015287221b41100175a98eddaba92e111aed3b05c93c4"
+notes = "llama.cpp b11960 vía third_party/llama-cpp-sys-2 (el crate trae uno sin LFM3). M4 Pro: 120 tok/s, enhance de 17,5 min en ~14 s. Alternativa QAD-Q4_0 (1050 MB) o Q8_0 (1846 MB) por si mejora la fidelidad de cifras: sin medir."
+
+# Tier opcional para reuniones en inglés: modelo específico de resumen de transcripciones.
+[[slots.llm_main.models]]
+name = "lfm2-2.6b-transcript"
+runtime = "llama.cpp"
+format = "gguf"
+repo = "LiquidAI/LFM2-2.6B-Transcript-GGUF"
+files = ["LFM2-2.6B-Transcript-Q4_K_M.gguf"]
+size_mb = 1564
+platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
+backends = ["vulkan", "cuda", "metal", "cpu"]
+context = 32768
+languages = 1
+notes = "Solo inglés. Prompt: cabecera de metadatos + líneas por hablante; temperature 0.3."
+
+# ---------------------------------------------------------------- LLM pequeño
 [slots.llm_small]
-description = "Limpieza de dictado, títulos, action items en vivo. < 1 s por 100 tokens."
-runtime = "llama.cpp"
-models = []
+description = "Limpieza de dictado, títulos. Reutiliza LFM3-1.7B (no se carga un segundo modelo)."
+default = "lfm3-1.7b"
 
+# ---------------------------------------------------------------- Embeddings de texto: EmbeddingGemma 2
 [slots.text_embedding]
-description = "Embeddings para búsqueda semántica y RAG."
-runtime = "fastembed"
-models = []
+description = "Búsqueda semántica y RAG. EmbeddingGemma 2 solo texto (270M), 768d truncado a 256d (Matryoshka)."
+default = "embeddinggemma-2-text"
 
+[[slots.text_embedding.models]]
+name = "embeddinggemma-2-text"
+runtime = "ort"
+format = "onnx"
+repo = "onnx-community/embeddinggemma-2-ONNX"
+files = ["onnx/model_quantized.onnx", "onnx/model_quantized.onnx_data", "tokenizer.json", "config.json"]
+size_mb = 314
+platforms = ["macos-arm64", "macos-x64", "windows-x64", "linux-x64"]
+backends = ["cpu"]
+dimension = 768
+notes = "q8, cos 0.9997 vs fp32. Prefijos: 'task: search result | query: …' y 'title: none | text: …'. Truncar a 256d y renormalizar."
+
+[[slots.text_embedding.models]]
+name = "embeddinggemma-2-text"
+runtime = "fluidaudio"
+format = "coreml"
+repo = "FluidInference/embeddinggemma-2-coreml"
+files = ["EmbeddingGemma2Text.mlpackage"]
+size_mb = 277
+platforms = ["macos-arm64"]
+backends = ["ane"]
+dimension = 768
+ready = false
+notes = "Optimización de fase 2 si se adopta el sidecar FluidAudio."
+
+[[slots.text_embedding.models]]
+name = "lfm2.5-embedding-350m"
+runtime = "llama.cpp"
+format = "gguf"
+repo = "LiquidAI/LFM2.5-Embedding-350M-GGUF"
+files = ["LFM2.5-Embedding-350M-Q4_K_M.gguf"]
+size_mb = 229
+platforms = ["macos-arm64", "macos-x64", "windows-x64", "linux-x64"]
+backends = ["metal", "vulkan", "cuda", "cpu"]
+notes = "Alternativa si se quiere pila 100 % Liquid. Sin cifra MTEB verificada."
+
+# ---------------------------------------------------------------- Reranker (fase 3)
 [slots.reranker]
-description = "Reordenar fragmentos recuperados antes de citar (opcional)."
-runtime = "fastembed"
-models = []
+description = "Reordenar fragmentos recuperados antes de citar. LFM2.5-ColBERT-350M (interacción tardía)."
 
-# Ejemplo de entrada (borrar o adaptar):
-# [[slots.llm_main.models]]
-# name = "mi-modelo-q4"
-# repo = "org/repo-GGUF"
-# files = ["model-q4_k_m.gguf"]
-# sha256 = "..."
-# size_mb = 4800
-# backends = ["metal", "cuda", "vulkan", "cpu"]
-# license = "Apache-2.0"
+[[slots.reranker.models]]
+name = "lfm2.5-colbert-350m"
+runtime = "llama.cpp"
+format = "gguf"
+repo = "LiquidAI/LFM2.5-ColBERT-350M-GGUF"
+files = ["LFM2.5-ColBERT-350M-Q4_K_M.gguf"]
+size_mb = 228
+platforms = ["macos-arm64", "macos-x64", "windows-x64", "linux-x64"]
+backends = ["metal", "vulkan", "cuda", "cpu"]
+ready = false

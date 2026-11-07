@@ -1,6 +1,7 @@
 //! Punto de entrada de la app de escritorio. Registra plugins, estado y comandos.
 
 mod commands;
+mod recording;
 mod state;
 
 use tauri::Manager;
@@ -30,8 +31,8 @@ pub fn run() {
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&data_dir)?;
-            let db_path = data_dir.join("granola.sqlite");
-            let db = tauri::async_runtime::block_on(granola_db::Db::open(&db_path))?;
+            let db_path = data_dir.join("juanola.sqlite");
+            let db = tauri::async_runtime::block_on(juanola_db::Db::open(&db_path))?;
             app.manage(state::AppState::new(db, data_dir));
             Ok(())
         })
@@ -39,9 +40,18 @@ pub fn run() {
             commands::app_info,
             commands::list_notes,
             commands::create_note,
+            commands::get_note,
+            commands::set_note_title,
+            commands::set_note_raw_doc,
+            commands::list_segments,
+            commands::start_recording,
+            commands::pause_recording,
+            commands::resume_recording,
+            commands::stop_recording,
+            commands::enhance_note,
             commands::list_audio_devices,
             commands::coming_up,
         ])
         .run(tauri::generate_context!())
-        .expect("error al arrancar Granola RS");
+        .expect("error al arrancar Juanola");
 }

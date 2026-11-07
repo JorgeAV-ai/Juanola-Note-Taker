@@ -17,6 +17,8 @@ pub struct GenOptions {
     pub temperature: Option<f32>,
     /// JSON Schema que la salida debe cumplir (GBNF en llama.cpp, response_format en OpenAI).
     pub json_schema: Option<serde_json::Value>,
+    /// Semilla del muestreo; `None` = fija (resultados reproducibles).
+    pub seed: Option<u32>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -38,6 +40,8 @@ pub trait ChatModel: Send + Sync {
     ) -> BoxStream<'a, Result<String, LlmError>>;
 }
 
+pub mod chat_format;
+
 pub mod backends {
     #[cfg(feature = "openai-compatible")]
     pub mod openai_compatible {
@@ -49,5 +53,5 @@ pub mod backends {
         }
     }
     #[cfg(feature = "llamacpp")]
-    pub mod llamacpp {}
+    pub mod llamacpp;
 }

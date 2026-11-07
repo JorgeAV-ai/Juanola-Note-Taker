@@ -1,0 +1,102 @@
+# Reunión ficticia de prueba para el enhance (~20 min con `say`).
+# Formato: Hablante|texto. "Yo" va al canal del micrófono; el resto al del sistema.
+Yo|Buenos días, Marta, Luis. Gracias por venir. Hoy tenemos bastante: las métricas del tercer trimestre, el estado de los errores críticos, el cambio de precios, la contratación y el plan de lanzamiento de la versión dos de la aplicación. Intentemos acabar en veinte minutos.
+Marta|Buenos días. Yo traigo los números de ingeniería y lo de los errores.
+Luis|Y yo lo de ventas y la propuesta de precios. Empiezo cuando queráis.
+Yo|Empecemos por las métricas. Luis, ¿cómo ha ido el trimestre?
+Luis|Pues bastante bien. Cerramos el trimestre con mil ochocientas cuarenta clínicas de fisioterapia activas, que es un veintidós por ciento más que en junio. Los ingresos recurrentes mensuales llegaron a ciento doce mil euros. El objetivo era ciento veinte mil, así que nos quedamos un siete por ciento por debajo.
+Yo|¿Sabemos por qué no llegamos?
+Luis|Sí. La mayor parte del hueco viene de las clínicas grandes, las que tienen más de cinco fisioterapeutas. Cerramos muchas menos de las que esperábamos porque piden integración con su programa de facturación, y no la tenemos. Perdimos al menos nueve operaciones por eso, según el equipo comercial.
+Marta|Eso me cuadra. Nos llegan peticiones de integración casi cada semana. Sobre todo con Facturama y con Holded.
+Yo|Vale. Lo apunto para cuando hablemos de la hoja de ruta. ¿Y la cancelación?
+Luis|La tasa de cancelación mensual bajó del tres coma uno al dos coma cuatro por ciento. Creemos que es por los recordatorios por WhatsApp que lanzamos en julio. Las clínicas que los usan tienen la mitad de citas perdidas.
+Yo|Eso es muy buena noticia. Marta, ¿tenemos el dato de uso de los recordatorios?
+Marta|Sí. El sesenta y tres por ciento de las clínicas activas tienen los recordatorios encendidos. Y se envían unos cuarenta mil mensajes a la semana. El coste del proveedor de WhatsApp es de unos mil cien euros al mes, que está dentro de lo previsto.
+Yo|Perfecto. Pasemos a los errores. Marta, cuéntanos.
+Marta|Tenemos tres errores críticos abiertos. El primero, y el más grave, es que algunas citas se duplican cuando dos recepcionistas editan la agenda a la vez. Afecta a unas cuarenta clínicas y ya hay quejas por escrito. Lo tenemos localizado: es un problema de bloqueo en la base de datos. Javier está con ello y calcula que estará arreglado el miércoles.
+Yo|¿Hay algún apaño mientras tanto?
+Marta|Sí, hemos puesto un aviso en la agenda cuando otra persona la está editando. No lo arregla, pero reduce mucho los casos. Desde que lo pusimos el lunes solo ha habido dos duplicados.
+Yo|Bien. ¿El segundo?
+Marta|El segundo es que la exportación de facturas a PDF falla con caracteres especiales, eñes y tildes en el nombre del paciente. Es más fácil: lo tendremos esta semana. Y el tercero es que la aplicación de Android se cierra al abrir el historial de un paciente con más de doscientas sesiones. Ese nos preocupa porque no lo conseguimos reproducir siempre. Lo lleva Sara y de momento no tenemos fecha.
+Yo|Vale. Quiero que el de Android tenga prioridad después del de las citas duplicadas. Si hace falta, que Sara deje lo de las notificaciones nuevas.
+Marta|De acuerdo, se lo digo hoy.
+Luis|Una pregunta: ¿puedo contarle a las clínicas afectadas por los duplicados que el miércoles estará resuelto? Hay dos que están amenazando con irse.
+Marta|Yo diría el viernes, para tener margen. Si sale el miércoles, mejor.
+Yo|De acuerdo, comunica el viernes. Y Luis, a esas dos clínicas ofréceles un mes gratis. Prefiero eso a perderlas.
+Luis|Perfecto, las llamo esta tarde.
+Yo|Siguiente tema: los precios. Luis, tu propuesta.
+Luis|Ahora mismo tenemos un único plan de cuarenta y nueve euros al mes por clínica, da igual el tamaño. La propuesta es pasar a tres planes. Un plan básico de treinta y nueve euros para un solo fisioterapeuta. Un plan clínica de setenta y nueve euros hasta cinco fisioterapeutas. Y un plan centro para más de cinco, a partir de ciento cuarenta y nueve euros, que incluiría las integraciones con facturación cuando las tengamos.
+Yo|¿Qué pasa con los clientes actuales?
+Luis|Mantendríamos el precio de cuarenta y nueve durante doce meses a todos los clientes actuales. Después pasarían al plan que les corresponda. Según mis cuentas, si solo un treinta por ciento de los clientes actuales acaba en el plan clínica, los ingresos suben un dieciocho por ciento en un año.
+Marta|Mi preocupación es técnica. Ahora mismo no tenemos forma de limitar el número de fisioterapeutas por cuenta. Habría que construirlo, y también la página de facturación con los tres planes. Calculo unas tres semanas de trabajo.
+Yo|Me gusta la propuesta, pero no quiero cambiar precios en el mismo mes que lanzamos la versión dos. Demasiados cambios a la vez para las clínicas.
+Luis|Entonces, ¿enero?
+Yo|Enero me parece bien. Decidimos eso: los nuevos planes entran el quince de enero. Luis, prepara la comunicación a clientes para mediados de diciembre, con un mes de aviso. Marta, el límite de fisioterapeutas y la página de planes tienen que estar listos antes del diez de enero.
+Marta|Vale, lo meto en la planificación de diciembre.
+Luis|Una cosa más sobre precios. Los clientes de Latinoamérica nos dicen que cuarenta y nueve euros es caro para ellos. ¿Hacemos precios por país?
+Yo|Buena pregunta, pero no lo decidimos hoy. Prepara un análisis con cuántos clientes tenemos por país y lo vemos en la próxima reunión.
+Luis|De acuerdo.
+Yo|Contratación. Marta, ¿cómo vamos con las dos plazas de ingeniería?
+Marta|La plaza de backend está casi cerrada. Tenemos una candidata, Elena Ruiz, que ha pasado todas las entrevistas. Le hemos hecho una oferta de cincuenta y dos mil euros y nos responde el lunes. La plaza de móvil está más complicada: hemos visto a seis personas y ninguna nos convence. Creo que deberíamos ampliar la búsqueda a remoto en toda España, no solo en Madrid.
+Yo|De acuerdo con ampliar a remoto. ¿Necesitas ayuda con algo?
+Marta|Sí, que alguien más haga las entrevistas de cultura, porque yo no llego. ¿Podrías hacerlas tú?
+Yo|Sí, mándame las candidaturas y me encargo yo de esas entrevistas.
+Luis|Por mi parte, ventas necesita una persona más para las clínicas grandes. Pero eso depende de que tengamos las integraciones, así que lo dejo para el año que viene.
+Yo|Me parece sensato. Último tema y el más importante: el lanzamiento de la versión dos. Marta, ¿cómo está?
+Marta|La versión dos tiene tres cosas grandes: la nueva agenda con vista semanal, los informes de evolución del paciente con gráficas, y el portal donde el paciente puede reservar y cambiar sus citas. La agenda y los informes están terminados y en pruebas. El portal del paciente va con retraso, le quedan unas dos semanas.
+Yo|¿Cuál era la fecha prevista?
+Marta|El dieciocho de noviembre. Con el retraso del portal, no llegamos con todo.
+Yo|Opciones.
+Marta|Dos. O lanzamos el dieciocho sin el portal y lo sacamos en diciembre, o retrasamos todo al dos de diciembre.
+Luis|Desde ventas prefiero lanzar el dieciocho. Tenemos una feria de fisioterapia en Valencia el veinte de noviembre y queremos enseñar la nueva agenda allí. El portal se puede enseñar como "próximamente".
+Marta|Para ingeniería también es mejor lanzar en dos partes. Menos riesgo.
+Yo|Entonces decidido: lanzamos la versión dos el dieciocho de noviembre con la agenda y los informes, y el portal del paciente sale el dos de diciembre. Luis, encárgate de preparar la demo para la feria de Valencia. Y prepara también el material de la feria con el portal como novedad de diciembre.
+Luis|Hecho. Necesitaré una cuenta de demostración con datos realistas.
+Marta|Te la preparo yo antes del jueves trece.
+Yo|¿Hay algo más del lanzamiento? Comunicación, soporte...
+Marta|Soporte necesita formación sobre la nueva agenda. Propongo una sesión de una hora la semana que viene.
+Yo|Bien. Organízala tú, Marta, y que vaya también el equipo de ventas.
+Luis|Y deberíamos escribir a todas las clínicas antes del lanzamiento. Un correo el día dieciséis explicando las novedades.
+Yo|De acuerdo. Luis, ese correo es tuyo. Mándamelo para revisarlo el día catorce.
+Luis|Perfecto.
+Yo|Antes de cerrar el lanzamiento, quiero repasar las opiniones de los clientes. Luis, ¿tenemos el resultado de la encuesta de satisfacción?
+Luis|Sí. La enviamos a todas las clínicas a principios de octubre y respondieron cuatrocientas diez. La puntuación neta de recomendación salió en cuarenta y uno, que es seis puntos más que en la encuesta de abril. Lo que más valoran es la facilidad de uso de la agenda y los recordatorios por WhatsApp.
+Yo|¿Y lo que menos?
+Luis|Tres cosas, por este orden. Primero, la falta de integración con facturación, otra vez. Segundo, que la aplicación de Android va lenta en móviles antiguos. Y tercero, que el soporte tarda en responder por la tarde. Muchas clínicas trabajan hasta las nueve de la noche y nuestro soporte cierra a las seis.
+Marta|Lo de Android lento probablemente está relacionado con el error del historial. Cargamos todas las sesiones de golpe. Si paginamos el historial, arreglamos las dos cosas a la vez.
+Yo|Entonces que Sara lo enfoque así: paginar el historial. ¿Y lo del horario de soporte?
+Luis|Habría que ampliar el horario hasta las nueve. Con la gente que tenemos no llegamos. Una opción es contratar a una persona a media jornada por las tardes. Costaría unos mil cuatrocientos euros al mes.
+Yo|Me parece razonable, pero quiero ver primero cuántas consultas entran por la tarde. Luis, sácame ese dato del sistema de soporte y lo decidimos la semana que viene.
+Luis|Vale, lo tengo para el lunes.
+Yo|Siguiente: la auditoría de protección de datos. Marta, ¿en qué punto estamos?
+Marta|La auditoría externa del reglamento de protección de datos empieza el uno de diciembre. Guardamos datos de salud de los pacientes, así que es importante. Hemos revisado la lista de requisitos y nos faltan dos cosas. La primera es el registro de accesos: tenemos que poder decir quién ha consultado el historial de cada paciente y cuándo. La segunda es el cifrado de las copias de seguridad, que ahora mismo no están cifradas.
+Yo|¿Cuánto trabajo es eso?
+Marta|El cifrado de las copias es poco, un par de días. El registro de accesos es más, unas dos semanas. Y tiene que estar antes del uno de diciembre.
+Yo|Eso choca con el portal del paciente.
+Marta|Sí. Por eso propongo que el registro de accesos lo haga Elena si acepta la oferta, porque se incorporaría el diecisiete de noviembre. Si no acepta, lo tendría que hacer Javier después de arreglar las citas duplicadas, y el portal se iría una semana más.
+Yo|De acuerdo. Si Elena acepta, se encarga ella del registro de accesos. Y el cifrado de las copias hazlo ya esta semana, que es poco.
+Marta|Perfecto. También necesitamos nombrar a una persona responsable de protección de datos. Ahora mismo no la tenemos.
+Yo|Lo seré yo de momento. Lo formalizamos con la gestoría.
+Luis|¿Esto afecta a ventas de alguna forma?
+Marta|Sí, en positivo. Las clínicas grandes nos piden el certificado de la auditoría. Si lo pasamos, es un argumento más para el plan centro.
+Yo|Bien visto. Pasemos al presupuesto de marketing para el último trimestre. Luis.
+Luis|Tenemos aprobados treinta y cinco mil euros para el trimestre. La feria de Valencia se lleva doce mil, entre el espacio, el viaje y el material. Para anuncios en buscadores y redes quedan dieciocho mil. Y propongo dedicar los cinco mil restantes a un programa de recomendación: si una clínica nos trae otra, las dos tienen un mes gratis.
+Yo|¿Cómo funcionan ahora los anuncios?
+Luis|Regular. El coste por clínica captada en buscadores está en doscientos diez euros, y en redes sociales en trescientos cuarenta. En redes nos va peor, así que propongo mover casi todo a buscadores.
+Yo|De acuerdo con mover el dinero a buscadores. El programa de recomendación me gusta, pero quiero que lo probemos solo con cien clínicas durante noviembre antes de abrirlo a todas.
+Luis|Me parece bien. Elijo las cien entre las que tienen mejor puntuación en la encuesta.
+Marta|Para el programa de recomendación necesito saber si hay que construir algo en la aplicación, como un enlace de invitación.
+Luis|Para la prueba no. Lo hacemos con un formulario y lo gestionamos a mano.
+Yo|Perfecto, así no quitamos tiempo a ingeniería. Por último, la hoja de ruta del primer trimestre. Ya hemos dicho que la integración con Holded va primero. ¿Qué más?
+Marta|Yo pondría la aplicación para el paciente en móvil, que es lo más pedido después de las integraciones. Y mejorar el rendimiento general, que con el crecimiento de clínicas la base de datos empieza a ir justa.
+Luis|Desde ventas, las integraciones son lo primero, sin duda. Lo segundo serían los informes para mutuas de seguros. Muchas clínicas trabajan con mutuas y tienen que mandarles informes en un formato concreto.
+Yo|Lo que propongo: primer trimestre, integración con Holded, rendimiento de la base de datos y los informes para mutuas. La aplicación móvil del paciente la dejamos para el segundo trimestre, porque el portal web ya cubre parte de esa necesidad. Marta, prepara una propuesta de hoja de ruta con estimaciones para la reunión del día veinte.
+Marta|De acuerdo.
+Yo|Volviendo a las integraciones con facturación. Por lo que habéis contado, es lo que más ventas nos está costando. Quiero que sea lo primero del primer trimestre. Marta, ¿cuánto costaría hacer la de Holded?
+Marta|La de Holded tiene una buena API. Calculo un mes con dos personas. Facturama es más complicada, sería después.
+Yo|Entonces Holded primero, en enero, en cuanto terminemos los planes de precios. Marta, prepara una estimación más detallada para la próxima reunión.
+Marta|De acuerdo.
+Yo|Repasemos rápido lo que hemos quedado. Javier arregla las citas duplicadas, con fecha comunicada a clientes el viernes. Sara prioriza el cierre de Android. Luis llama hoy a las dos clínicas y les ofrece un mes gratis. Los nuevos precios entran el quince de enero. Luis prepara el análisis de precios por país. Marta amplía la búsqueda de móvil a remoto y yo hago las entrevistas de cultura. Lanzamos la versión dos el dieciocho de noviembre sin el portal, y el portal sale el dos de diciembre. Luis prepara la demo de Valencia y el correo a clientes. Marta organiza la formación de soporte y la cuenta de demostración, y estima la integración con Holded.
+Marta|Correcto.
+Luis|Todo claro por mi parte.
+Yo|Pues muchas gracias a los dos. Nos vemos la semana que viene, mismo día y misma hora.

@@ -1,5 +1,5 @@
 [package]
-name = "granola-llm"
+name = "juanola-llm"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -12,10 +12,17 @@ serde.workspace = true
 serde_json.workspace = true
 reqwest.workspace = true
 tokio.workspace = true
+tracing.workspace = true
+llama-cpp-2 = { version = "0.1.161", optional = true, default-features = false, features = ["common"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+llama-cpp-2 = { version = "0.1.161", optional = true, default-features = false, features = ["common", "metal"] }
 
 [features]
 default = ["openai-compatible"]
 openai-compatible = []
 # Al activar un backend, sustituye `[]` por `["dep:<crate>"]` y añade la dependencia opcional.
-llamacpp = []    # llama-cpp-2: GGUF local, GBNF/JSON schema, Metal/CUDA/Vulkan
+llamacpp = ["dep:llama-cpp-2"]    # llama-cpp-2: GGUF local, GBNF/JSON schema, Metal/CUDA/Vulkan
 mistralrs = []   # mistralrs: alternativa puro Rust
+
+[dev-dependencies]

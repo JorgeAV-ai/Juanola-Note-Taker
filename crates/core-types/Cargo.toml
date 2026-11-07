@@ -1,5 +1,5 @@
 [package]
-name = "granola-core-types"
+name = "juanola-core-types"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

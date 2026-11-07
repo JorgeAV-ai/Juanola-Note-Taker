@@ -1,11 +1,11 @@
 [package]
-name = "granola-speaker-tags"
+name = "juanola-speaker-tags"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-granola-detect.workspace = true
+juanola-detect.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 serde.workspace = true

@@ -1,5 +1,5 @@
 [package]
-name = "granola-detect"
+name = "juanola-detect"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

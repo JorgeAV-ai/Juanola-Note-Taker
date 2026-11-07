@@ -9,3 +9,12 @@
 *.gguf
 *.onnx
 *.bin
+
+# grabaciones de prueba de audio
+recordings/
+
+# kernels MLX precompilados (scripts/fetch-mlx-metallib.sh)
+third_party/mlx-metallib/
+
+# código de llama.cpp (scripts/fetch-llama-cpp.sh)
+third_party/llama-cpp-sys-2/llama.cpp/

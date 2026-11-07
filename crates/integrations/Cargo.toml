@@ -1,11 +1,11 @@
 [package]
-name = "granola-integrations"
+name = "juanola-integrations"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-granola-core-types.workspace = true
+juanola-core-types.workspace = true
 reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true

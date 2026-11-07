@@ -1,0 +1,3 @@
+[env]
+# Kernels de MLX precompilados; los baja scripts/fetch-mlx-metallib.sh.
+MLXRS_PREBUILT_METALLIB = { value = "third_party/mlx-metallib/mlx.metallib", relative = true }

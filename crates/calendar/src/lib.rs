@@ -2,7 +2,7 @@
 //! caché local, "Coming up" y vínculo de recurrentes.
 
 use chrono::{DateTime, Utc};
-use granola_core_types::CalendarEvent;
+use juanola_core_types::CalendarEvent;
 
 #[async_trait::async_trait]
 pub trait CalendarProvider: Send + Sync {

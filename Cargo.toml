@@ -28,7 +28,7 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 rust-version = "1.85"
-repository = "https://github.com/your-org/granola-rs"
+repository = "https://github.com/your-org/juanola"
 
 [workspace.dependencies]
 # núcleo
@@ -55,27 +55,44 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 axum = "0.8"
 
 # crates internos
-granola-core-types = { path = "crates/core-types" }
-granola-db = { path = "crates/db" }
-granola-search = { path = "crates/search" }
-granola-audio-capture = { path = "crates/audio-capture" }
-granola-audio-store = { path = "crates/audio-store" }
-granola-stt = { path = "crates/stt" }
-granola-diarize = { path = "crates/diarize" }
-granola-llm = { path = "crates/llm" }
-granola-embed = { path = "crates/embed" }
-granola-prompts = { path = "crates/prompts" }
-granola-enhance = { path = "crates/enhance" }
-granola-calendar = { path = "crates/calendar" }
-granola-detect = { path = "crates/detect" }
-granola-speaker-tags = { path = "crates/speaker-tags" }
-granola-dictation = { path = "crates/dictation" }
-granola-models = { path = "crates/models" }
-granola-mcp-server = { path = "crates/mcp-server" }
-granola-api-server = { path = "crates/api-server" }
-granola-integrations = { path = "crates/integrations" }
+juanola-core-types = { path = "crates/core-types" }
+juanola-db = { path = "crates/db" }
+juanola-search = { path = "crates/search" }
+juanola-audio-capture = { path = "crates/audio-capture" }
+juanola-audio-store = { path = "crates/audio-store" }
+juanola-stt = { path = "crates/stt" }
+juanola-diarize = { path = "crates/diarize" }
+juanola-llm = { path = "crates/llm" }
+juanola-embed = { path = "crates/embed" }
+juanola-prompts = { path = "crates/prompts" }
+juanola-enhance = { path = "crates/enhance" }
+juanola-calendar = { path = "crates/calendar" }
+juanola-detect = { path = "crates/detect" }
+juanola-speaker-tags = { path = "crates/speaker-tags" }
+juanola-dictation = { path = "crates/dictation" }
+juanola-models = { path = "crates/models" }
+juanola-mcp-server = { path = "crates/mcp-server" }
+juanola-api-server = { path = "crates/api-server" }
+juanola-integrations = { path = "crates/integrations" }
+
+# llama.cpp y MLX se compilan con CMake en Release también en desarrollo: en
+# Debug la inferencia es decenas de veces más lenta.
+[profile.dev.package.llama-cpp-sys-2]
+opt-level = 3
+debug = false
+
+[profile.dev.package.mlxrs-sys]
+opt-level = 3
+debug = false
 
 [profile.release]
 lto = "thin"
 codegen-units = 1
 strip = true
+
+# mlxrs-sys parcheado para usar un mlx.metallib precompilado (ver third_party/README.md).
+[patch.crates-io]
+mlxrs-sys = { path = "third_party/mlxrs-sys" }
+# llama-cpp-sys-2 con llama.cpp b11960 (soporte LFM3); ver third_party/README.md.
+llama-cpp-sys-2 = { path = "third_party/llama-cpp-sys-2" }
+llama-cpp-2 = { path = "third_party/llama-cpp-2" }

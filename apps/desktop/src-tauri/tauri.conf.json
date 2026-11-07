@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Granola RS",
+  "productName": "Juanola",
   "version": "0.1.0",
-  "identifier": "dev.granola-rs.desktop",
+  "identifier": "dev.juanola.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Granola RS",
+        "title": "Juanola",
         "label": "main",
         "width": 1180,
         "height": 780,
@@ -22,13 +22,21 @@
         "hiddenTitle": true
       }
     ],
-    "security": { "csp": null },
+    "security": {
+      "csp": null
+    },
     "macOSPrivateApi": false
   },
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.png"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.png"
+    ],
     "macOS": {
       "minimumSystemVersion": "13.0",
       "entitlements": "entitlements.plist"

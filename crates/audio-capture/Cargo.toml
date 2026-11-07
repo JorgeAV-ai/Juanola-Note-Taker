@@ -1,21 +1,27 @@
 [package]
-name = "granola-audio-capture"
+name = "juanola-audio-capture"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-granola-core-types.workspace = true
+juanola-core-types.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 serde.workspace = true
-# cpal = "0.16"                          # micrófono (todas las plataformas), WASAPI loopback, PipeWire
-# rubato = "0.16"                        # resampling a 16 kHz mono
+# Micrófono en todas las plataformas. El audio del sistema también va por cpal:
+# en macOS 14.6+ `build_input_stream` sobre un dispositivo de salida crea un
+# Core Audio process tap + aggregate device (sin permiso de grabación de pantalla);
+# en Windows usa WASAPI loopback.
+cpal = "0.18"
+# Resample a 16 kHz mono.
+rubato = "5"
 
-# [target.'cfg(target_os = "macos")'.dependencies]
-# screencapturekit = "..."               # system audio en macOS 13-14.1
-# objc2 / coreaudio-sys                  # Core Audio process taps en macOS 14.2+
+[dev-dependencies]
+hound = "3"
+anyhow.workspace = true
+tracing-subscriber.workspace = true
+tokio = { workspace = true, features = ["signal"] }
 
-# [target.'cfg(target_os = "windows")'.dependencies]
-# wasapi = "0.19"                        # loopback del render device por defecto
+# Pendiente: `screencapturekit` como fallback para macOS 13 – 14.5.

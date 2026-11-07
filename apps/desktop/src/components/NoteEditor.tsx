@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -6,8 +7,9 @@ import TaskItem from "@tiptap/extension-task-item";
 import Image from "@tiptap/extension-image";
 
 // Editor de notas crudas. Markdown ligero (#, -, [], **, *) lo da StarterKit + TaskList.
-// Fase 1: marca `ai-text` (gris) y nodo `transcript-ref` (lupa) para las notas mejoradas.
-export function NoteEditor() {
+// Guarda el documento ProseMirror (debounce de 600 ms) con `onChange`.
+export function NoteEditor({ initial, onChange }: { initial: unknown; onChange: (doc: unknown) => void }) {
+  const timer = useRef<number | undefined>(undefined);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -16,7 +18,21 @@ export function NoteEditor() {
       TaskItem.configure({ nested: true }),
       Image.configure({ inline: false, allowBase64: true }),
     ],
-    content: "",
+    content: (initial as object) ?? "",
+    onUpdate: ({ editor }) => {
+      window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => onChange(editor.getJSON()), 600);
+    },
   });
+  // Guardar lo pendiente al salir de la nota.
+  useEffect(
+    () => () => {
+      if (timer.current !== undefined && editor) {
+        window.clearTimeout(timer.current);
+        onChange(editor.getJSON());
+      }
+    },
+    [editor],
+  );
   return <EditorContent editor={editor} className="editor" />;
 }

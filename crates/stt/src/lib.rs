@@ -1,8 +1,8 @@
 //! Reconocimiento de voz. Trait único con dos modos: streaming (transcript en
 //! vivo por canal) y batch (re-transcripción de calidad al terminar).
 
-use granola_audio_capture::AudioFrame;
-use granola_core_types::Channel;
+use juanola_audio_capture::AudioFrame;
+use juanola_core_types::Channel;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -53,10 +53,6 @@ pub trait Vad: Send {
     fn is_speech(&mut self, samples: &[f32]) -> bool;
 }
 
-pub mod backends {
-    //! Implementaciones concretas, gated por features de Cargo.
-    #[cfg(feature = "sherpa")]
-    pub mod sherpa {}
-    #[cfg(feature = "whisper")]
-    pub mod whisper {}
-}
+pub mod backends;
+pub mod segmenter;
+pub mod worker;

@@ -1,5 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    granola_desktop_lib::run()
+    juanola_desktop_lib::run()
 }
