@@ -1,39 +1,51 @@
-# Juanola
+# ⚡ Juanola Note Taker
 
-Réplica de [Granola](https://www.granola.ai) con modelos open source ejecutados en local. Núcleo en Rust, UI en Tauri v2 + React (misma estructura y features que Granola). El plan completo está en [docs/plan.md](docs/plan.md).
+**The lightest, fastest & safest AI note taker.**
 
-## Estructura
+Native Rust core. 100% on-device. Open-source models. Your meetings never leave your machine.
+
+Juanola is an open-source, local-first take on [Granola](https://www.granola.ai): it listens to your meetings (mic + system audio), transcribes them live, and turns your rough notes into polished, structured summaries — all without sending a single byte to the cloud.
+
+## Why Juanola?
+
+- 🪶 **Lightest** — Rust core + Tauri v2 instead of a heavy Electron shell. Tiny footprint, instant startup.
+- 🚀 **Fastest** — Streaming speech-to-text and local LLM inference with GPU backends (Metal, MLX, llama.cpp).
+- 🔒 **Safest** — Everything runs on your device. No accounts, no uploads, no telemetry. You choose the models.
+- 🧠 **Smart** — Enhanced notes, meeting recipes, follow-ups, briefs, and "Ask anything" chat over all your notes.
+- 🔌 **Open** — Local MCP server and REST API so your own tools and agents can use your notes.
+
+## Project layout
 
 ```
-apps/desktop/          Tauri v2 (src-tauri) + frontend React/TipTap (src)
-crates/core-types      Modelos de dominio (Note, Segment, Folder, Recipe, …)
-crates/db              SQLite (sqlx) + migraciones
-crates/search          FTS (tantivy) + vectorial
-crates/audio-capture   Mic + audio del sistema por SO, resample, VU meters
-crates/audio-store     Grabación opcional, retención, snapshots
-crates/stt             Traits de STT streaming/batch + VAD (sherpa-onnx, whisper.cpp)
-crates/diarize         Diarización y fusión con speaker tags
+apps/desktop/          Tauri v2 (src-tauri) + React/TipTap frontend (src)
+crates/core-types      Domain models (Note, Segment, Folder, Recipe, …)
+crates/db              SQLite (sqlx) + migrations
+crates/search          Full-text (tantivy) + vector search
+crates/audio-capture   Mic + system audio per OS, resampling, VU meters
+crates/audio-store     Optional recording, retention, snapshots
+crates/stt             Streaming/batch STT traits + VAD (sherpa-onnx, whisper.cpp)
+crates/diarize         Diarization and merging with speaker tags
 crates/llm             ChatModel: llama.cpp, mistral.rs, OpenAI-compatible
 crates/embed           Embeddings
-crates/prompts         Plantillas de prompts
-crates/enhance         Pipelines: enhance, chat, recipes, briefs, follow-up
+crates/prompts         Prompt templates
+crates/enhance         Pipelines: enhance, chat, recipes, briefs, follow-ups
 crates/calendar        Google, Microsoft, (Apple)
-crates/detect          Detección de reuniones y mic en uso
-crates/speaker-tags    Nombres de hablantes vía Accesibilidad
-crates/dictation       Voice Typing
-crates/models          Catálogo models.toml, descarga, backends GPU
-crates/mcp-server      MCP local (9 tools de Granola)
-crates/api-server      API REST local
+crates/detect          Meeting detection and mic-in-use detection
+crates/speaker-tags    Speaker names via Accessibility APIs
+crates/dictation       Voice typing
+crates/models          models.toml catalog, downloads, GPU backends
+crates/mcp-server      Local MCP server
+crates/api-server      Local REST API
 crates/integrations    Slack, Notion, CRMs, Zapier, Gmail
-models.toml            Slots de modelos (los eliges tú)
+models.toml            Model slots (you pick them)
 ```
 
-## Requisitos
+## Requirements
 
-- Rust estable (1.85+), Node 20+, pnpm.
-- macOS: Xcode Command Line Tools. Linux: dependencias de Tauri (webkit2gtk, etc.).
+- Rust stable (1.85+), Node 20+, pnpm.
+- macOS: Xcode Command Line Tools. Linux: Tauri dependencies (webkit2gtk, etc.).
 
-## Desarrollo
+## Development
 
 ```bash
 cargo check --workspace
@@ -43,6 +55,8 @@ cargo check --workspace
 cd apps/desktop && pnpm install && pnpm tauri dev
 ```
 
-## Estado
+## Status
 
-Esqueleto (fase 0 del plan): workspace compila, app arranca con shell de UI (sidebar, Home, nota con editor TipTap, píldora de grabación, barra Ask anything). Los backends reales de audio, STT y LLM están gated por features y se activan al elegir modelos.
+Early stage. The workspace compiles and the app boots with the full UI shell (sidebar, Home, note view with TipTap editor, recording pill, "Ask anything" bar). Real audio, STT and LLM backends are feature-gated and activate once you pick your models.
+
+The full roadmap lives in [docs/plan.md](docs/plan.md).
