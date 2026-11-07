@@ -1,4 +1,8 @@
-# ⚡ Juanola Note Taker
+<p align="center">
+  <img src="docs/assets/logo.svg" alt="Juanola Note Taker logo" width="120" />
+</p>
+
+# ◆ Juanola Note Taker
 
 **The lightest, fastest & safest AI note taker.**
 
