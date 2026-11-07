@@ -1,10 +1,9 @@
-<p align="center">
-  <img src="docs/assets/logo.svg" alt="Juanola Note Taker logo" width="90" />
-</p>
+<h1 align="center">
+  <img src="docs/assets/logo.svg" alt="" height="44" align="absmiddle" />
+  Juanola Note Taker
+</h1>
 
-# ◆ Juanola Note Taker
-
-**The lightest, fastest & safest AI note taker.**
+<p align="center"><b>The lightest, fastest &amp; safest AI note taker.</b></p>
 
 Native Rust core. 100% on-device. Open-source models. Your meetings never leave your machine.
 
