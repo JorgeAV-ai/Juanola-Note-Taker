@@ -5,7 +5,8 @@
 //   lupa de cita → edición a mano (se guarda como texto del usuario) → tarea →
 //   cambio de pestaña → Pause/Resume → segunda grabación en la misma nota.
 import { invoke } from "@tauri-apps/api/core";
-import { ipc, type EnhancedNotes } from "../lib/ipc";
+import { emit } from "@tauri-apps/api/event";
+import { events, ipc, type EnhancedNotes, type RecordingState } from "../lib/ipc";
 
 const log = (line: string) => invoke("autotest_log", { line }).catch(() => {});
 const say = (text: string) => invoke("autotest_say", { text, voice: "Mónica" });
@@ -86,6 +87,8 @@ export async function runAutotest(mode: string) {
   try {
     if (mode === "enhance") await enhanceOnly();
     else if (mode === "ui") await sidebarFlow();
+    else if (mode === "detect") await detectFlow();
+    else if (mode === "detect-live") await detectLiveFlow();
     else await flow();
   } catch (e) {
     check(false, "excepción", String(e));
@@ -409,4 +412,117 @@ async function sidebarFlow() {
   button(".note-confirm button", "Borrar carpeta")?.click();
   await sleep(500);
   check(!document.querySelector(`.sidebar-item.folder[data-folder-id="${folderId}"]`), "carpeta borrada");
+}
+
+// JUANOLA_AUTOTEST=detect: avisos de reunión y calendario. Muestra un aviso de
+// llamada de prueba, pulsa «Take Notes» (abre una nota y empieza a grabar),
+// simula que la llamada termina (debe parar sola) y prueba cerrar un aviso de
+// calendario. Con JUANOLA_AUTOTEST_NO_MIC=1 no necesita micrófono.
+async function detectFlow() {
+  const settings = await ipc.detectionSettings();
+  check(typeof settings.meetings === "boolean", "ajustes de detección", JSON.stringify(settings));
+  let access = await ipc.calendarAccess();
+  if (access === "not_determined") {
+    log("     pidiendo permiso de calendario (hay que pulsar «Permitir»)…");
+    access = await ipc.requestCalendarAccess();
+  }
+  check(access === "granted", "permiso de calendario", access);
+  for (const line of await invoke<string[]>("calendar_diagnostics")) log(`     ${line}`);
+  const upcoming = access === "granted" ? await ipc.comingUp() : [];
+  log(`     calendario: ${access}, ${upcoming.length} eventos próximos`);
+  for (const e of upcoming.slice(0, 8)) log(`     evento: ${e.start} · ${e.title} · ${e.attendees.length} asist. · ${e.conference_url ?? "sin enlace"}`);
+  // Lo que pinta «Coming up» en Home (el autotest arranca en Home).
+  await waitFor("Coming up cargado", () => document.querySelector(".coming-up"), 5000);
+  await sleep(500);
+  const shown = Array.from(document.querySelectorAll(".coming-event")).map((b) => b.textContent?.trim());
+  check(shown.length === Math.min(5, upcoming.length), "Coming up pinta los eventos", JSON.stringify(shown));
+  if (upcoming[0]) log(`     primero: ${upcoming[0].title} · ${upcoming[0].start} · ${upcoming[0].attendees.length} asistentes · ${upcoming[0].conference_url ?? "sin enlace"}`);
+
+  let state: RecordingState | null = null;
+  const un = events.recordingState((e) => {
+    if (e.state !== "warning") state = e.state;
+  });
+  try {
+    await ipc.simulateDetection("adhoc");
+    await sleep(1500);
+    const payload = await ipc.notificationPayload();
+    check(payload?.title === "Meeting detected" && payload.body === "Zoom", "aviso «Meeting detected · Zoom»", JSON.stringify(payload));
+
+    const before = document.querySelector<HTMLElement>(".note[data-note-id]")?.dataset.noteId ?? null;
+    await ipc.notificationTakeNotes();
+    const noteEl = await waitFor("nota abierta por «Take Notes»", () => {
+      const el = document.querySelector<HTMLElement>(".note[data-note-id]");
+      return el && el.dataset.noteId !== before ? el : null;
+    }, 5000);
+    check(!!noteEl, "«Take Notes» abre una nota nueva");
+    check((await ipc.notificationPayload()) === null, "el aviso se cierra al pulsar «Take Notes»");
+    const noteId = noteEl?.dataset.noteId;
+    if (noteId) await ipc.setNoteTitle(noteId, `Autotest detect ${new Date().toLocaleString()}`);
+
+    const started = await waitFor("grabación en marcha", () => (state === "recording" ? true : state === "error" ? "error" : null), 30_000);
+    check(started === true, "la grabación empieza sola", String(state));
+    if (started === true) {
+      await sleep(3000);
+      // La app de la llamada suelta el micrófono → debe parar y lanzar el enhance.
+      await emit("detect://meeting-ended", { bundle_id: "us.zoom.xos", name: "Zoom", kind: "zoom" });
+      const stopped = await waitFor("grabación parada al terminar la llamada", () => (state === "stopped" ? true : null), 20_000);
+      check(!!stopped, "al terminar la llamada la grabación para sola");
+    } else {
+      await ipc.stopRecording().catch(() => {});
+    }
+
+    await ipc.simulateDetection("calendar");
+    await sleep(1200);
+    const cal = await ipc.notificationPayload();
+    check(cal?.kind === "calendar" && cal.body.startsWith("Starts in"), "aviso de calendario", JSON.stringify(cal && { title: cal.title, body: cal.body }));
+    await ipc.notificationDismiss();
+    check((await ipc.notificationPayload()) === null, "× cierra el aviso");
+
+    // Limpieza: la nota de prueba a la papelera cuando termine el enhance.
+    if (noteId) {
+      await sleep(1000);
+      await waitFor("enhance terminado", () => !document.querySelector(".enhancing") || null, 120_000);
+      await ipc.trashNote(noteId).catch((e) => log(`     no se pudo borrar la nota: ${e}`));
+    }
+  } finally {
+    un.then((f) => f());
+  }
+}
+
+// JUANOLA_AUTOTEST=detect-live: espera un aviso real (el script abre Chrome
+// con una página que pide el micrófono), pulsa «Take Notes» y espera a que la
+// grabación pare sola cuando Chrome suelta el micrófono.
+async function detectLiveFlow() {
+  let state: RecordingState | null = null;
+  const un = events.recordingState((e) => {
+    if (e.state !== "warning") state = e.state;
+  });
+  try {
+    log("     esperando un aviso real…");
+    let payload = null;
+    const t0 = performance.now();
+    while (!payload && performance.now() - t0 < 90_000) {
+      payload = await ipc.notificationPayload();
+      if (!payload) await sleep(500);
+    }
+    check(!!payload, "aviso real", JSON.stringify(payload && { title: payload.title, body: payload.body, app: payload.app?.bundle_id }));
+    if (!payload) return;
+    await sleep(4000); // tiempo para verlo en pantalla
+    await ipc.notificationTakeNotes();
+    const noteEl = await waitFor("nota abierta", () => document.querySelector<HTMLElement>(".note[data-note-id]"), 5000);
+    const noteId = noteEl?.dataset.noteId;
+    if (noteId) await ipc.setNoteTitle(noteId, `Autotest detect-live ${new Date().toLocaleString()}`);
+    const started = await waitFor("grabación en marcha", () => (state === "recording" ? true : state === "error" ? "error" : null), 30_000);
+    check(started === true, "la grabación empieza sola", String(state));
+    log("     esperando a que Chrome suelte el micrófono…");
+    const stopped = await waitFor("grabación parada al cerrar Chrome", () => (state === "stopped" ? true : null), 90_000);
+    check(!!stopped, "al soltar el micrófono la grabación para sola");
+    if (noteId) {
+      await sleep(1000);
+      await waitFor("enhance terminado", () => !document.querySelector(".enhancing") || null, 120_000);
+      await ipc.trashNote(noteId).catch(() => {});
+    }
+  } finally {
+    un.then((f) => f());
+  }
 }

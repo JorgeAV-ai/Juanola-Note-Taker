@@ -48,18 +48,53 @@ export interface EnhancedNotes {
   edited?: boolean;
 }
 
+export interface Attendee {
+  email: string;
+  name: string | null;
+  declined: boolean;
+  is_self: boolean;
+}
+
 export interface CalendarEvent {
   id: string;
+  provider: string;
+  calendar_id: string;
   title: string;
   start: string;
   end: string;
-  attendees: { email: string; name: string | null }[];
+  attendees: Attendee[];
   conference_url: string | null;
+  recurring_event_id: string | null;
+  description: string | null;
+}
+
+export type CalendarAccess = "granted" | "denied" | "not_determined" | "write_only" | "unsupported";
+
+export interface DetectionSettings {
+  /** Avisar cuando otra app abre el micrófono. */
+  meetings: boolean;
+  /** Avisar 1 minuto antes de los eventos del calendario. */
+  calendar_reminders: boolean;
+}
+
+export interface DetectedApp {
+  bundle_id: string;
+  name: string;
+  kind: string;
+}
+
+/** Aviso de reunión (ventana `notification`, ver detect.rs). */
+export interface MeetingNotice {
+  kind: "adhoc" | "calendar";
+  title: string;
+  body: string;
+  app: DetectedApp | null;
+  event: CalendarEvent | null;
 }
 
 export type RecordingState = "starting" | "recording" | "paused" | "finishing" | "stopped" | "error" | "warning";
 
-export type SettingsAction = "mic_settings" | "audio_capture_settings";
+export type SettingsAction = "mic_settings" | "audio_capture_settings" | "calendar_settings";
 
 export interface RecordingStateEvent {
   note_id: string;
@@ -125,6 +160,16 @@ export const ipc = {
   enhanceNote: (id: string) => invoke<EnhancedNotes>("enhance_note", { id }),
   openPrivacySettings: (kind: SettingsAction) => invoke<void>("open_privacy_settings", { kind }),
   comingUp: () => invoke<CalendarEvent[]>("coming_up"),
+  calendarAccess: () => invoke<CalendarAccess>("calendar_access"),
+  requestCalendarAccess: () => invoke<CalendarAccess>("request_calendar_access"),
+  openEventNote: (event: CalendarEvent) => invoke<Note>("open_event_note", { event }),
+  noteEvent: (noteId: string) => invoke<CalendarEvent | null>("note_event", { noteId }),
+  detectionSettings: () => invoke<DetectionSettings>("detection_settings"),
+  setDetectionSettings: (settings: DetectionSettings) => invoke<void>("set_detection_settings", { settings }),
+  notificationPayload: () => invoke<MeetingNotice | null>("notification_payload"),
+  notificationTakeNotes: () => invoke<void>("notification_take_notes"),
+  notificationDismiss: () => invoke<void>("notification_dismiss"),
+  simulateDetection: (kind: "adhoc" | "calendar") => invoke<void>("simulate_detection", { kind }),
   trashNote: (id: string) => invoke<void>("trash_note", { id }),
   restoreNote: (id: string) => invoke<void>("restore_note", { id }),
   listTrashedNotes: () => invoke<Note[]>("list_trashed_notes"),
@@ -153,6 +198,12 @@ export const events = {
     listen<LiveSegment>("transcript://segment", (e) => cb(e.payload)),
   noteStatus: (cb: (e: { note_id: string; status: NoteStatus; message?: string }) => void): Promise<UnlistenFn> =>
     listen<{ note_id: string; status: NoteStatus; message?: string }>("note://status", (e) => cb(e.payload)),
+  calendarChanged: (cb: () => void): Promise<UnlistenFn> => listen("calendar://changed", () => cb()),
+  takeNotes: (cb: (e: { note_id: string }) => void): Promise<UnlistenFn> =>
+    listen<{ note_id: string }>("detect://take-notes", (e) => cb(e.payload)),
+  meetingEnded: (cb: (e: DetectedApp) => void): Promise<UnlistenFn> => listen<DetectedApp>("detect://meeting-ended", (e) => cb(e.payload)),
+  notificationUpdate: (cb: (e: MeetingNotice) => void): Promise<UnlistenFn> =>
+    listen<MeetingNotice>("notification://update", (e) => cb(e.payload)),
   modelsProgress: (cb: (e: ModelProgress) => void): Promise<UnlistenFn> => listen<ModelProgress>("models://progress", (e) => cb(e.payload)),
   modelsDone: (cb: (e: { ok: boolean; error?: string }) => void): Promise<UnlistenFn> =>
     listen<{ ok: boolean; error?: string }>("models://done", (e) => cb(e.payload)),

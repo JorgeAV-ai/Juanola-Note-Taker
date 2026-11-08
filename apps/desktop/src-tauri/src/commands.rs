@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use juanola_calendar::Access;
 use juanola_core_types::{CalendarEvent, Id, Note, NoteStatus, Segment};
 use juanola_db::repo;
 use juanola_db::repo::folders::Folder;
@@ -12,6 +13,7 @@ use juanola_llm::backends::llamacpp::LlamaCpp;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
 
+use crate::detect::{self, DetectionSettings, Notification, NotificationKind, TakeNotes};
 use crate::recording::Active;
 use crate::state::AppState;
 
@@ -208,6 +210,7 @@ pub async fn stop_recording(state: State<'_, AppState>) -> Res<usize> {
         return Ok(0);
     };
     tracing::info!(note_id = %active.note_id, "stop_recording");
+    state.detection.set_origin_app(None);
     tauri::async_runtime::spawn_blocking(move || active.stop()).await.map_err(e)?
 }
 
@@ -281,10 +284,153 @@ pub fn list_audio_devices() -> Vec<juanola_audio_capture::AudioDevice> {
     juanola_audio_capture::CpalCapture::new().list_input_devices().unwrap_or_default()
 }
 
+// --------------------------------------------------- calendario y detección
+
+/// Próximas reuniones del calendario (relee EventKit, unos milisegundos;
+/// vacío sin permiso).
 #[tauri::command]
-pub async fn coming_up(_state: State<'_, AppState>) -> Res<Vec<CalendarEvent>> {
-    // Fase 2: juanola_calendar
-    Ok(vec![])
+pub async fn coming_up(state: State<'_, AppState>) -> Res<Vec<CalendarEvent>> {
+    let events = if detect::calendar_access() == Access::Granted { detect::refresh_events(&state.detection) } else { Vec::new() };
+    Ok(juanola_calendar::coming_up(events, chrono::Utc::now()))
+}
+
+#[tauri::command]
+pub fn calendar_access() -> Access {
+    detect::calendar_access()
+}
+
+/// Diagnóstico para el autotest: calendarios visibles y eventos del último y
+/// el próximo mes (sin filtrar).
+#[tauri::command]
+pub fn calendar_diagnostics() -> Vec<String> {
+    #[cfg(target_os = "macos")]
+    {
+        let now = chrono::Utc::now();
+        let mut out: Vec<String> =
+            juanola_calendar::eventkit::calendars().into_iter().map(|(_, t, s)| format!("calendario: {t} ({s})")).collect();
+        let events = juanola_calendar::eventkit::events(now - chrono::Duration::days(30), now + chrono::Duration::days(30));
+        out.push(format!("eventos ±30 días (sin todo el día): {}", events.len()));
+        out.extend(events.iter().rev().take(5).map(|e| format!("  {} · {} · {} asist.", e.start, e.title, e.attendees.len())));
+        out
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        Vec::new()
+    }
+}
+
+/// Pide el permiso de calendario y espera la respuesta (hasta 2 min).
+#[tauri::command]
+pub async fn request_calendar_access(app: AppHandle) -> Res<Access> {
+    let access = tauri::async_runtime::spawn_blocking(detect::request_calendar_access).await.map_err(e)?;
+    // La Home vuelve a leer el calendario aunque el permiso se haya concedido desde otra vista.
+    let _ = app.emit("calendar://changed", access);
+    Ok(access)
+}
+
+/// Nota de un evento: la que ya tenga o una nueva con su título. Guarda una
+/// copia del evento para que la nota conserve hora y asistentes.
+async fn note_for_event(state: &AppState, event: &CalendarEvent) -> Res<Note> {
+    repo::events::upsert(&state.db, event).await.map_err(e)?;
+    if let Some(n) = repo::notes::find_by_event(&state.db, &event.id).await.map_err(e)? {
+        return Ok(n);
+    }
+    let ws = repo::workspaces::ensure_personal(&state.db).await.map_err(e)?;
+    let n = repo::notes::create(&state.db, ws, &event.title).await.map_err(e)?;
+    repo::notes::set_calendar_event(&state.db, n.id, Some(&event.id)).await.map_err(e)?;
+    repo::notes::get(&state.db, n.id).await.map_err(e)?.ok_or_else(|| "la nota no existe".into())
+}
+
+#[tauri::command]
+pub async fn open_event_note(state: State<'_, AppState>, event: CalendarEvent) -> Res<Note> {
+    note_for_event(&state, &event).await
+}
+
+/// Evento asociado a una nota, si lo tiene.
+#[tauri::command]
+pub async fn note_event(state: State<'_, AppState>, note_id: Id) -> Res<Option<CalendarEvent>> {
+    let Some(note) = repo::notes::get(&state.db, note_id).await.map_err(e)? else { return Ok(None) };
+    match note.calendar_event_id {
+        Some(id) => repo::events::get(&state.db, &id).await.map_err(e),
+        None => Ok(None),
+    }
+}
+
+#[tauri::command]
+pub fn detection_settings(state: State<'_, AppState>) -> DetectionSettings {
+    state.detection.settings()
+}
+
+#[tauri::command]
+pub async fn set_detection_settings(state: State<'_, AppState>, settings: DetectionSettings) -> Res<()> {
+    state.detection.set_settings(settings);
+    repo::settings::set(&state.db, detect::KEY_MEETINGS, &settings.meetings).await.map_err(e)?;
+    repo::settings::set(&state.db, detect::KEY_REMINDERS, &settings.calendar_reminders).await.map_err(e)
+}
+
+/// Lo que muestra la ventana de aviso al abrirse.
+#[tauri::command]
+pub fn notification_payload(state: State<'_, AppState>) -> Option<Notification> {
+    state.detection.current()
+}
+
+/// «Take Notes»: abre (o crea) la nota, trae la ventana principal y le pide
+/// que empiece a grabar. En un aviso de calendario abre también la videollamada.
+#[tauri::command]
+pub async fn notification_take_notes(app: AppHandle, state: State<'_, AppState>) -> Res<()> {
+    let Some(n) = state.detection.current() else { return Ok(()) };
+    detect::close(&app);
+    let note = match &n.event {
+        Some(ev) => note_for_event(&state, ev).await?,
+        None => {
+            let ws = repo::workspaces::ensure_personal(&state.db).await.map_err(e)?;
+            repo::notes::create(&state.db, ws, "").await.map_err(e)?
+        }
+    };
+    if n.kind == NotificationKind::Calendar {
+        if let Some(url) = n.event.as_ref().and_then(|ev| ev.conference_url.clone()) {
+            use tauri_plugin_opener::OpenerExt;
+            if let Err(err) = app.opener().open_url(url, None::<&str>) {
+                tracing::warn!(error = %err, "no se pudo abrir la videollamada");
+            }
+        }
+    }
+    state.detection.set_origin_app(n.app.as_ref().map(|a| a.bundle_id.clone()));
+    detect::focus_main(&app);
+    tracing::info!(note_id = %note.id, "take notes");
+    app.emit_to("main", "detect://take-notes", TakeNotes { note_id: note.id }).map_err(e)
+}
+
+#[tauri::command]
+pub fn notification_dismiss(app: AppHandle) {
+    detect::close(&app);
+}
+
+/// Muestra un aviso de prueba («Probar aviso» en Ajustes y autotest): `kind`
+/// es `"adhoc"` o `"calendar"`.
+#[tauri::command]
+pub fn simulate_detection(app: AppHandle, kind: String) -> Res<()> {
+    let now = chrono::Utc::now();
+    let n = if kind == "calendar" {
+        let event = CalendarEvent {
+            id: format!("test:{}", now.timestamp()),
+            provider: "test".into(),
+            calendar_id: "test".into(),
+            title: "Reunión de prueba".into(),
+            start: now + chrono::Duration::seconds(50),
+            end: now + chrono::Duration::minutes(30),
+            attendees: vec![],
+            conference_url: None,
+            recurring_event_id: None,
+            description: None,
+        };
+        detect::calendar_notification(&event, now)
+    } else {
+        let detected = juanola_detect::classify("us.zoom.xos").ok_or("sin app")?;
+        detect::adhoc_notification(detected, None)
+    };
+    detect::show(&app, n);
+    Ok(())
 }
 
 /// Abre el panel de privacidad de Ajustes del Sistema que corresponde a `kind`
@@ -294,6 +440,7 @@ pub fn open_privacy_settings(kind: String) -> Res<()> {
     let pane = match kind.as_str() {
         "mic_settings" => "Privacy_Microphone",
         "audio_capture_settings" => "Privacy_ScreenCapture",
+        "calendar_settings" => "Privacy_Calendars",
         other => return Err(format!("ajuste desconocido: {other}")),
     };
     std::process::Command::new("open")

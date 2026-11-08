@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use juanola_llm::backends::llamacpp::LlamaCpp;
 
+use crate::detect::{Detection, DetectionSettings};
 use crate::models::Models;
 use crate::recording::{Active, Paths};
 
@@ -16,12 +17,21 @@ pub struct AppState {
     pub llm: tokio::sync::Mutex<Option<Arc<LlamaCpp>>>,
     /// Catálogo, estado y descarga de los modelos.
     pub models: Arc<Models>,
+    /// Detección de reuniones, avisos y caché del calendario.
+    pub detection: Detection,
 }
 
 impl AppState {
-    pub fn new(db: juanola_db::Db, data_dir: PathBuf) -> Self {
+    pub fn new(db: juanola_db::Db, data_dir: PathBuf, detection: DetectionSettings) -> Self {
         let models = Arc::new(Models::new(&data_dir));
-        Self { db, data_dir, recording: Mutex::new(None), llm: tokio::sync::Mutex::new(None), models }
+        Self {
+            db,
+            data_dir,
+            recording: Mutex::new(None),
+            llm: tokio::sync::Mutex::new(None),
+            models,
+            detection: Detection::new(detection),
+        }
     }
 
     /// Libera el modelo antes de salir. Si sigue cargado cuando el proceso

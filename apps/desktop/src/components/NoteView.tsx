@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { AlignLeft, CalendarDays, ChevronDown, Ellipsis, Folder, FolderMinus, FolderPlus, Sparkles, Trash2, UsersRound } from "lucide-react";
-import { events, ipc, type Note, MODELS_MISSING } from "@/lib/ipc";
+import { events, ipc, type CalendarEvent, type Note, MODELS_MISSING } from "@/lib/ipc";
 import { useModels } from "@/state/models";
-import { dayLabel } from "@/lib/dates";
+import { dayLabel, timeLabel } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { useTranscript } from "@/state/transcript";
 import { useLibrary } from "@/state/library";
@@ -35,13 +35,14 @@ type Tab = "mine" | "enhanced";
 // fecha y asistentes, carpeta, más) y abajo la píldora de grabación junto a
 // «Ask anything». Al parar la grabación se generan las notas mejoradas; si el
 // usuario ya las había editado, se pregunta antes de sustituirlas.
-export function NoteView({ id, onTrashed }: { id: string; onTrashed: () => void }) {
+export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?: number; onTrashed: () => void }) {
   const [note, setNote] = useState<Note | null>(null);
   const [tab, setTab] = useState<Tab>("mine");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [folder, setFolder] = useState<string | null>(null);
+  const [event, setEvent] = useState<CalendarEvent | null>(null);
   const folders = useLibrary((s) => s.folders);
   const reloadFolders = useLibrary((s) => s.reload);
   const load = useTranscript((s) => s.load);
@@ -55,6 +56,7 @@ export function NoteView({ id, onTrashed }: { id: string; onTrashed: () => void 
     });
     load(id);
     ipc.getNoteFolder(id).then(setFolder).catch(() => setFolder(null));
+    ipc.noteEvent(id).then(setEvent).catch(() => setEvent(null));
     const un = events.noteStatus((e) => {
       if (e.note_id !== id) return;
       setBusy(e.status === "enhancing");
@@ -155,12 +157,13 @@ export function NoteView({ id, onTrashed }: { id: string; onTrashed: () => void 
           </Button>
         )}
 
-        <div className="flex h-10 items-center gap-3 rounded-full border border-line px-4 text-[15px] text-ink-2">
+        <div className="note-meta flex h-10 items-center gap-3 rounded-full border border-line px-4 text-[15px] text-ink-2">
           <span className="flex items-center gap-2">
-            <CalendarDays className="size-[17px]" /> {dayLabel(new Date(note.created_at))}
+            <CalendarDays className="size-[17px]" /> {dayLabel(new Date(event?.start ?? note.created_at))}
+            {event && <span className="text-muted">{timeLabel(new Date(event.start))}</span>}
           </span>
-          <span className="flex items-center gap-2">
-            <UsersRound className="size-[17px]" /> Me
+          <span className="flex items-center gap-2" title={event ? attendeeNames(event) : undefined}>
+            <UsersRound className="size-[17px]" /> {event ? attendeeLabel(event) : "Me"}
           </span>
         </div>
 
@@ -231,6 +234,7 @@ export function NoteView({ id, onTrashed }: { id: string; onTrashed: () => void 
         )}
         <RecordingPill
           noteId={id}
+          autostart={autostart}
           onStopped={(saved) => (saved > 0 ? requestEnhance() : setError("No se ha transcrito nada."))}
           askBar={<AskAnythingBar recipe="Write follow up email" onAsk={() => setError("El chat todavía no está conectado al modelo.")} />}
         />
@@ -248,4 +252,14 @@ export function NoteView({ id, onTrashed }: { id: string; onTrashed: () => void 
       </AlertDialog>
     </div>
   );
+}
+
+const personName = (a: CalendarEvent["attendees"][number]) => (a.is_self ? "Me" : a.name || a.email.split("@")[0]);
+const attendeeNames = (e: CalendarEvent) => e.attendees.filter((a) => !a.declined).map(personName).join(", ");
+
+// «Me», «Ana», «Ana +3»: como Granola, los extra se colapsan en «+N».
+function attendeeLabel(e: CalendarEvent) {
+  const others = e.attendees.filter((a) => !a.is_self && !a.declined);
+  if (others.length === 0) return "Me";
+  return others.length === 1 ? personName(others[0]) : `${personName(others[0])} +${others.length - 1}`;
 }

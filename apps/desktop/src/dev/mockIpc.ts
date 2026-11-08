@@ -3,7 +3,7 @@
 // llamadas quedan en `window.__ipcCalls` para inspeccionarlas.
 import { mockIPC } from "@tauri-apps/api/mocks";
 import { emit } from "@tauri-apps/api/event";
-import type { EnhancedNotes, Folder, ModelStatus, Note, Segment } from "../lib/ipc";
+import type { CalendarEvent, DetectionSettings, EnhancedNotes, Folder, MeetingNotice, ModelStatus, Note, Segment } from "../lib/ipc";
 
 const NOTE_ID = "00000000-0000-4000-8000-000000000001";
 const now = new Date().toISOString();
@@ -57,6 +57,45 @@ const models: ModelStatus[] = [
   { slot: "llm_main", name: "lfm3-1.7b", format: "gguf", repo: "LiquidAI/LFM3-1.7B-GGUF", size_mb: 1100, dir: "/mock/llm", installed: !modelsMissing, partial_bytes: 0 },
 ];
 let installTimer: ReturnType<typeof setInterval> | null = null;
+
+// Calendario: con `?calendar=none` está sin conectar.
+let calendarAccess = new URLSearchParams(location.search).get("calendar") === "none" ? "not_determined" : "granted";
+const at = (dayOffset: number, h: number, m = 0) => {
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(h, m, 0, 0);
+  return d;
+};
+const mkEvent = (id: string, title: string, start: Date, mins: number, people: string[], url: string | null): CalendarEvent => ({
+  id,
+  provider: "apple",
+  calendar_id: "work",
+  title,
+  start: start.toISOString(),
+  end: new Date(start.getTime() + mins * 60_000).toISOString(),
+  attendees: [{ email: "yo@juanola.dev", name: "Yo", declined: false, is_self: true }, ...people.map((p) => ({ email: `${p.toLowerCase()}@acme.com`, name: p, declined: false, is_self: false }))],
+  conference_url: url,
+  recurring_event_id: null,
+  description: null,
+});
+const soon = new Date(Date.now() + 20 * 60_000);
+const calendarEvents: CalendarEvent[] = [
+  mkEvent("apple:a", "Standup de producto", soon, 15, ["Laura", "Luis", "Marta"], "https://meet.google.com/abc-defg-hij"),
+  mkEvent("apple:b", "1:1 con Laura", at(0, 23, 0), 30, ["Laura"], null),
+  mkEvent("apple:c", "Revisión de diseño", at(1, 10, 0), 60, ["Marta", "Pablo"], "https://acme.zoom.us/j/123"),
+  mkEvent("apple:d", "Planificación Q1", at(1, 12, 30), 45, ["Luis", "Ana", "Pablo", "Laura"], null),
+  mkEvent("apple:e", "Entrevista cliente", at(2, 9, 0), 30, ["Cliente"], "https://teams.microsoft.com/l/meetup-join/x"),
+  mkEvent("apple:f", "Retro", at(3, 16, 0), 60, ["Laura", "Luis"], null),
+];
+const eventOf = new Map<string, string>();
+let detection: DetectionSettings = { meetings: true, calendar_reminders: true };
+const sampleNotice: MeetingNotice = {
+  kind: new URLSearchParams(location.search).get("notice") === "calendar" ? "calendar" : "adhoc",
+  title: new URLSearchParams(location.search).get("notice") === "calendar" ? "Standup de producto" : "Meeting detected",
+  body: new URLSearchParams(location.search).get("notice") === "calendar" ? "Starts in 1 min" : "Zoom",
+  app: { bundle_id: "us.zoom.xos", name: "Zoom", kind: "zoom" },
+  event: null,
+};
 
 const folders: Folder[] = [];
 const folderOf = new Map<string, string>();
@@ -225,7 +264,39 @@ export function installMockIpc() {
         case "autotest_config":
           return null;
         case "coming_up":
-          return [];
+          return calendarAccess === "granted" ? calendarEvents : [];
+        case "calendar_access":
+          return calendarAccess;
+        case "request_calendar_access":
+          calendarAccess = "granted";
+          return calendarAccess;
+        case "open_event_note": {
+          const ev = a.event as CalendarEvent;
+          const existing = [...eventOf].find(([, e]) => e === ev.id)?.[0];
+          if (existing && note(existing)) return note(existing);
+          const n: Note = { ...notes[0], id: crypto.randomUUID(), title: ev.title, enhanced_doc: null, status: "draft", calendar_event_id: ev.id };
+          notes.unshift(n);
+          eventOf.set(n.id, ev.id);
+          return n;
+        }
+        case "note_event":
+          return calendarEvents.find((e) => e.id === eventOf.get(a.noteId as string)) ?? null;
+        case "detection_settings":
+          return detection;
+        case "set_detection_settings":
+          detection = a.settings as DetectionSettings;
+          return null;
+        case "notification_payload":
+          return sampleNotice;
+        case "notification_take_notes": {
+          const n: Note = { ...notes[0], id: crypto.randomUUID(), title: "", enhanced_doc: null, status: "draft" };
+          notes.unshift(n);
+          emit("detect://take-notes", { note_id: n.id });
+          return null;
+        }
+        case "notification_dismiss":
+        case "simulate_detection":
+          return null;
         case "app_info":
           return { version: "dev", data_dir: "/mock" };
         default:

@@ -1,11 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { MeetingNotification } from "./components/MeetingNotification";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./styles/tokens.css";
 import { invoke } from "@tauri-apps/api/core";
 
 function render() {
+  // La ventana de aviso de reunión carga la misma página con otro hash.
+  if (location.hash.startsWith("#/notification")) {
+    document.documentElement.classList.add("notification-window");
+    ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(<MeetingNotification />);
+    return;
+  }
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
       <ErrorBoundary>
