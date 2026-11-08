@@ -136,3 +136,23 @@ pub async fn delete_forever(db: &Db, id: Id) -> Result<(), DbError> {
     sqlx::query("DELETE FROM notes WHERE id = ? AND trashed_at IS NOT NULL").bind(id.to_string()).execute(db.pool()).await?;
     Ok(())
 }
+
+/// Nota (no borrada) de un evento de calendario, si ya existe.
+pub async fn find_by_event(db: &Db, event_id: &str) -> Result<Option<Note>, DbError> {
+    let row = sqlx::query(&format!(
+        "SELECT {COLS} FROM notes WHERE calendar_event_id = ? AND trashed_at IS NULL ORDER BY created_at DESC LIMIT 1"
+    ))
+    .bind(event_id)
+    .fetch_optional(db.pool())
+    .await?;
+    row.as_ref().map(row_to_note).transpose()
+}
+
+pub async fn set_calendar_event(db: &Db, id: Id, event_id: Option<&str>) -> Result<(), DbError> {
+    sqlx::query("UPDATE notes SET calendar_event_id = ? WHERE id = ?")
+        .bind(event_id)
+        .bind(id.to_string())
+        .execute(db.pool())
+        .await?;
+    Ok(())
+}

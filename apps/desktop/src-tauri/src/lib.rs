@@ -1,6 +1,7 @@
 //! Punto de entrada de la app de escritorio. Registra plugins, estado y comandos.
 
 mod commands;
+mod detect;
 mod models;
 mod recording;
 mod state;
@@ -21,7 +22,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .plugin(tauri_plugin_window_state::Builder::new().build())
+        // El aviso de reunión se coloca solo; restaurarlo lo enseñaría y activaría la app.
+        .plugin(tauri_plugin_window_state::Builder::new().with_denylist(&[detect::WINDOW]).build())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -34,7 +36,14 @@ pub fn run() {
             std::fs::create_dir_all(&data_dir)?;
             let db_path = data_dir.join("juanola.sqlite");
             let db = tauri::async_runtime::block_on(juanola_db::Db::open(&db_path))?;
-            let state = state::AppState::new(db, data_dir);
+            let settings = tauri::async_runtime::block_on(async {
+                let get = |k| juanola_db::repo::settings::get::<bool>(&db, k);
+                detect::DetectionSettings {
+                    meetings: get(detect::KEY_MEETINGS).await.ok().flatten().unwrap_or(true),
+                    calendar_reminders: get(detect::KEY_REMINDERS).await.ok().flatten().unwrap_or(true),
+                }
+            });
+            let state = state::AppState::new(db, data_dir, settings);
             match state.models.status() {
                 Ok(models) => {
                     for m in models {
@@ -44,6 +53,7 @@ pub fn run() {
                 Err(e) => tracing::warn!(error = %e, "estado de los modelos"),
             }
             app.manage(state);
+            detect::spawn(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -84,10 +94,30 @@ pub fn run() {
             commands::enhance_note,
             commands::list_audio_devices,
             commands::coming_up,
+            commands::calendar_access,
+            commands::calendar_diagnostics,
+            commands::request_calendar_access,
+            commands::open_event_note,
+            commands::note_event,
+            commands::detection_settings,
+            commands::set_detection_settings,
+            commands::notification_payload,
+            commands::notification_take_notes,
+            commands::notification_dismiss,
+            commands::simulate_detection,
         ])
         .build(tauri::generate_context!())
         .expect("error al arrancar Juanola")
         .run(|app, event| {
+            // Al salir con el aviso abierto: devolverle su clase antes de que
+            // tao destruya las ventanas (ver `detect::float_over_fullscreen`).
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit = event {
+                use tauri::Manager;
+                if let Some(w) = app.get_webview_window(detect::WINDOW) {
+                    detect::restore_class(&w);
+                }
+            }
             if let tauri::RunEvent::Exit = event {
                 use tauri::Manager;
                 app.state::<state::AppState>().unload_llm();

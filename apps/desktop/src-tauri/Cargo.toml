@@ -12,7 +12,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon"] }
+tauri = { version = "2", features = ["tray-icon", "macos-private-api"] }
 tauri-plugin-opener = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-global-shortcut = "2"
@@ -42,3 +42,9 @@ juanola-models.workspace = true
 juanola-dictation.workspace = true
 chrono.workspace = true
 uuid.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# Que el aviso de reunión se vea encima de las apps a pantalla completa.
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSResponder", "NSWindow", "NSPanel", "NSView", "objc2-quartz-core"] }
+objc2-quartz-core = { version = "0.3", default-features = false, features = ["std", "CALayer"] }
+objc2 = "0.6"

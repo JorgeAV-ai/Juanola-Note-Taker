@@ -10,7 +10,10 @@ import { useTranscript } from "@/state/transcript";
 // (y parar/pausa mientras graba) a la izquierda de «Ask anything». Desplegada:
 // una tarjeta con el transcript (Them a la izquierda, Me a la derecha) y, en su
 // pie, las barras, parar, el micrófono y el idioma; tapa «Ask anything».
-export function RecordingPill({ noteId, onStopped, askBar }: { noteId: string; onStopped: (saved: number) => void; askBar: ReactNode }) {
+// Nonces de `autostart` ya atendidos (StrictMode monta los efectos dos veces).
+const autostarted = new Set<number>();
+
+export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId: string; autostart?: number; onStopped: (saved: number) => void; askBar: ReactNode }) {
   const [state, setState] = useState<RecordingState | "idle">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [action, setAction] = useState<SettingsAction | null>(null);
@@ -85,6 +88,32 @@ export function RecordingPill({ noteId, onStopped, askBar }: { noteId: string; o
       setMessage(String(e));
     }
   };
+
+  // Desde un aviso de reunión: empezar a grabar al abrir la nota.
+  useEffect(() => {
+    if (!autostart || autostarted.has(autostart)) return;
+    autostarted.add(autostart);
+    start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autostart]);
+
+  // La app de la llamada soltó el micrófono: la reunión terminó.
+  // Refs: el aviso puede llegar mucho después de montar, con `stop` y su
+  // `onStopped` ya renovados.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const stopRef = useRef(stop);
+  stopRef.current = stop;
+  useEffect(() => {
+    const un = events.meetingEnded((e) => {
+      if (e.note_id !== noteId) return;
+      if (stateRef.current === "recording" || stateRef.current === "paused") stopRef.current();
+    });
+    return () => {
+      un.then((f) => f());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noteId]);
 
   // Barras: altura según el nivel (RMS → dB, -60..0).
   const db = 20 * Math.log10(Math.max(level, 1e-6));

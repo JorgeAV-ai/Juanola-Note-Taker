@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Home } from "@/components/Home";
 import { NoteView } from "@/components/NoteView";
@@ -13,12 +13,13 @@ import { initModels } from "@/state/models";
 import { TopBar } from "@/components/TopBar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useLibrary } from "@/state/library";
-import { ipc } from "@/lib/ipc";
+import { events, ipc } from "@/lib/ipc";
 
 export type Route =
   | { kind: "home" }
   | { kind: "space" }
-  | { kind: "note"; id: string }
+  /** `autostart`: empezar a grabar al abrirla (nonce, para no repetirlo). */
+  | { kind: "note"; id: string; autostart?: number }
   | { kind: "folder"; id: string }
   | { kind: "trash" }
   | { kind: "chat"; q?: string }
@@ -34,6 +35,32 @@ export default function App() {
   useEffect(() => {
     reload();
     initModels();
+  }, [reload]);
+
+  // Fin de la llamada con la nota cerrada: no hay píldora que pare, así que se
+  // para aquí (la nota abierta lo hace ella, y lanza además el enhance).
+  const routeRef = useRef(route);
+  routeRef.current = route;
+  useEffect(() => {
+    const un = events.meetingEnded((e) => {
+      const r = routeRef.current;
+      if (r.kind === "note" && r.id === e.note_id) return;
+      ipc.stopRecording().catch((err) => console.error("no se pudo parar la grabación", err));
+    });
+    return () => {
+      un.then((f) => f());
+    };
+  }, []);
+
+  // «Take Notes» en un aviso de reunión: abre la nota y empieza a grabar.
+  useEffect(() => {
+    const un = events.takeNotes((e) => {
+      reload();
+      setRoute({ kind: "note", id: e.note_id, autostart: Date.now() });
+    });
+    return () => {
+      un.then((f) => f());
+    };
   }, [reload]);
 
   // Atajos de Granola: ⌘K búsqueda, ⌘, ajustes, ⌘N nota nueva.
@@ -82,7 +109,7 @@ export default function App() {
       view = <Home onOpenNote={openNote} onNavigate={setRoute} space />;
       break;
     case "note":
-      view = <NoteView key={route.id} id={route.id} onTrashed={() => setRoute({ kind: "home" })} />;
+      view = <NoteView key={route.id} id={route.id} autostart={route.autostart} onTrashed={() => setRoute({ kind: "home" })} />;
       break;
     case "folder":
       view = <FolderView key={route.id} id={route.id} onOpenNote={openNote} onNewNote={() => newNote(route.id)} onDeleted={() => setRoute({ kind: "home" })} />;

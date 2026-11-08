@@ -5,7 +5,9 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-thiserror.workspace = true
-tokio.workspace = true
 serde.workspace = true
-# side-huddle = "0.2"   # detecta Zoom/Teams/Meet por bundle id, proceso y título
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# Objetos de proceso de Core Audio: qué app tiene el micrófono abierto.
+objc2-core-audio = { version = "0.3", default-features = false, features = ["std", "AudioHardware"] }
+objc2-core-foundation = { version = "0.3", default-features = false, features = ["std", "CFString"] }

@@ -6,6 +6,8 @@
   <string>Juanola necesita el micrófono para transcribir tus reuniones en tu equipo.</string>
   <key>NSAudioCaptureUsageDescription</key>
   <string>Juanola captura el audio del sistema para transcribir a los demás participantes.</string>
+  <key>NSCalendarsUsageDescription</key>
+  <string>Juanola lee tu calendario para mostrar las próximas reuniones.</string>
   <key>NSCalendarsFullAccessUsageDescription</key>
   <string>Juanola lee tu calendario para mostrar las próximas reuniones.</string>
 </dict>

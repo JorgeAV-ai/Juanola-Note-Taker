@@ -75,3 +75,16 @@
 .licorice::after { content: ""; position: absolute; inset: 1px 4px auto; height: 3px; border-radius: 999px; background: rgb(255 255 255 / .18); }
 @keyframes licorice-twist { from { translate: -8px 0; } to { translate: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .rec-diamond, .licorice i { animation: none; } }
+
+/* Ventana de aviso de reunión (transparente; la tarjeta deja margen para la sombra) */
+html.notification-window, html.notification-window body, html.notification-window #root { background: transparent; overflow: hidden; }
+.meeting-notice {
+  position: relative; display: flex; gap: 12px; align-items: flex-start;
+  /* Llena la ventana, que mide lo mismo; esquinas y sombra las pone macOS. */
+  box-sizing: border-box; height: 100vh; padding: 14px 14px 14px 22px; border-radius: 16px;
+  background: var(--surface); border: 1px solid var(--line);
+  -webkit-user-select: none; user-select: none; cursor: default;
+}
+.notice-bar { position: absolute; left: 10px; top: 14px; bottom: 14px; width: 3px; border-radius: 2px; }
+.notice-bar.solid { background: var(--event); }
+.notice-bar.dashed { background: repeating-linear-gradient(to bottom, var(--leaf) 0 5px, transparent 5px 9px); }

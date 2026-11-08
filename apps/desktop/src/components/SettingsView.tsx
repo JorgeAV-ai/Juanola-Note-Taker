@@ -1,10 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AudioLines, Boxes, CalendarDays, ChevronLeft, FolderOpen, Globe, HardDrive, House, Info, Mic, SlidersHorizontal, Speaker } from "lucide-react";
+import { AudioLines, BellRing, Boxes, CalendarDays, ChevronLeft, FolderOpen, Globe, HardDrive, House, Info, Mic, SlidersHorizontal, Speaker } from "lucide-react";
 import type { Route } from "@/App";
-import { ipc, type AudioDevice, type Permission } from "@/lib/ipc";
+import { ipc, type AudioDevice, type CalendarAccess, type DetectionSettings, type Permission } from "@/lib/ipc";
 import { LANGUAGES, saveLanguage, savedLanguage } from "@/lib/language";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { ModelActions, ModelList } from "@/components/ModelsDialog";
 import { useModels } from "@/state/models";
 
@@ -110,10 +111,38 @@ function Row({ icon, title, desc, children, testId }: { icon: ReactNode; title: 
   );
 }
 
+function useDetection() {
+  const [settings, setSettings] = useState<DetectionSettings | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    ipc.detectionSettings().then(setSettings).catch((e) => setError(String(e)));
+  }, []);
+  const update = (patch: Partial<DetectionSettings>) => {
+    if (!settings) return;
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    ipc.setDetectionSettings(next).catch((e) => setError(String(e)));
+  };
+  return { settings, update, error };
+}
+
 function Preferences() {
   const [language, setLanguage] = useState(savedLanguage);
+  const detection = useDetection();
   return (
     <Page title="Preferences">
+      {detection.error && <div className="note-error mb-4 text-[13.5px] text-danger">{detection.error}</div>}
+      <Group label="Reuniones">
+        <Row icon={<BellRing />} title="Avisar al detectar una llamada" desc="Cuando Zoom, Teams, Meet u otra app abre el micrófono, aparece «Meeting detected» con «Take Notes». Nunca graba sin que lo pulses.">
+          <Switch
+            className="detect-meetings"
+            checked={detection.settings?.meetings ?? false}
+            disabled={!detection.settings}
+            onCheckedChange={(v) => detection.update({ meetings: v })}
+            aria-label="Avisar al detectar una llamada"
+          />
+        </Row>
+      </Group>
       <Group label="Transcripción">
         <Row icon={<Globe />} title="Idioma de las reuniones" desc="Se usa al pulsar Start; también se cambia en la píldora. «Detectar» fija el idioma tras unos segundos de voz.">
           <select
@@ -185,11 +214,66 @@ function Audio() {
   );
 }
 
+const CALENDAR_TEXT: Record<CalendarAccess, string> = {
+  granted: "Conectado. «Coming up» muestra los eventos de todas las cuentas de la app Calendario (iCloud, Google, Exchange…).",
+  not_determined: "Sin conectar. Juanola lee el calendario de macOS; añade ahí tus cuentas de Google o Microsoft.",
+  denied: "Acceso denegado. Actívalo en Ajustes del Sistema › Privacidad › Calendarios.",
+  write_only: "Solo escritura: Juanola necesita leer los eventos. Cámbialo a «Acceso total» en Ajustes del Sistema.",
+  unsupported: "El calendario solo está disponible en macOS por ahora.",
+};
+
 function Calendar() {
+  const [access, setAccess] = useState<CalendarAccess | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const detection = useDetection();
+  const refresh = () => ipc.calendarAccess().then(setAccess).catch(() => setAccess("unsupported"));
+  useEffect(() => {
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, []);
+  const connect = () =>
+    ipc
+      .requestCalendarAccess()
+      .then(setAccess)
+      .catch((e) => setError(String(e)));
+  const openSettings = () =>
+    ipc.openPrivacySettings("calendar_settings").catch((e) => setError(String(e)));
+
   return (
     <Page title="Calendar">
-      <Group label="Display">
-        <Row icon={<CalendarDays />} title="Calendario no conectado" desc="La integración con el calendario aún no está hecha. Cuando lo esté, «Coming up» mostrará tus reuniones." />
+      {(error || detection.error) && <div className="note-error mb-4 text-[13.5px] text-danger">{error ?? detection.error}</div>}
+      <Group label="Calendario de macOS">
+        <Row icon={<CalendarDays />} title="Calendario" desc={access ? CALENDAR_TEXT[access] : "…"} testId="calendar-access">
+          {access === "granted" ? (
+            <span className="text-[14px] text-olive-ink">✓ Enabled</span>
+          ) : access === "not_determined" ? (
+            <Button className="calendar-connect" onClick={connect}>
+              Conectar
+            </Button>
+          ) : access === "denied" || access === "write_only" ? (
+            <Button onClick={openSettings}>Abrir Ajustes</Button>
+          ) : null}
+        </Row>
+      </Group>
+      <Group label="Avisos">
+        <Row icon={<BellRing />} title="Avisar 1 minuto antes" desc="Para eventos con dos o más asistentes. «Take Notes» abre la videollamada y empieza a grabar.">
+          <Switch
+            className="calendar-reminders"
+            checked={detection.settings?.calendar_reminders ?? false}
+            disabled={!detection.settings}
+            onCheckedChange={(v) => detection.update({ calendar_reminders: v })}
+            aria-label="Avisar 1 minuto antes"
+          />
+        </Row>
+        <Row icon={<BellRing />} title="Probar aviso" desc="Muestra un aviso de ejemplo arriba a la derecha.">
+          <Button className="test-notice" onClick={() => ipc.simulateDetection("calendar").catch((e) => setError(String(e)))}>
+            Calendario
+          </Button>
+          <Button className="test-notice-adhoc" onClick={() => ipc.simulateDetection("adhoc").catch((e) => setError(String(e)))}>
+            Llamada
+          </Button>
+        </Row>
       </Group>
     </Page>
   );

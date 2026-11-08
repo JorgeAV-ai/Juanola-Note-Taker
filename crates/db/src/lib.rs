@@ -117,4 +117,45 @@ mod tests {
         assert!(repo::notes::get(&db, b.id).await.unwrap().is_none());
         std::fs::remove_dir_all(&dir).ok();
     }
+
+    #[tokio::test]
+    async fn settings_and_calendar_events() {
+        use juanola_core_types::{Attendee, CalendarEvent};
+        let dir = std::env::temp_dir().join(format!("juanola-db-test-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let db = Db::open(&dir.join("t.sqlite")).await.unwrap();
+        assert_eq!(repo::settings::get::<bool>(&db, "detect.enabled").await.unwrap(), None);
+        repo::settings::set(&db, "detect.enabled", &false).await.unwrap();
+        repo::settings::set(&db, "detect.enabled", &true).await.unwrap();
+        assert_eq!(repo::settings::get::<bool>(&db, "detect.enabled").await.unwrap(), Some(true));
+
+        let start = chrono::Utc::now();
+        let mut ev = CalendarEvent {
+            id: "apple:X:1".into(),
+            provider: "apple".into(),
+            calendar_id: "c".into(),
+            title: "Sync".into(),
+            start,
+            end: start + chrono::Duration::minutes(30),
+            attendees: vec![Attendee { email: "a@x.com".into(), name: Some("Ana".into()), declined: false, is_self: false }],
+            conference_url: Some("https://meet.google.com/abc".into()),
+            recurring_event_id: None,
+            description: None,
+        };
+        repo::events::upsert(&db, &ev).await.unwrap();
+        ev.title = "Sync semanal".into();
+        repo::events::upsert(&db, &ev).await.unwrap();
+        let got = repo::events::get(&db, &ev.id).await.unwrap().unwrap();
+        assert_eq!((got.title.as_str(), got.attendees.len()), ("Sync semanal", 1));
+        assert_eq!(got.start.timestamp(), start.timestamp());
+
+        let ws = repo::workspaces::ensure_personal(&db).await.unwrap();
+        let n = repo::notes::create(&db, ws, "Sync").await.unwrap();
+        assert!(repo::notes::find_by_event(&db, &ev.id).await.unwrap().is_none());
+        repo::notes::set_calendar_event(&db, n.id, Some(&ev.id)).await.unwrap();
+        assert_eq!(repo::notes::find_by_event(&db, &ev.id).await.unwrap().unwrap().id, n.id);
+        repo::notes::trash(&db, n.id).await.unwrap();
+        assert!(repo::notes::find_by_event(&db, &ev.id).await.unwrap().is_none());
+        std::fs::remove_dir_all(&dir).ok();
+    }
 }
