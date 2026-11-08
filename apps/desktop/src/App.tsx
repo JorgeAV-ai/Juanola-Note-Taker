@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Home } from "@/components/Home";
 import { NoteView } from "@/components/NoteView";
@@ -36,6 +36,21 @@ export default function App() {
     reload();
     initModels();
   }, [reload]);
+
+  // Fin de la llamada con la nota cerrada: no hay píldora que pare, así que se
+  // para aquí (la nota abierta lo hace ella, y lanza además el enhance).
+  const routeRef = useRef(route);
+  routeRef.current = route;
+  useEffect(() => {
+    const un = events.meetingEnded((e) => {
+      const r = routeRef.current;
+      if (r.kind === "note" && r.id === e.note_id) return;
+      ipc.stopRecording().catch((err) => console.error("no se pudo parar la grabación", err));
+    });
+    return () => {
+      un.then((f) => f());
+    };
+  }, []);
 
   // «Take Notes» en un aviso de reunión: abre la nota y empieza a grabar.
   useEffect(() => {

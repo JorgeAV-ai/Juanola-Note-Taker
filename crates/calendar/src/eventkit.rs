@@ -91,12 +91,22 @@ fn convert(e: &EKEvent) -> Option<CalendarEvent> {
         let conference_url = find_conference_url(
             [url.as_deref(), location.as_deref(), notes.as_deref()].into_iter().flatten(),
         );
-        let recurring_event_id = e
-            .hasRecurrenceRules()
-            .then(|| e.calendarItemExternalIdentifier().map(|s| s.to_string()).unwrap_or_else(|| item_id.clone()));
+        // El identificador externo (el UID del servidor) sobrevive a las
+        // resincronizaciones; `calendarItemIdentifier` puede cambiar.
+        let uid = e.calendarItemExternalIdentifier().map(|s| s.to_string()).filter(|s| !s.is_empty()).unwrap_or(item_id);
+        let recurring = e.hasRecurrenceRules();
+        let recurring_event_id = recurring.then(|| uid.clone());
+        // Las repeticiones comparten UID: la fecha original de cada una (no
+        // cambia aunque se mueva esa repetición) las distingue. Un evento
+        // suelto conserva su id aunque se cambie de hora, y con él su nota.
+        let id = if recurring {
+            let occurrence = e.occurrenceDate().map(|d| to_utc(&d)).unwrap_or(start);
+            format!("{PROVIDER}:{uid}:{}", occurrence.timestamp())
+        } else {
+            format!("{PROVIDER}:{uid}")
+        };
         Some(CalendarEvent {
-            // Las repeticiones comparten identificador: el inicio distingue cada una.
-            id: format!("{PROVIDER}:{item_id}:{}", start.timestamp()),
+            id,
             provider: PROVIDER.into(),
             calendar_id,
             title: e.title().to_string(),
@@ -125,6 +135,9 @@ pub fn events(from: DateTime<Utc>, to: DateTime<Utc>) -> Vec<CalendarEvent> {
         let found = store.eventsMatchingPredicate(&predicate);
         let mut out: Vec<CalendarEvent> = found.iter().filter_map(|e| convert(&e)).collect();
         out.sort_by_key(|e| e.start);
+        // Una invitación puede estar en dos calendarios (dos cuentas) con el mismo UID.
+        let mut seen = std::collections::HashSet::new();
+        out.retain(|e| seen.insert(e.id.clone()));
         out
     }
 }

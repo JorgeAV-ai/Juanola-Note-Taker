@@ -77,6 +77,11 @@ export interface DetectionSettings {
   calendar_reminders: boolean;
 }
 
+export interface MeetingEnded {
+  note_id: string;
+  app: DetectedApp;
+}
+
 export interface DetectedApp {
   bundle_id: string;
   name: string;
@@ -201,7 +206,8 @@ export const events = {
   calendarChanged: (cb: () => void): Promise<UnlistenFn> => listen("calendar://changed", () => cb()),
   takeNotes: (cb: (e: { note_id: string }) => void): Promise<UnlistenFn> =>
     listen<{ note_id: string }>("detect://take-notes", (e) => cb(e.payload)),
-  meetingEnded: (cb: (e: DetectedApp) => void): Promise<UnlistenFn> => listen<DetectedApp>("detect://meeting-ended", (e) => cb(e.payload)),
+  /** La llamada que se grababa terminó: hay que parar la grabación de `note_id`. */
+  meetingEnded: (cb: (e: MeetingEnded) => void): Promise<UnlistenFn> => listen<MeetingEnded>("detect://meeting-ended", (e) => cb(e.payload)),
   notificationUpdate: (cb: (e: MeetingNotice) => void): Promise<UnlistenFn> =>
     listen<MeetingNotice>("notification://update", (e) => cb(e.payload)),
   modelsProgress: (cb: (e: ModelProgress) => void): Promise<UnlistenFn> => listen<ModelProgress>("models://progress", (e) => cb(e.payload)),

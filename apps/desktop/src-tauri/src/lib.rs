@@ -22,7 +22,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .plugin(tauri_plugin_window_state::Builder::new().build())
+        // El aviso de reunión se coloca solo; restaurarlo lo enseñaría y activaría la app.
+        .plugin(tauri_plugin_window_state::Builder::new().with_denylist(&[detect::WINDOW]).build())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -108,6 +109,15 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error al arrancar Juanola")
         .run(|app, event| {
+            // Al salir con el aviso abierto: devolverle su clase antes de que
+            // tao destruya las ventanas (ver `detect::float_over_fullscreen`).
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit = event {
+                use tauri::Manager;
+                if let Some(w) = app.get_webview_window(detect::WINDOW) {
+                    detect::restore_class(&w);
+                }
+            }
             if let tauri::RunEvent::Exit = event {
                 use tauri::Manager;
                 app.state::<state::AppState>().unload_llm();

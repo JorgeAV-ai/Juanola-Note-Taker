@@ -89,6 +89,7 @@ export async function runAutotest(mode: string) {
     else if (mode === "ui") await sidebarFlow();
     else if (mode === "detect") await detectFlow();
     else if (mode === "detect-live") await detectLiveFlow();
+    else if (mode === "detect-calendar") await detectCalendarFlow();
     else await flow();
   } catch (e) {
     check(false, "excepción", String(e));
@@ -464,7 +465,7 @@ async function detectFlow() {
     if (started === true) {
       await sleep(3000);
       // La app de la llamada suelta el micrófono → debe parar y lanzar el enhance.
-      await emit("detect://meeting-ended", { bundle_id: "us.zoom.xos", name: "Zoom", kind: "zoom" });
+      await emit("detect://meeting-ended", { note_id: noteId, app: { bundle_id: "us.zoom.xos", name: "Zoom", kind: "zoom" } });
       const stopped = await waitFor("grabación parada al terminar la llamada", () => (state === "stopped" ? true : null), 20_000);
       check(!!stopped, "al terminar la llamada la grabación para sola");
     } else {
@@ -517,6 +518,41 @@ async function detectLiveFlow() {
     log("     esperando a que Chrome suelte el micrófono…");
     const stopped = await waitFor("grabación parada al cerrar Chrome", () => (state === "stopped" ? true : null), 90_000);
     check(!!stopped, "al soltar el micrófono la grabación para sola");
+    if (noteId) {
+      await sleep(1000);
+      await waitFor("enhance terminado", () => !document.querySelector(".enhancing") || null, 120_000);
+      await ipc.trashNote(noteId).catch(() => {});
+    }
+  } finally {
+    un.then((f) => f());
+  }
+}
+
+// JUANOLA_AUTOTEST=detect-calendar: «Take Notes» en un aviso de calendario y,
+// con la grabación en marcha, el script abre un Chrome que coge el micrófono y
+// luego lo suelta. La grabación debe asociarse a Chrome y parar sola.
+async function detectCalendarFlow() {
+  let state: RecordingState | null = null;
+  const un = events.recordingState((e) => {
+    if (e.state !== "warning") state = e.state;
+  });
+  try {
+    await ipc.simulateDetection("calendar");
+    await sleep(1500);
+    const payload = await ipc.notificationPayload();
+    check(payload?.kind === "calendar", "aviso de calendario", JSON.stringify(payload && { title: payload.title, body: payload.body }));
+    if (!payload) return;
+    await ipc.notificationTakeNotes();
+    const noteEl = await waitFor("nota abierta", () => document.querySelector<HTMLElement>(".note[data-note-id]"), 5000);
+    const noteId = noteEl?.dataset.noteId;
+    if (noteId) await ipc.setNoteTitle(noteId, `Autotest detect-calendar ${new Date().toLocaleString()}`);
+    const started = await waitFor("grabación en marcha", () => (state === "recording" ? true : state === "error" ? "error" : null), 30_000);
+    check(started === true, "la grabación empieza sola", String(state));
+    if (started !== true) return;
+    log("     LISTO: abrid la llamada (Chrome con micrófono)");
+    const stopped = await waitFor("grabación parada al terminar la llamada", () => (state === "stopped" ? true : null), 180_000);
+    check(!!stopped, "al terminar la llamada la grabación para sola");
+    if (!stopped) await ipc.stopRecording().catch(() => {});
     if (noteId) {
       await sleep(1000);
       await waitFor("enhance terminado", () => !document.querySelector(".enhancing") || null, 120_000);

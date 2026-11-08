@@ -212,6 +212,11 @@ pub fn classify(bundle_id: &str) -> Option<DetectedApp> {
     Some(DetectedApp { bundle_id: base.to_string(), name: name.to_string(), kind: MeetingApp::Other })
 }
 
+/// ¿Es una app de la lista de conocidas (videollamadas y navegadores)?
+pub fn is_known(bundle_id: &str) -> bool {
+    KNOWN.iter().any(|(p, ..)| bundle_id.starts_with(p))
+}
+
 fn strip_helper(bundle_id: &str) -> &str {
     let lower = bundle_id.to_ascii_lowercase();
     for marker in [".helper", ".webcontent", ".renderer", ".gpu", ".plugin"] {
@@ -227,6 +232,10 @@ pub struct WatcherConfig {
     /// Tiempo seguido con el micrófono antes de avisar (evita parpadeos, como
     /// el de una app que prueba el dispositivo al arrancar).
     pub min_on: Duration,
+    /// Lo mismo para apps que no están en la lista de conocidas: dictado,
+    /// grabadoras, OBS… abren el micrófono sin que haya llamada, así que se
+    /// espera más (una llamada dura minutos; un dictado, segundos).
+    pub min_on_unknown: Duration,
     /// Tiempo sin micrófono antes de dar la llamada por terminada (Zoom lo
     /// suelta y lo retoma al silenciarse o cambiar de dispositivo).
     pub grace: Duration,
@@ -234,7 +243,7 @@ pub struct WatcherConfig {
 
 impl Default for WatcherConfig {
     fn default() -> Self {
-        Self { min_on: Duration::from_secs(3), grace: Duration::from_secs(5) }
+        Self { min_on: Duration::from_secs(3), min_on_unknown: Duration::from_secs(30), grace: Duration::from_secs(5) }
     }
 }
 
@@ -279,7 +288,8 @@ impl MicWatcher {
                 .entry(app.bundle_id.clone())
                 .or_insert_with(|| Track { app: app.clone(), since: now, last_seen: now, announced: false });
             t.last_seen = now;
-            if !t.announced && now.saturating_sub(t.since) >= self.cfg.min_on {
+            let min_on = if is_known(&u.bundle_id) { self.cfg.min_on } else { self.cfg.min_on_unknown };
+            if !t.announced && now.saturating_sub(t.since) >= min_on {
                 t.announced = true;
                 out.push(DetectEvent::MicInUse { app: t.app.clone() });
             }
@@ -301,6 +311,47 @@ impl MicWatcher {
         });
         out
     }
+}
+
+/// Confirma que la llamada que se graba ha terminado: su app soltó el
+/// micrófono y no lo ha vuelto a coger en `wait`. Más paciente que la gracia
+/// de [`MicWatcher`], porque aquí un falso positivo corta una grabación (hay
+/// apps que sueltan el micrófono un momento al silenciarse o cambiar de
+/// dispositivo).
+#[derive(Debug, Clone)]
+pub struct EndTracker {
+    wait: Duration,
+    released_at: Option<Duration>,
+}
+
+impl EndTracker {
+    pub fn new(wait: Duration) -> Self {
+        Self { wait, released_at: None }
+    }
+
+    /// Muestra tomada en `now`: `holding` dice si la app de la llamada tiene
+    /// el micrófono. Devuelve `true` una sola vez, al confirmarse el final.
+    pub fn update(&mut self, now: Duration, holding: bool) -> bool {
+        if holding {
+            self.released_at = None;
+            return false;
+        }
+        let since = *self.released_at.get_or_insert(now);
+        if now.saturating_sub(since) >= self.wait {
+            self.released_at = None;
+            return true;
+        }
+        false
+    }
+
+    pub fn reset(&mut self) {
+        self.released_at = None;
+    }
+}
+
+/// ¿Alguno de `users` es la app `bundle_id` (ya normalizada por [`classify`])?
+pub fn holds_mic(users: &[MicUser], bundle_id: &str) -> bool {
+    users.iter().any(|u| classify(&u.bundle_id).is_some_and(|a| a.bundle_id == bundle_id))
 }
 
 #[cfg(test)]
@@ -379,5 +430,40 @@ mod tests {
         w.update(s(0), &users);
         let ev = w.update(s(3), &users);
         assert_eq!(ev.len(), 1);
+    }
+
+    #[test]
+    fn end_needs_a_sustained_release() {
+        let mut t = EndTracker::new(s(15));
+        assert!(!t.update(s(0), true));
+        assert!(!t.update(s(1), false));
+        assert!(!t.update(s(10), false));
+        // Vuelve a coger el micrófono (p. ej. al quitarse el silencio): se reinicia.
+        assert!(!t.update(s(11), true));
+        assert!(!t.update(s(12), false));
+        assert!(!t.update(s(26), false));
+        assert!(t.update(s(27), false));
+        // Solo una vez.
+        assert!(!t.update(s(28), false));
+    }
+
+    #[test]
+    fn holds_mic_matches_helpers() {
+        let users = [user("com.google.Chrome.helper")];
+        assert!(holds_mic(&users, "com.google.Chrome"));
+        assert!(!holds_mic(&users, "us.zoom.xos"));
+    }
+
+    #[test]
+    fn unknown_apps_wait_longer() {
+        let mut w = MicWatcher::new(WatcherConfig::default());
+        let users = [user("com.example.Dictator"), user("us.zoom.xos")];
+        let first = w.update(s(0), &users);
+        assert!(first.is_empty());
+        let at3 = w.update(s(3), &users);
+        assert_eq!(at3.len(), 1, "solo Zoom a los 3 s: {at3:?}");
+        assert!(w.update(s(20), &users).is_empty());
+        let at30 = w.update(s(30), &users);
+        assert!(matches!(&at30[..], [DetectEvent::MicInUse { app }] if app.name == "Dictator"));
     }
 }

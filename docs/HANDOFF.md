@@ -167,5 +167,31 @@ El usuario aparcó la mejora de calidad del enhance (tareas con responsable) par
   - `JUANOLA_AUTOTEST=detect-live` en la .app con Chrome real: aviso «Meeting detected · Google Chrome», Take Notes, grabación automática y parada al cerrar Chrome. «FIN: todo OK».
   - Ventana de aviso: posición lógica (1336, 41) en una pantalla de 1728 de ancho, es decir arriba a la derecha bajo la barra de menús; visible. Robaba el foco: ahora `focusable(false)` + `accept_first_mouse(true)` y el log confirma que no se enfoca y que Chrome sigue delante.
   - Calendario: permiso concedido; EventKit ve la cuenta de Google del usuario y extrae el enlace de Meet. «Coming up» salía vacío porque la próxima reunión estaba a 12 días: la ventana pasa de 7 a 30 días. Además la Home recarga al conceder el permiso (`calendar://changed`) y al volver a la ventana. Autotest `detect` con datos reales: «FIN: todo OK».
-- **Sin verificar**: (1) el primer clic real con ratón en «Take Notes» con Juanola en segundo plano (el autotest llama al comando); (2) auriculares Bluetooth como micrófono en una llamada (la regla de manos libres no se ha podido probar: no estaban conectados); (3) Zoom, Teams y Slack reales (no instalados Zoom ni Teams); (4) falsos positivos de apps que abren el micrófono sin llamada (se añaden a `IGNORED_PREFIXES`); (5) cada build cambia la firma ad hoc y macOS vuelve a pedir audio del sistema y calendario.
+- **Revisión de la rama (8 nov)**, fallos corregidos:
+  - Fin de llamada demasiado impaciente: con 5 s sin micrófono se paraba la grabación, y hay apps que lo sueltan un momento al silenciarse. Ahora `EndTracker` exige 15 s seguidos (`END_WAIT`); si la app lo retoma, se reinicia. Probado con Chrome real: un corte de 8 s no para la grabación, el definitivo la para a los 15 s.
+  - `detect://meeting-ended` lleva `{note_id, app}`. Si la nota no está abierta, `App.tsx` para la grabación (antes el evento se perdía y la grabación seguía).
+  - Grabación desde un aviso de calendario: no paraba nunca, porque no había app de origen. Ahora `Origin::Pending` adopta la primera app de reuniones con el micrófono mientras se graba. Probado con `JUANOLA_AUTOTEST=detect-calendar`: aviso de calendario → «Take Notes» → grabación; luego un Chrome real coge el micrófono 30 s, la grabación se asocia a Chrome a los 6 s y para sola 15 s después de que lo suelte. «FIN: todo OK».
+  - El origen caduca a los 30 s sin grabación (si el arranque automático falla, no para después una grabación manual).
+  - Doble clic en «Take Notes» podía crear dos notas: `close` se queda el aviso de forma atómica.
+  - El aviso de calendario sin atender se quedaba para siempre encima de todo. Ahora se cierra 10 min después de empezar el evento, y el texto se actualiza: «Starts in 1 min» → «Starting now» → «Started N min ago».
+  - El aviso se cierra si ya se está grabando y al desactivar su tipo en Ajustes.
+  - Sondeo más barato: el hilo lee EventKit de −1 h a +2 h. Solo «Coming up» pide 30 días, ahora fuera del hilo de Tauri. El conjunto `reminded` ya no crece sin límite.
+  - ID de evento estable: UID externo (sobrevive a resincronizaciones). Un evento suelto ya no lleva la hora, así que si se mueve conserva su nota. Las repeticiones usan `occurrenceDate`. Se quitan los duplicados (misma invitación en dos cuentas). Las notas asociadas con el formato anterior pierden el vínculo; solo afecta a datos de prueba.
+- **Segunda revisión (8 nov)**:
+  - **El aviso no se veía en reuniones a pantalla completa, y al aparecer activaba Juanola y sacaba al usuario de la reunión.** Medido con Chrome a pantalla completa y `CGWindowListCopyWindowInfo`. Hubo dos causas:
+    1. El plugin `window-state` restauraba también la ventana del aviso. Se excluye con `with_denylist`.
+    2. Una ventana normal no entra en el espacio de otra app a pantalla completa, ni con `FullScreenAuxiliary` ni subiendo el nivel. Hace falta un `NSPanel` no activante.
+
+    Ahora el aviso se crea oculto, pasa a `NSPanel` (`object_setClass`, como tauri-nspanel) y se muestra con `orderFrontRegardless`. Chrome sigue siendo la app activa y el aviso queda encima.
+  - **Fallo nuevo con el panel**: tao lanza una excepción de Objective-C al cerrar la ventana o al salir, y la app abortaba. Ocurre porque `TaoWindow` tiene estado propio. Por eso `restore_class` le devuelve su clase antes de `close()`, en `ExitRequested` y en `Exit`. Probado con el autotest `detect`, saliendo con «Salir» y con `pkill` con el aviso abierto: sin informes de fallo.
+  - Apps desconocidas (dictado, OBS, grabadoras): avisaban a los 3 s. Ahora esperan 30 s (`min_on_unknown`); las conocidas siguen a los 3 s.
+  - `note_for_event` va de uno en uno (un `Mutex` estático), para que dos clics no creen dos notas del mismo evento.
+- **Auriculares Bluetooth** (JBL Tune 720BT, 8 nov):
+  - macOS los ve como dos dispositivos: entrada a 16 kHz y salida a 44,1 kHz.
+  - Con el micrófono abierto, Chrome marca `IsRunningInput=1` y se detecta sin la regla de manos libres. Al abrirse el micrófono, la salida baja a 16 kHz (HFP), como supone esa regla.
+  - Solo reproduciendo (A2DP) no hay detección. Sonido + micrófono sí.
+  - `detect-live` con los JBL: aviso, «Take Notes», graba el micrófono de los auriculares a 16 kHz y para sola al soltarlo Chrome. «FIN: todo OK».
+- **Clic real con ratón en «Take Notes»** sobre el panel, con Juanola en segundo plano: confirmado por el usuario (8 nov).
+- **Velo blanco alrededor del aviso** (lo vio el usuario en la .app): en el navegador la página es transparente, así que el velo lo pinta macOS en la parte transparente de la ventana. Ahora la ventana mide lo mismo que la tarjeta (368×110), sin margen. Las esquinas se recortan con la capa de la vista (`cornerRadius` + `masksToBounds`) y la sombra es la nativa (`invalidateShadow` a los 400 ms, cuando la página ya está pintada). Confirmado a ojo por el usuario (8 nov): ya no se ve el velo.
+- **Sin verificar**: (3) Zoom, Teams y Slack reales (no instalados Zoom ni Teams); (4) falsos positivos de apps que abren el micrófono sin llamada (se añaden a `IGNORED_PREFIXES`); (5) cada build cambia la firma ad hoc y macOS vuelve a pedir audio del sistema y calendario.
 - Pendiente de la Fase 2: Google/Microsoft directos con OAuth, reposición de ventana, indicador flotante arrastrable, tray, «si abres la nota antes de la hora, empieza a la hora», auto-stop por fin del evento o 15 min sin voz.

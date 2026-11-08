@@ -80,9 +80,9 @@
 html.notification-window, html.notification-window body, html.notification-window #root { background: transparent; overflow: hidden; }
 .meeting-notice {
   position: relative; display: flex; gap: 12px; align-items: flex-start;
-  margin: 8px; padding: 14px 14px 14px 22px; border-radius: 16px;
+  /* Llena la ventana, que mide lo mismo; esquinas y sombra las pone macOS. */
+  box-sizing: border-box; height: 100vh; padding: 14px 14px 14px 22px; border-radius: 16px;
   background: var(--surface); border: 1px solid var(--line);
-  box-shadow: 0 6px 22px rgb(0 0 0 / 0.14), 0 1px 3px rgb(0 0 0 / 0.08);
   -webkit-user-select: none; user-select: none; cursor: default;
 }
 .notice-bar { position: absolute; left: 10px; top: 14px; bottom: 14px; width: 3px; border-radius: 2px; }

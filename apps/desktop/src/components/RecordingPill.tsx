@@ -105,7 +105,8 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
   const stopRef = useRef(stop);
   stopRef.current = stop;
   useEffect(() => {
-    const un = events.meetingEnded(() => {
+    const un = events.meetingEnded((e) => {
+      if (e.note_id !== noteId) return;
       if (stateRef.current === "recording" || stateRef.current === "paused") stopRef.current();
     });
     return () => {

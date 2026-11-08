@@ -210,7 +210,7 @@ pub async fn stop_recording(state: State<'_, AppState>) -> Res<usize> {
         return Ok(0);
     };
     tracing::info!(note_id = %active.note_id, "stop_recording");
-    state.detection.set_origin_app(None);
+    state.detection.set_origin(detect::Origin::None);
     tauri::async_runtime::spawn_blocking(move || active.stop()).await.map_err(e)?
 }
 
@@ -286,12 +286,15 @@ pub fn list_audio_devices() -> Vec<juanola_audio_capture::AudioDevice> {
 
 // --------------------------------------------------- calendario y detección
 
-/// Próximas reuniones del calendario (relee EventKit, unos milisegundos;
-/// vacío sin permiso).
+/// Próximas reuniones de los próximos 30 días (para enseñar la siguiente
+/// aunque no sea esta semana). Relee EventKit, unos milisegundos; vacío sin permiso.
 #[tauri::command]
-pub async fn coming_up(state: State<'_, AppState>) -> Res<Vec<CalendarEvent>> {
-    let events = if detect::calendar_access() == Access::Granted { detect::refresh_events(&state.detection) } else { Vec::new() };
-    Ok(juanola_calendar::coming_up(events, chrono::Utc::now()))
+pub async fn coming_up() -> Res<Vec<CalendarEvent>> {
+    let now = chrono::Utc::now();
+    let events = tauri::async_runtime::spawn_blocking(move || detect::calendar_events(now, now + chrono::Duration::days(30)))
+        .await
+        .map_err(e)?;
+    Ok(juanola_calendar::coming_up(events, now))
 }
 
 #[tauri::command]
@@ -331,6 +334,10 @@ pub async fn request_calendar_access(app: AppHandle) -> Res<Access> {
 /// Nota de un evento: la que ya tenga o una nueva con su título. Guarda una
 /// copia del evento para que la nota conserve hora y asistentes.
 async fn note_for_event(state: &AppState, event: &CalendarEvent) -> Res<Note> {
+    // De uno en uno: dos clics seguidos (Coming up y el aviso, o un doble
+    // clic) no deben crear dos notas para el mismo evento.
+    static LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+    let _guard = LOCK.lock().await;
     repo::events::upsert(&state.db, event).await.map_err(e)?;
     if let Some(n) = repo::notes::find_by_event(&state.db, &event.id).await.map_err(e)? {
         return Ok(n);
@@ -362,8 +369,9 @@ pub fn detection_settings(state: State<'_, AppState>) -> DetectionSettings {
 }
 
 #[tauri::command]
-pub async fn set_detection_settings(state: State<'_, AppState>, settings: DetectionSettings) -> Res<()> {
+pub async fn set_detection_settings(app: AppHandle, state: State<'_, AppState>, settings: DetectionSettings) -> Res<()> {
     state.detection.set_settings(settings);
+    detect::close_disabled(&app, settings);
     repo::settings::set(&state.db, detect::KEY_MEETINGS, &settings.meetings).await.map_err(e)?;
     repo::settings::set(&state.db, detect::KEY_REMINDERS, &settings.calendar_reminders).await.map_err(e)
 }
@@ -378,8 +386,8 @@ pub fn notification_payload(state: State<'_, AppState>) -> Option<Notification> 
 /// que empiece a grabar. En un aviso de calendario abre también la videollamada.
 #[tauri::command]
 pub async fn notification_take_notes(app: AppHandle, state: State<'_, AppState>) -> Res<()> {
-    let Some(n) = state.detection.current() else { return Ok(()) };
-    detect::close(&app);
+    // `close` se queda el aviso: un doble clic no crea dos notas.
+    let Some(n) = detect::close(&app) else { return Ok(()) };
     let note = match &n.event {
         Some(ev) => note_for_event(&state, ev).await?,
         None => {
@@ -395,7 +403,10 @@ pub async fn notification_take_notes(app: AppHandle, state: State<'_, AppState>)
             }
         }
     }
-    state.detection.set_origin_app(n.app.as_ref().map(|a| a.bundle_id.clone()));
+    state.detection.set_origin(match &n.app {
+        Some(a) => detect::Origin::App(a.bundle_id.clone()),
+        None => detect::Origin::Pending,
+    });
     detect::focus_main(&app);
     tracing::info!(note_id = %note.id, "take notes");
     app.emit_to("main", "detect://take-notes", TakeNotes { note_id: note.id }).map_err(e)
