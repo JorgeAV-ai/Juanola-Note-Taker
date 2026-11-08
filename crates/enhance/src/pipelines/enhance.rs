@@ -34,45 +34,121 @@ pub enum EnhanceError {
     TooShort { words: usize },
 }
 
-/// Bloque de las notas crudas del usuario.
+/// Qué es cada bloque de las notas crudas del usuario.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BlockKind {
+    Paragraph,
+    Heading(u8),
+    /// Elemento de una lista con viñetas o numerada.
+    ListItem,
+    /// Elemento de una lista de tareas (`[ ]` en el editor).
+    Task { checked: bool },
+}
+
+/// Bloque de las notas crudas del usuario: un párrafo, un título o un
+/// elemento de lista (cada elemento por separado, también los anidados).
 #[derive(Debug, Clone)]
 pub struct UserBlock {
     pub id: String,
     pub text: String,
+    pub kind: BlockKind,
+    /// Alguna parte en negrita o subrayada: el usuario lo marcó como importante.
+    pub emphasis: bool,
 }
 
-/// Extrae los bloques de primer nivel de un documento ProseMirror. El id es
-/// `attrs.id` si existe; si no, `b<n>` por posición.
+/// Extrae los bloques de texto de un documento ProseMirror (TipTap). Los
+/// párrafos y títulos de primer nivel son un bloque cada uno; las listas se
+/// abren y cada elemento es un bloque, con sus sublistas detrás. Las imágenes
+/// y separadores se ignoran.
+///
+/// El id es `attrs.id` si existe; si no, la posición: `b<n>` en el primer
+/// nivel y `b<n>.<m>` (y así sucesivamente) dentro de listas y citas.
 pub fn user_blocks(doc: &serde_json::Value) -> Vec<UserBlock> {
-    fn text_of(node: &serde_json::Value, out: &mut String) {
-        if let Some(t) = node.get("text").and_then(|t| t.as_str()) {
-            out.push_str(t);
-        }
-        if let Some(children) = node.get("content").and_then(|c| c.as_array()) {
-            for c in children {
-                text_of(c, out);
+    /// Texto en línea de un nodo (párrafo, título): los nodos de texto
+    /// hermanos ya traen sus espacios; los saltos de línea pasan a espacio.
+    fn inline(node: &serde_json::Value, text: &mut String, emphasis: &mut bool) {
+        match node.get("type").and_then(|t| t.as_str()) {
+            Some("text") => {
+                if let Some(t) = node.get("text").and_then(|t| t.as_str()) {
+                    text.push_str(t);
+                }
+                let marks = node.get("marks").and_then(|m| m.as_array()).into_iter().flatten();
+                if marks.filter_map(|m| m.get("type").and_then(|t| t.as_str())).any(|t| matches!(t, "bold" | "underline")) {
+                    *emphasis = true;
+                }
+            }
+            Some("hardBreak") => text.push(' '),
+            _ => {
+                for c in children(node) {
+                    inline(c, text, emphasis);
+                }
             }
         }
     }
-    let Some(blocks) = doc.get("content").and_then(|c| c.as_array()) else { return Vec::new() };
-    blocks
-        .iter()
-        .enumerate()
-        .filter_map(|(i, b)| {
-            let mut text = String::new();
-            text_of(b, &mut text);
-            let text = text.trim().to_owned();
-            if text.is_empty() {
-                return None;
+    fn children(node: &serde_json::Value) -> impl Iterator<Item = &serde_json::Value> {
+        node.get("content").and_then(|c| c.as_array()).into_iter().flatten()
+    }
+    fn push(out: &mut Vec<UserBlock>, node: &serde_json::Value, id: String, kind: BlockKind, text: String, emphasis: bool) {
+        let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+        if text.is_empty() {
+            return;
+        }
+        let id = node.pointer("/attrs/id").and_then(|v| v.as_str()).map(str::to_owned).unwrap_or(id);
+        out.push(UserBlock { id, text, kind, emphasis });
+    }
+    fn walk(node: &serde_json::Value, id: String, out: &mut Vec<UserBlock>) {
+        let ty = node.get("type").and_then(|t| t.as_str()).unwrap_or("");
+        match ty {
+            "paragraph" | "heading" | "codeBlock" => {
+                let kind = match ty {
+                    "heading" => BlockKind::Heading(node.pointer("/attrs/level").and_then(|l| l.as_u64()).unwrap_or(1).clamp(1, 6) as u8),
+                    _ => BlockKind::Paragraph,
+                };
+                let (mut text, mut emphasis) = (String::new(), false);
+                inline(node, &mut text, &mut emphasis);
+                push(out, node, id, kind, text, emphasis);
             }
-            let id = b
-                .pointer("/attrs/id")
-                .and_then(|v| v.as_str())
-                .map(str::to_owned)
-                .unwrap_or_else(|| format!("b{i}"));
-            Some(UserBlock { id, text })
-        })
-        .collect()
+            "listItem" | "taskItem" => {
+                let kind = if ty == "taskItem" {
+                    BlockKind::Task { checked: node.pointer("/attrs/checked").and_then(|c| c.as_bool()).unwrap_or(false) }
+                } else {
+                    BlockKind::ListItem
+                };
+                // El texto del elemento son sus párrafos; las sublistas van
+                // detrás como bloques propios.
+                let (mut text, mut emphasis) = (String::new(), false);
+                let mut nested = Vec::new();
+                for c in children(node) {
+                    if matches!(c.get("type").and_then(|t| t.as_str()), Some("paragraph" | "heading" | "codeBlock")) {
+                        text.push(' ');
+                        inline(c, &mut text, &mut emphasis);
+                    } else {
+                        nested.push(c);
+                    }
+                }
+                push(out, node, id.clone(), kind, text, emphasis);
+                let mut n = 0;
+                for c in nested {
+                    for item in children(c) {
+                        walk(item, format!("{id}.{n}"), out);
+                        n += 1;
+                    }
+                }
+            }
+            "image" | "horizontalRule" => {}
+            // Listas, citas y cualquier contenedor desconocido: sus hijos.
+            _ => {
+                for (n, c) in children(node).enumerate() {
+                    walk(c, format!("{id}.{n}"), out);
+                }
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for (i, b) in children(doc).enumerate() {
+        walk(b, format!("b{i}"), &mut out);
+    }
+    out
 }
 
 fn clock(secs: f64) -> String {
@@ -671,17 +747,80 @@ mod tests {
         }
     }
 
+    fn p(text: &str) -> serde_json::Value {
+        serde_json::json!({"type":"paragraph","content":[{"type":"text","text":text}]})
+    }
+    fn li(ty: &str, content: Vec<serde_json::Value>) -> serde_json::Value {
+        serde_json::json!({"type":ty,"content":content})
+    }
+    fn texts(b: &[UserBlock]) -> Vec<(&str, &str)> {
+        b.iter().map(|b| (b.id.as_str(), b.text.as_str())).collect()
+    }
+
     #[test]
     fn blocks_from_prosemirror() {
         let doc = serde_json::json!({"type":"doc","content":[
-            {"type":"paragraph","content":[{"type":"text","text":"presupuesto Q3"}]},
+            p("presupuesto Q3"),
             {"type":"paragraph"},
-            {"type":"bulletList","attrs":{"id":"x9"},"content":[{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"demo jueves"}]}]}]}
+            {"type":"bulletList","content":[{"type":"listItem","attrs":{"id":"x9"},"content":[p("demo jueves")]}]}
         ]});
         let b = user_blocks(&doc);
-        assert_eq!(b.len(), 2);
-        assert_eq!((b[0].id.as_str(), b[0].text.as_str()), ("b0", "presupuesto Q3"));
-        assert_eq!((b[1].id.as_str(), b[1].text.as_str()), ("x9", "demo jueves"));
+        assert_eq!(texts(&b), [("b0", "presupuesto Q3"), ("x9", "demo jueves")]);
+        assert_eq!((b[0].kind, b[1].kind), (BlockKind::Paragraph, BlockKind::ListItem));
+    }
+
+    #[test]
+    fn each_list_item_is_its_own_block() {
+        // Antes: «demo juevesllamar a Luis» en un único bloque.
+        let doc = serde_json::json!({"type":"doc","content":[
+            li("bulletList", vec![li("listItem", vec![p("demo jueves")]), li("listItem", vec![p("llamar a Luis")])])
+        ]});
+        assert_eq!(texts(&user_blocks(&doc)), [("b0.0", "demo jueves"), ("b0.1", "llamar a Luis")]);
+    }
+
+    #[test]
+    fn nested_lists_follow_their_parent() {
+        let doc = serde_json::json!({"type":"doc","content":[
+            li("orderedList", vec![
+                li("listItem", vec![p("Precios"), li("bulletList", vec![li("listItem", vec![p("básico 39")]), li("listItem", vec![p("pro 99")])])]),
+                li("listItem", vec![p("Contratación")]),
+            ])
+        ]});
+        assert_eq!(
+            texts(&user_blocks(&doc)),
+            [("b0.0", "Precios"), ("b0.0.0", "básico 39"), ("b0.0.1", "pro 99"), ("b0.1", "Contratación")]
+        );
+    }
+
+    #[test]
+    fn task_items_keep_their_state() {
+        let doc = serde_json::json!({"type":"doc","content":[{"type":"taskList","content":[
+            {"type":"taskItem","attrs":{"checked":false},"content":[p("llamar a Luis")]},
+            {"type":"taskItem","attrs":{"checked":true},"content":[p("enviar acta")]}
+        ]}]});
+        let b = user_blocks(&doc);
+        assert_eq!(texts(&b), [("b0.0", "llamar a Luis"), ("b0.1", "enviar acta")]);
+        assert_eq!((b[0].kind, b[1].kind), (BlockKind::Task { checked: false }, BlockKind::Task { checked: true }));
+    }
+
+    #[test]
+    fn headings_emphasis_and_inline_text() {
+        let doc = serde_json::json!({"type":"doc","content":[
+            {"type":"heading","attrs":{"level":3},"content":[{"type":"text","text":"Contratación"}]},
+            {"type":"paragraph","content":[
+                {"type":"text","text":"Elena empieza "},
+                {"type":"text","marks":[{"type":"bold"}],"text":"en enero"},
+                {"type":"hardBreak"},
+                {"type":"text","text":"con  contrato"}
+            ]},
+            {"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"sin énfasis"}]},
+            {"type":"image","attrs":{"src":"data:,"}},
+            {"type":"blockquote","content":[p("cita")]}
+        ]});
+        let b = user_blocks(&doc);
+        assert_eq!(texts(&b), [("b0", "Contratación"), ("b1", "Elena empieza en enero con contrato"), ("b2", "sin énfasis"), ("b4.0", "cita")]);
+        assert_eq!(b[0].kind, BlockKind::Heading(3));
+        assert_eq!(b.iter().map(|b| b.emphasis).collect::<Vec<_>>(), [false, true, false, false]);
     }
 
     #[test]
@@ -824,8 +963,8 @@ mod tests {
             seg(2, Channel::System, 6.0, 9.0, "c"),
         ];
         let blocks = [
-            UserBlock { id: "b0".into(), text: "precios nuevos: enero".into() },
-            UserBlock { id: "b1".into(), text: "llamar a la gestoría".into() },
+            UserBlock { id: "b0".into(), text: "precios nuevos: enero".into(), kind: BlockKind::Paragraph, emphasis: false },
+            UserBlock { id: "b1".into(), text: "llamar a la gestoría".into(), kind: BlockKind::Paragraph, emphasis: false },
         ];
         let raw = parse_markdown("## Errores\n- Citas duplicadas [3, 2, 99]\n## Precios\n- Los precios nuevos entran en enero [1]\n- Sin cita\n## Inventado\n- Nada que lo respalde\n## Próximos pasos\n- Luis llama hoy [2]\n");
         let (notes, rep) = resolve(raw, &segs, &blocks, Id::nil()).unwrap();
