@@ -1,27 +1,102 @@
-/* Tokens de diseño. Los valores definitivos salen de la auditoría de la fase 0
-   (capturas de la app real). Estos son una aproximación al estilo Apple Notes de Granola. */
+/* Tokens de color y tipografía. Los nombres semánticos
+   (background, card, border…) son los de shadcn/ui, para que sus componentes
+   funcionen sin tocar; los demás son propios. */
+@import "tailwindcss";
+@import "@fontsource-variable/newsreader";
+@import "./app.css";
+
+/* Paleta «regaliz»: papel crema, negro regaliz y un acento de eucalipto (las
+   pastillas Juanola llevan regaliz, mentol y eucalipto). Los nombres olive/
+   olive-ink/leaf se conservan como identificadores del acento. */
 :root {
-  --bg: #ffffff;
-  --bg-sidebar: #f5f5f4;
-  --fg: #111111;
-  --fg-ai: #8a8a8a;          /* texto generado por la IA */
-  --fg-muted: #6b6b6b;
-  --border: #e6e6e3;
-  --accent: #22c55e;         /* verde de Granola */
-  --bubble-them: #ececea;
-  --bubble-me: #dcfce7;
-  --radius: 10px;
-  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  --canvas: #f6f3ec;          /* fondo de la ventana: papel crema */
+  --sidebar: #efebe2;         /* sidebar, un punto más oscuro */
+  --card: #fbf9f4;            /* tarjetas (Coming up, ajustes) */
+  --surface: #fffdf9;         /* popovers, diálogos, barra Ask */
+  --line: #e4ded2;            /* bordes finos */
+  --ink: #1a1715;             /* texto y botón principal: negro regaliz */
+  --ink-2: #57504a;           /* texto secundario */
+  --muted: #8a8279;           /* etiquetas, horas */
+  --ai: #8a8279;              /* texto generado por la IA */
+  --hover: #ece7dd;
+  --active: #e5dfd3;
+  --olive: #2f6b4f;           /* acento eucalipto: enviar, interruptores */
+  --olive-ink: #2e6a4e;       /* texto con acento («Start», «Enabled») */
+  --leaf: #3f8f68;            /* barras de nivel y rombo de grabación */
+  --licorice: #141210;        /* la barrita de «Enhancing notes» */
+  --event: #9fd3d6;           /* barra de los eventos del calendario */
+  --amber: #c98a2e;
+  --mark: #f3e0b5;            /* resaltado de búsqueda */
+  --danger: #b42318;
+  --bubble-them: #ece7dd;
+  --bubble-me: #e0ebe2;
+  --faint: #c2b9ab;           /* «#» de los títulos, placeholder del título */
+  --selection: #d8e6dc;
 }
+/* Oscuro: negro regaliz cálido, no gris neutro. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1c1c1e;
-    --bg-sidebar: #161617;
-    --fg: #f2f2f2;
-    --fg-ai: #9a9a9a;
-    --fg-muted: #8c8c8c;
-    --border: #2c2c2e;
-    --bubble-them: #2a2a2c;
-    --bubble-me: #1f3a2a;
+    --canvas: #1c1915;
+    --sidebar: #181511;
+    --card: #23201b;
+    --surface: #2a2620;
+    --line: #3a342c;
+    --ink: #ece6dc;
+    --ink-2: #c4baad;
+    --muted: #978d80;
+    --ai: #a39a8e;
+    --hover: #312c25;
+    --active: #39332b;
+    --olive: #5fae86;
+    --olive-ink: #7cc49d;
+    --leaf: #6fbf94;
+    --licorice: #0b0a08;
+    --amber: #e0a54a;
+    --mark: #5a4526;
+    --bubble-them: #39332b;
+    --bubble-me: #2c3a31;
+    --faint: #5e564c;
+    --selection: #33473a;
   }
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-sidebar: var(--sidebar);
+  --color-card: var(--card);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-ai: var(--ai);
+  --color-hover: var(--hover);
+  --color-active: var(--active);
+  --color-olive: var(--olive);
+  --color-olive-ink: var(--olive-ink);
+  --color-leaf: var(--leaf);
+  --color-licorice: var(--licorice);
+  --color-event: var(--event);
+  --color-amber: var(--amber);
+  --color-mark: var(--mark);
+  --color-danger: var(--danger);
+  --color-faint: var(--faint);
+  /* shadcn */
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--olive);
+  --color-primary: var(--ink);
+  --color-primary-foreground: var(--canvas);
+  --color-accent: var(--hover);
+  --color-accent-foreground: var(--ink);
+  --color-muted-foreground: var(--muted);
+  --color-destructive: var(--danger);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
+  --font-serif: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+  --font-mono: ui-monospace, Menlo, monospace;
 }

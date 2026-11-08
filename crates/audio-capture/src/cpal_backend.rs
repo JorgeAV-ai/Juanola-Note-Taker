@@ -42,6 +42,13 @@ const GAP_TOLERANCE_SECS: f64 = 0.05;
 /// Core Audio no lo notifica.
 const STALL_TIMEOUT: Duration = Duration::from_secs(2);
 const WATCHDOG_TICK: Duration = Duration::from_millis(500);
+/// Cada cuánto mira el DSP si se ha pedido el cierre.
+const DSP_POLL: Duration = Duration::from_millis(100);
+/// Tope para abrir un stream (Core Audio a veces no vuelve nunca). El mic es
+/// más generoso: con Bluetooth tarda ~3 s en cambiar de perfil y, si falla, la
+/// grabación no puede seguir; el del sistema se reintenta en segundo plano.
+const OPEN_TIMEOUT_MIC: Duration = Duration::from_secs(15);
+const OPEN_TIMEOUT_SYSTEM: Duration = Duration::from_secs(6);
 
 enum Command {
     Pause,
@@ -188,6 +195,13 @@ struct ChannelSlot {
     opened_ms: u64,
     /// Reconstrucciones seguidas por falta de datos (para el backoff).
     stalls: u32,
+    /// Pide al hilo DSP que termine. No basta con soltar `tx`: un hilo de
+    /// apertura colgado en Core Audio conserva un clon y el DSP no vería nunca
+    /// el canal cerrado (Stop se quedaba esperando para siempre).
+    closing: Arc<std::sync::atomic::AtomicBool>,
+    /// Hay un hilo de apertura sin terminar (colgado en Core Audio): no se
+    /// lanza otro hasta que vuelva, para no acumular hilos bloqueados.
+    opening: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl ChannelSlot {
@@ -199,9 +213,11 @@ impl ChannelSlot {
         frames: broadcast::Sender<AudioFrame>,
     ) -> Result<Self, CaptureError> {
         let (tx, rx) = mpsc::sync_channel::<Block>(CALLBACK_QUEUE);
+        let closing = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let dsp_closing = closing.clone();
         let dsp = std::thread::Builder::new()
             .name(format!("audio-dsp-{}", label(channel)))
-            .spawn(move || dsp_thread(channel, t0, rx, frames))
+            .spawn(move || dsp_thread(channel, t0, rx, frames, dsp_closing))
             .map_err(backend)?;
         Ok(Self {
             channel,
@@ -215,52 +231,28 @@ impl ChannelSlot {
             last_activity: Arc::new(AtomicU64::new(0)),
             opened_ms: 0,
             stalls: 0,
+            closing,
+            opening: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         })
     }
 
-    fn resolve_device(&self, host: &cpal::Host) -> Result<cpal::Device, CaptureError> {
-        if self.loopback {
-            return host
-                .default_output_device()
-                .ok_or_else(|| CaptureError::DeviceNotFound("salida por defecto".into()));
-        }
-        match &self.device_id {
-            Some(id) => {
-                let parsed = id.parse().map_err(|_| CaptureError::DeviceNotFound(id.clone()))?;
-                host.device_by_id(&parsed).ok_or_else(|| CaptureError::DeviceNotFound(id.clone()))
-            }
-            None => host
-                .default_input_device()
-                .ok_or_else(|| CaptureError::DeviceNotFound("micrófono por defecto".into())),
-        }
-    }
-
     /// (Re)abre el stream del canal. Si `play` es falso queda creado pero en pausa.
+    ///
+    /// Todo lo que toca Core Audio va en un hilo auxiliar con tiempo límite:
+    /// crear el tap del sistema mientras un auricular Bluetooth cambia de perfil
+    /// (A2DP → HFP al abrir su micro) puede quedarse colgado para siempre, y
+    /// sin el límite colgaba el arranque entero de la grabación.
     fn open(
         &mut self,
-        host: &cpal::Host,
         commands: &mpsc::Sender<Command>,
         play: bool,
     ) -> Result<(), CaptureError> {
+        if self.opening.load(Ordering::Acquire) {
+            return Err(CaptureError::Backend(format!("la apertura anterior de {} sigue colgada", label(self.channel))));
+        }
         // Soltar el anterior primero: en macOS destruye su tap y aggregate device.
         self.stream = None;
         self.generation = self.generation.wrapping_add(1);
-        let device = self.resolve_device(host)?;
-        let supported =
-            if self.loopback { device.default_output_config() } else { device.default_input_config() }
-                .map_err(map_cpal)?;
-        let format = supported.sample_format();
-        let config: cpal::StreamConfig = supported.into();
-        let name = device.description().map(|d| d.name().to_string()).unwrap_or_default();
-        tracing::info!(
-            channel = label(self.channel),
-            device = %name,
-            rate = config.sample_rate,
-            channels = config.channels,
-            ?format,
-            generation = self.generation,
-            "abriendo stream"
-        );
         self.touch();
         self.opened_ms = self.last_activity.load(Ordering::Relaxed);
         let ctx = StreamCtx {
@@ -271,19 +263,77 @@ impl ChannelSlot {
             tx: self.tx.clone(),
             commands: commands.clone(),
         };
-        let stream = match format {
-            SampleFormat::F32 => build::<f32>(&device, config, ctx)?,
-            SampleFormat::I16 => build::<i16>(&device, config, ctx)?,
-            SampleFormat::I32 => build::<i32>(&device, config, ctx)?,
-            SampleFormat::U16 => build::<u16>(&device, config, ctx)?,
-            other => return Err(CaptureError::Backend(format!("formato de muestra no soportado: {other:?}"))),
-        };
-        if play {
-            stream.play().map_err(map_cpal)?;
+        let (loopback, device_id, channel) = (self.loopback, self.device_id.clone(), self.channel);
+        let (done_tx, done_rx) = mpsc::channel();
+        let opening = self.opening.clone();
+        opening.store(true, Ordering::Release);
+        std::thread::Builder::new()
+            .name(format!("audio-open-{}", label(channel)))
+            .spawn(move || {
+                let res = open_stream(loopback, device_id.as_deref(), ctx, play);
+                opening.store(false, Ordering::Release);
+                // Si ya se agotó el tiempo nadie escucha: el stream se suelta aquí.
+                let _ = done_tx.send(res);
+            })
+            .map_err(|e| {
+                self.opening.store(false, Ordering::Release);
+                backend(e)
+            })?;
+        let timeout = if self.loopback { OPEN_TIMEOUT_SYSTEM } else { OPEN_TIMEOUT_MIC };
+        match done_rx.recv_timeout(timeout) {
+            Ok(res) => {
+                self.stream = Some(res?);
+                Ok(())
+            }
+            Err(_) => Err(CaptureError::Backend(format!(
+                "abrir el stream de {} tardó más de {} s",
+                label(self.channel),
+                timeout.as_secs()
+            ))),
         }
-        self.stream = Some(stream);
-        Ok(())
     }
+}
+
+fn resolve_device(host: &cpal::Host, loopback: bool, device_id: Option<&str>) -> Result<cpal::Device, CaptureError> {
+    if loopback {
+        return host.default_output_device().ok_or_else(|| CaptureError::DeviceNotFound("salida por defecto".into()));
+    }
+    match device_id {
+        Some(id) => {
+            let parsed = id.parse().map_err(|_| CaptureError::DeviceNotFound(id.to_string()))?;
+            host.device_by_id(&parsed).ok_or_else(|| CaptureError::DeviceNotFound(id.to_string()))
+        }
+        None => host.default_input_device().ok_or_else(|| CaptureError::DeviceNotFound("micrófono por defecto".into())),
+    }
+}
+
+fn open_stream(loopback: bool, device_id: Option<&str>, ctx: StreamCtx, play: bool) -> Result<cpal::Stream, CaptureError> {
+    let host = cpal::default_host();
+    let device = resolve_device(&host, loopback, device_id)?;
+    let supported = if loopback { device.default_output_config() } else { device.default_input_config() }.map_err(map_cpal)?;
+    let format = supported.sample_format();
+    let config: cpal::StreamConfig = supported.into();
+    let name = device.description().map(|d| d.name().to_string()).unwrap_or_default();
+    tracing::info!(
+        channel = label(ctx.channel),
+        device = %name,
+        rate = config.sample_rate,
+        channels = config.channels,
+        ?format,
+        generation = ctx.generation,
+        "abriendo stream"
+    );
+    let stream = match format {
+        SampleFormat::F32 => build::<f32>(&device, config, ctx)?,
+        SampleFormat::I16 => build::<i16>(&device, config, ctx)?,
+        SampleFormat::I32 => build::<i32>(&device, config, ctx)?,
+        SampleFormat::U16 => build::<u16>(&device, config, ctx)?,
+        other => return Err(CaptureError::Backend(format!("formato de muestra no soportado: {other:?}"))),
+    };
+    if play {
+        stream.play().map_err(map_cpal)?;
+    }
+    Ok(stream)
 }
 
 impl ChannelSlot {
@@ -325,21 +375,32 @@ fn owner_thread(
     ready: mpsc::Sender<Result<Instant, CaptureError>>,
 ) {
     let t0 = Instant::now();
-    let host = cpal::default_host();
     let mut slots: Vec<ChannelSlot> = Vec::new();
 
     let setup = (|| -> Result<(), CaptureError> {
         // El mic va primero: si es Bluetooth, abrirlo cambia el perfil y la
         // frecuencia de la salida; el stream del sistema se reconstruye solo.
-        let mut mic = ChannelSlot::new(Channel::Mic, cfg.mic_device.clone(), false, t0, frames.clone())?;
-        mic.open(&host, &commands_tx, true)?;
-        slots.push(mic);
+        if !cfg.capture_mic && !cfg.capture_system_audio {
+            return Err(CaptureError::Backend("no hay ningún canal que capturar".into()));
+        }
+        if cfg.capture_mic {
+            let mut mic = ChannelSlot::new(Channel::Mic, cfg.mic_device.clone(), false, t0, frames.clone())?;
+            mic.open(&commands_tx, true)?;
+            slots.push(mic);
+        }
         if cfg.capture_system_audio {
             let mut sys = ChannelSlot::new(Channel::System, None, true, t0, frames.clone())?;
-            sys.open(&host, &commands_tx, true).map_err(|e| match e {
-                CaptureError::Backend(m) => CaptureError::Backend(format!("audio del sistema: {m}")),
-                other => other,
-            })?;
+            match sys.open(&commands_tx, true) {
+                Ok(()) => {}
+                // Permisos o falta de soporte: no tiene arreglo, se informa.
+                Err(e @ (CaptureError::PermissionDenied(_) | CaptureError::SystemAudioUnavailable)) => return Err(e),
+                // Lo demás (p. ej. Core Audio colgado en un cambio de perfil BT)
+                // suele ser pasajero: se graba el mic y el sistema se reintenta.
+                Err(e) => {
+                    tracing::warn!("audio del sistema: {e}; se reintenta en segundo plano");
+                    let _ = commands_tx.send(Command::Rebuild(Channel::System));
+                }
+            }
             slots.push(sys);
         }
         Ok(())
@@ -348,7 +409,7 @@ fn owner_thread(
     let ok = setup.is_ok();
     let _ = ready.send(setup.map(|()| t0));
     if ok {
-        command_loop(&host, &mut slots, &commands_tx, &commands);
+        command_loop(&mut slots, &commands_tx, &commands);
     }
     // Soltar streams y emisores termina los hilos DSP.
     let handles: Vec<_> = slots
@@ -356,6 +417,7 @@ fn owner_thread(
         .map(|s| {
             drop(s.stream);
             drop(s.tx);
+            s.closing.store(true, Ordering::Relaxed);
             s.dsp
         })
         .collect();
@@ -365,7 +427,6 @@ fn owner_thread(
 }
 
 fn command_loop(
-    host: &cpal::Host,
     slots: &mut [ChannelSlot],
     commands_tx: &mpsc::Sender<Command>,
     commands: &mpsc::Receiver<Command>,
@@ -421,7 +482,7 @@ fn command_loop(
         pending.retain(|(_, at)| *at > now);
         for ch in due {
             let Some(slot) = slots.iter_mut().find(|s| s.channel == ch) else { continue };
-            match slot.open(host, commands_tx, !paused) {
+            match slot.open(commands_tx, !paused) {
                 Ok(()) => tracing::info!(channel = label(ch), "stream reconstruido"),
                 Err(e) => {
                     tracing::warn!(channel = label(ch), "no se pudo reconstruir: {e}; reintento");
@@ -437,6 +498,7 @@ fn dsp_thread(
     t0: Instant,
     rx: mpsc::Receiver<Block>,
     frames: broadcast::Sender<AudioFrame>,
+    closing: Arc<std::sync::atomic::AtomicBool>,
 ) {
     let rate = TARGET_SAMPLE_RATE as f64;
     let mut resampler: Option<MonoResampler> = None;
@@ -454,7 +516,14 @@ fn dsp_thread(
         let _ = frames.send(AudioFrame { channel, samples, timestamp });
     };
 
-    while let Ok(block) = rx.recv() {
+    loop {
+        // Con la cola vacía y el cierre pedido, se termina aunque quede algún
+        // emisor vivo (ver `ChannelSlot::closing`).
+        let block = match rx.recv_timeout(DSP_POLL) {
+            Ok(b) => b,
+            Err(mpsc::RecvTimeoutError::Timeout) if !closing.load(Ordering::Relaxed) => continue,
+            Err(_) => break,
+        };
         if generation != Some(block.generation) {
             generation = Some(block.generation);
             match MonoResampler::new(block.rate) {

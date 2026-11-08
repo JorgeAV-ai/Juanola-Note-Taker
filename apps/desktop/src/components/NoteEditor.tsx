@@ -5,6 +5,8 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Image from "@tiptap/extension-image";
+import Underline from "@tiptap/extension-underline";
+import { FormatMenu } from "@/components/FormatMenu";
 
 // Editor de notas crudas. Markdown ligero (#, -, [], **, *) lo da StarterKit + TaskList.
 // Guarda el documento ProseMirror (debounce de 600 ms) con `onChange`.
@@ -13,7 +15,8 @@ export function NoteEditor({ initial, onChange }: { initial: unknown; onChange: 
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Placeholder.configure({ placeholder: "Write notes..." }),
+      Underline,
+      Placeholder.configure({ placeholder: "Write notes" }),
       TaskList,
       TaskItem.configure({ nested: true }),
       Image.configure({ inline: false, allowBase64: true }),
@@ -34,5 +37,10 @@ export function NoteEditor({ initial, onChange }: { initial: unknown; onChange: 
     },
     [editor],
   );
-  return <EditorContent editor={editor} className="editor" />;
+  return (
+    <>
+      <FormatMenu editor={editor} />
+      <EditorContent editor={editor} className="editor" />
+    </>
+  );
 }

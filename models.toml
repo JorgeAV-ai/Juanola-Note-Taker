@@ -23,6 +23,7 @@ runtime = "mlx"
 format = "mlx"
 repo = "mlx-community/silero-vad"
 files = ["model.safetensors", "config.json"]
+dir = "vad/silero-vad-mlx"
 size_mb = 2
 platforms = ["macos-arm64"]
 backends = ["metal"]
@@ -48,8 +49,9 @@ name = "qwen3-asr-0.6b"
 runtime = "mlx"
 format = "mlx"
 repo = "mlx-community/Qwen3-ASR-0.6B-4bit"
-# El repo no trae tokenizer.json (ni el de Qwen): se genera desde vocab.json + merges.txt
-# + tokenizer_config.json (hoy con `transformers`; pendiente hacerlo en Rust al instalar).
+dir = "stt_streaming/qwen3-asr-0.6b-mlx"
+# El repo no trae tokenizer.json: el instalador lo genera desde vocab.json + merges.txt
+# + tokenizer_config.json (juanola_models::tokenizer).
 files = ["model.safetensors", "config.json", "vocab.json", "merges.txt", "tokenizer_config.json", "preprocessor_config.json"]
 size_mb = 710
 notes = "Transcriptor propio sobre mlxrs (crates/stt/src/backends/qwen3_mlx.rs), validado token a token contra mlx-audio."
@@ -202,6 +204,7 @@ runtime = "llama.cpp"
 format = "gguf"
 repo = "LiquidAI/LFM3-1.7B-GGUF"
 files = ["LFM3-1.7B-Q4_K_M.gguf"]
+dir = "llm/lfm3-1.7b-q4km"
 size_mb = 1100
 platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
 backends = ["vulkan", "cuda", "metal", "cpu"]

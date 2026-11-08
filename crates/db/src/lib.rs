@@ -75,4 +75,46 @@ mod tests {
         assert_eq!(repo::segments::last_end(&db, n.id).await.unwrap(), 3.0);
         std::fs::remove_dir_all(&dir).ok();
     }
+
+    #[tokio::test]
+    async fn folders_and_trash() {
+        let dir = std::env::temp_dir().join(format!("juanola-db-test-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let db = Db::open(&dir.join("t.sqlite")).await.unwrap();
+        let ws = repo::workspaces::ensure_personal(&db).await.unwrap();
+        let a = repo::notes::create(&db, ws, "a").await.unwrap();
+        let b = repo::notes::create(&db, ws, "b").await.unwrap();
+        let calls = repo::folders::create(&db, ws, "Customer calls").await.unwrap();
+        let other = repo::folders::create(&db, ws, "Otra").await.unwrap();
+        repo::folders::set_note_folder(&db, a.id, Some(calls.id)).await.unwrap();
+        repo::folders::set_note_folder(&db, b.id, Some(calls.id)).await.unwrap();
+        // Mover a otra carpeta la quita de la primera.
+        repo::folders::set_note_folder(&db, b.id, Some(other.id)).await.unwrap();
+        assert_eq!(repo::folders::note_folder(&db, b.id).await.unwrap(), Some(other.id));
+        let list = repo::folders::list(&db, ws).await.unwrap();
+        assert_eq!(list.iter().map(|f| (f.name.as_str(), f.note_count)).collect::<Vec<_>>(), [("Customer calls", 1), ("Otra", 1)]);
+        repo::folders::rename(&db, other.id, "Clientes").await.unwrap();
+
+        // Papelera: fuera de las listas y de los recuentos; se restaura.
+        repo::notes::trash(&db, a.id).await.unwrap();
+        assert_eq!(repo::notes::list_recent(&db, 10).await.unwrap().len(), 1);
+        assert!(repo::folders::notes(&db, calls.id).await.unwrap().is_empty());
+        assert_eq!(repo::folders::list(&db, ws).await.unwrap()[0].note_count, 0);
+        assert_eq!(repo::notes::list_trashed(&db).await.unwrap()[0].id, a.id);
+        repo::notes::restore(&db, a.id).await.unwrap();
+        assert_eq!(repo::folders::notes(&db, calls.id).await.unwrap()[0].id, a.id);
+
+        // Borrar una carpeta deja sus notas sin carpeta.
+        repo::folders::delete(&db, calls.id).await.unwrap();
+        assert_eq!(repo::folders::note_folder(&db, a.id).await.unwrap(), None);
+        assert_eq!(repo::notes::list_recent(&db, 10).await.unwrap().len(), 2);
+
+        // Borrar para siempre solo desde la papelera.
+        repo::notes::delete_forever(&db, b.id).await.unwrap();
+        assert!(repo::notes::get(&db, b.id).await.unwrap().is_some());
+        repo::notes::trash(&db, b.id).await.unwrap();
+        repo::notes::delete_forever(&db, b.id).await.unwrap();
+        assert!(repo::notes::get(&db, b.id).await.unwrap().is_none());
+        std::fs::remove_dir_all(&dir).ok();
+    }
 }

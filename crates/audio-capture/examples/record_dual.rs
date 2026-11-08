@@ -44,6 +44,7 @@ async fn main() -> anyhow::Result<()> {
 
     let mut rx = capture.start(CaptureConfig {
         mic_device: std::env::var("JUANOLA_MIC").ok(),
+        capture_mic: true,
         capture_system_audio: true,
         echo_cancellation: false,
     })?;

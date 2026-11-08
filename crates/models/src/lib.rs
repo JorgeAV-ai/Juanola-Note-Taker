@@ -2,6 +2,9 @@
 //! Hugging Face con progreso, verificación SHA-256 y selección de backend
 //! según plataforma, GPU y RAM. Ver docs/modelos-mvp.md.
 
+pub mod install;
+pub mod tokenizer;
+
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -29,6 +32,9 @@ pub struct ModelEntry {
     pub repo: String,
     #[serde(default)]
     pub files: Vec<String>,
+    /// Carpeta de instalación relativa a la raíz de modelos (por defecto
+    /// `<slot>/<name>-<format>`).
+    pub dir: Option<String>,
     pub sha256: Option<String>,
     pub size_mb: Option<u64>,
     #[serde(default)]

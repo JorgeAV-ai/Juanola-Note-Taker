@@ -63,7 +63,7 @@ async fn main() -> anyhow::Result<()> {
         updated_at: now,
         trashed_at: None,
     };
-    let input = EnhanceInput { note: &note, segments: &segments, template: None, summary_language: "español", user_profile: "" };
+    let input = EnhanceInput { note: &note, segments: &segments, template: None, summary_language: juanola_enhance::language::summary_language(&segments), user_profile: "" };
 
     let gguf = PathBuf::from(std::env::var("HOME")?)
         .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q4km/LFM3-1.7B-Q4_K_M.gguf");

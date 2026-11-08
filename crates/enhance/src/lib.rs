@@ -9,6 +9,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnhancedNotes {
     pub sections: Vec<Section>,
+    /// El usuario las ha editado: regenerarlas perdería esos cambios.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub edited: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,6 +26,9 @@ pub struct Bullet {
     pub is_user_text: bool,
     pub source: Option<Citation>,
     pub is_action_item: bool,
+    /// Tarea marcada como hecha en el editor (la IA siempre la crea sin marcar).
+    #[serde(default)]
+    pub done: bool,
 }
 
 pub struct EnhanceInput<'a> {
@@ -58,4 +64,5 @@ pub fn enhanced_notes_schema() -> serde_json::Value {
 }
 
 pub mod itn;
+pub mod language;
 pub mod pipelines;

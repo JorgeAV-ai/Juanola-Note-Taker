@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "dev.juanola.desktop",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "scripts/build-sidecar.sh && pnpm dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "scripts/build-sidecar.sh && pnpm build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -40,6 +40,9 @@
     "macOS": {
       "minimumSystemVersion": "13.0",
       "entitlements": "entitlements.plist"
-    }
+    },
+    "externalBin": [
+      "binaries/juanola-stt-worker"
+    ]
   }
 }

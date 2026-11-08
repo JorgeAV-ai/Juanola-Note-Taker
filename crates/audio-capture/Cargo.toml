@@ -18,6 +18,12 @@ cpal = "0.18"
 # Resample a 16 kHz mono.
 rubato = "5"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+# Consultar y pedir el permiso de micrófono (AVCaptureDevice) antes de grabar.
+objc2 = "0.6"
+block2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString"] }
+
 [dev-dependencies]
 hound = "3"
 anyhow.workspace = true

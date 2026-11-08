@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let mut capture = CpalCapture::new();
-    let mut rx = capture.start(CaptureConfig { mic_device: None, capture_system_audio: true, echo_cancellation: false })?;
+    let mut rx = capture.start(CaptureConfig { mic_device: None, capture_mic: true, capture_system_audio: true, echo_cancellation: false })?;
     // Medir contra el origen de los timestamps de la captura, no contra la
     // vuelta de start() (abrir un micro Bluetooth tarda segundos).
     let started = capture.session_start().unwrap_or_else(Instant::now);

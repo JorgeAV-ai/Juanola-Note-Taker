@@ -2875,9 +2875,12 @@ name = "juanola-audio-capture"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "block2",
  "cpal",
  "hound",
  "juanola-core-types",
+ "objc2",
+ "objc2-foundation",
  "rubato",
  "serde",
  "thiserror 2.0.21",
@@ -2926,6 +2929,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "juanola-core-types",
+ "serde",
  "serde_json",
  "sqlx",
  "thiserror 2.0.21",
@@ -3077,11 +3081,15 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "dirs 6.0.0",
+ "futures",
  "reqwest 0.12.28",
  "serde",
+ "serde_json",
+ "sha2",
  "thiserror 2.0.21",
  "tokio",
  "toml 0.8.2",
+ "tracing",
 ]
 
 [[package]]

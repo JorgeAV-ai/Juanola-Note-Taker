@@ -1,6 +1,7 @@
 //! Punto de entrada de la app de escritorio. Registra plugins, estado y comandos.
 
 mod commands;
+mod models;
 mod recording;
 mod state;
 
@@ -33,7 +34,16 @@ pub fn run() {
             std::fs::create_dir_all(&data_dir)?;
             let db_path = data_dir.join("juanola.sqlite");
             let db = tauri::async_runtime::block_on(juanola_db::Db::open(&db_path))?;
-            app.manage(state::AppState::new(db, data_dir));
+            let state = state::AppState::new(db, data_dir);
+            match state.models.status() {
+                Ok(models) => {
+                    for m in models {
+                        tracing::info!(slot = m.slot, installed = m.installed, dir = %m.dir.display(), "modelo");
+                    }
+                }
+                Err(e) => tracing::warn!(error = %e, "estado de los modelos"),
+            }
+            app.manage(state);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -43,6 +53,29 @@ pub fn run() {
             commands::get_note,
             commands::set_note_title,
             commands::set_note_raw_doc,
+            commands::set_note_enhanced_doc,
+            commands::open_privacy_settings,
+            commands::mic_permission_status,
+            commands::frontend_error,
+            commands::reveal_data_dir,
+            commands::models_status,
+            commands::install_models,
+            commands::cancel_model_install,
+            commands::trash_note,
+            commands::restore_note,
+            commands::list_trashed_notes,
+            commands::delete_note_forever,
+            commands::list_folders,
+            commands::create_folder,
+            commands::rename_folder,
+            commands::delete_folder,
+            commands::list_folder_notes,
+            commands::get_note_folder,
+            commands::set_note_folder,
+            commands::autotest_config,
+            commands::autotest_log,
+            commands::autotest_say,
+            commands::autotest_quit,
             commands::list_segments,
             commands::start_recording,
             commands::pause_recording,
@@ -52,6 +85,12 @@ pub fn run() {
             commands::list_audio_devices,
             commands::coming_up,
         ])
-        .run(tauri::generate_context!())
-        .expect("error al arrancar Juanola");
+        .build(tauri::generate_context!())
+        .expect("error al arrancar Juanola")
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                use tauri::Manager;
+                app.state::<state::AppState>().unload_llm();
+            }
+        });
 }

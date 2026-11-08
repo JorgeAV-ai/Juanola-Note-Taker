@@ -11,9 +11,11 @@ use juanola_core_types::Channel;
 use tokio::sync::broadcast;
 
 mod cpal_backend;
+mod permissions;
 mod resample;
 
 pub use cpal_backend::CpalCapture;
+pub use permissions::{mic_permission, request_mic_permission, Permission};
 pub use resample::MonoResampler;
 
 /// Frecuencia a la que se entregan los frames a los modelos.
@@ -40,6 +42,9 @@ pub struct AudioDevice {
 pub struct CaptureConfig {
     /// `None` = "Auto": seguir al micrófono que usa la app de reunión.
     pub mic_device: Option<String>,
+    /// Abrir el micrófono. Siempre en la app; sin él solo se graba el sistema
+    /// (pruebas automáticas que no pueden aceptar el permiso de micrófono).
+    pub capture_mic: bool,
     pub capture_system_audio: bool,
     pub echo_cancellation: bool,
 }

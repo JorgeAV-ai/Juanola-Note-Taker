@@ -18,3 +18,10 @@ third_party/mlx-metallib/
 
 # código de llama.cpp (scripts/fetch-llama-cpp.sh)
 third_party/llama-cpp-sys-2/llama.cpp/
+
+# Sidecar de Tauri (lo genera apps/desktop/scripts/build-sidecar.sh)
+/apps/desktop/src-tauri/binaries/
+
+# configuración local de herramientas y cachés de compilación
+.claude/
+*.tsbuildinfo

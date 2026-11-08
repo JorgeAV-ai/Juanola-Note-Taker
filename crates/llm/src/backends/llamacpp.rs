@@ -114,6 +114,16 @@ impl LlamaCpp {
         let mut ctx = self.model.new_context(backend()?, ctx_params).map_err(err)?;
 
         let mut samplers = Vec::new();
+        // El razonamiento va desactivado (`<think></think>` en el prompt), pero
+        // con entradas cortas LFM3 abre otro `<think>` y gasta todo el
+        // presupuesto pensando: se prohíbe ese token.
+        let think = vocab.tokenize(b"<think>", false, true);
+        if let [tok] = think[..] {
+            samplers.push(LlamaSampler::logit_bias(
+                self.model.n_vocab(),
+                &[llama_cpp_2::token::logit_bias::LlamaLogitBias::new(tok, f32::NEG_INFINITY)],
+            ));
+        }
         if let Some(schema) = &opts.json_schema {
             let gbnf = llama_cpp_2::json_schema_to_grammar(&schema.to_string()).map_err(err)?;
             samplers.push(LlamaSampler::grammar(&self.model, &gbnf, "root").map_err(err)?);

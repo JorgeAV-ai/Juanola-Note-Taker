@@ -13,6 +13,7 @@ use std::time::Instant;
 use juanola_core_types::Channel;
 use juanola_stt::backends::qwen3_mlx::Qwen3AsrMlx;
 use juanola_stt::backends::silero_mlx::{SileroMlx, WINDOW};
+use juanola_stt::language_lock::LanguageLock;
 use juanola_stt::segmenter::{Action, Segmenter, SegmenterConfig, Span};
 use juanola_stt::worker::{read_frame, WorkerEvent, TARGET_SAMPLE_RATE};
 
@@ -132,6 +133,8 @@ fn run() -> Result<(), String> {
         }
     });
 
+    // Con «auto», el idioma se fija en cuanto uno domina (ver `LanguageLock`).
+    let mut lock = LanguageLock::default();
     let mut eof = false;
     while !eof {
         // Bloquear por la primera trama y luego vaciar la cola: si la
@@ -157,14 +160,14 @@ fn run() -> Result<(), String> {
             }
         }
         for ch in channels.iter_mut() {
-            run_pending(&asr, ch, language.as_deref());
+            run_pending(&asr, ch, language.as_deref(), &mut lock);
             ch.trim();
         }
     }
     Ok(())
 }
 
-fn run_pending(asr: &Qwen3AsrMlx, ch: &mut ChannelState, language: Option<&str>) {
+fn run_pending(asr: &Qwen3AsrMlx, ch: &mut ChannelState, fixed: Option<&str>, lock: &mut LanguageLock) {
     let actions = std::mem::take(&mut ch.pending);
     let last = actions.len().saturating_sub(1);
     for (i, action) in actions.into_iter().enumerate() {
@@ -175,8 +178,17 @@ fn run_pending(asr: &Qwen3AsrMlx, ch: &mut ChannelState, language: Option<&str>)
             Action::Final(s) => (s, true),
         };
         let t = Instant::now();
+        let language = fixed.or(lock.locked());
         let ev = match asr.transcribe(ch.audio(span), language) {
             Ok(out) => {
+                if is_final && language.is_none() {
+                    if let Some(l) = out.language.as_deref() {
+                        let secs = (span.end - span.start) as f64 / TARGET_SAMPLE_RATE;
+                        if let Some(l) = lock.observe(l, secs) {
+                            eprintln!("juanola-stt-worker: idioma fijado en {l}");
+                        }
+                    }
+                }
                 if !is_final && out.text.is_empty() {
                     continue;
                 }

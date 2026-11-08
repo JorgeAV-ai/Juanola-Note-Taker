@@ -181,7 +181,8 @@ pub fn build_messages(input: &EnhanceInput<'_>, blocks: &[UserBlock], opts: &Enh
         .replace("{{transcript}}", transcript.trim_end())
         .replace("{{notes}}", &notes)
         .replace("{{sections}}", sections_hint(transcript_words(input.segments)))
-        .replace("{{language}}", input.summary_language);
+        .replace("{{language}}", input.summary_language)
+        + &crate::language::prompt_suffix(input.summary_language);
     vec![Message { role: "user".into(), content: user }]
 }
 
@@ -519,6 +520,7 @@ fn resolve(
                         is_user_text: false,
                         source: Some(Citation::Transcript { note_id, start, end }),
                         is_action_item: action,
+                        done: false,
                     })
                 })
                 .collect();
@@ -552,6 +554,7 @@ fn resolve(
             is_user_text: true,
             source: Some(Citation::UserNote { note_id, block_id: b.id.clone() }),
             is_action_item: false,
+            done: false,
         };
         match best {
             Some((i, _)) => placed[i].push(bullet),
@@ -571,7 +574,7 @@ fn resolve(
     report.sections = sections.len();
     report.bullets = sections.iter().map(|s| s.bullets.len()).sum();
     report.action_items = sections.iter().flat_map(|s| &s.bullets).filter(|b| b.is_action_item).count();
-    let notes = EnhancedNotes { sections };
+    let notes = EnhancedNotes { sections, edited: false };
     validate(&notes)?;
     Ok((notes, report))
 }
@@ -614,6 +617,9 @@ pub async fn enhance_with(
     let gen = GenOptions { max_tokens: Some(summary_budget(words, opts.max_tokens)), seed: opts.seed, ..Default::default() };
     // 1. Resumen en una pasada: da la estructura y las tareas.
     let md = model.complete(&build_messages(input, &blocks, opts), &gen).await?;
+    if std::env::var_os("JUANOLA_LLM_TRACE").is_some() {
+        eprintln!("[enhance] resumen:\n{md}\n[/enhance]");
+    }
     let mut raw = merge_sections(parse_markdown(&md));
     // 2. Pasadas de detalle por fragmentos: datos concretos que el resumen omitió.
     // (Resumir por fragmentos y reagrupar los temas con el modelo se probó y
@@ -625,7 +631,8 @@ pub async fn enhance_with(
                 .replace("{{from}}", &clock(segs[0].start))
                 .replace("{{to}}", &clock(segs[segs.len() - 1].end))
                 .replace("{{transcript}}", format_transcript_from(segs, range.start + 1, opts.itn).trim_end())
-                .replace("{{language}}", input.summary_language);
+                .replace("{{language}}", input.summary_language)
+                + &crate::language::prompt_suffix(input.summary_language);
             // 12 datos caben en ~450 tokens; el tope corta las listas que el
             // modelo alarga sin fin (es lo que más tiempo cuesta).
             let detail_gen = GenOptions { max_tokens: Some(450), ..gen.clone() };
@@ -639,7 +646,11 @@ pub async fn enhance_with(
     }
     // (Se probó una pasada aparte para las tareas en JSON con gramática: daba
     // peores tareas, con frases copiadas y sin responsable.)
-    resolve(raw, input.segments, &blocks, input.note.id)
+    let (mut notes, report) = resolve(raw, input.segments, &blocks, input.note.id)?;
+    for s in notes.sections.iter_mut() {
+        s.heading = crate::language::localize_heading(&s.heading, input.summary_language);
+    }
+    Ok((notes, report))
 }
 
 #[cfg(test)]

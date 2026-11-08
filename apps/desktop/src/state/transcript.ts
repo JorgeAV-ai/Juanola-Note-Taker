@@ -26,7 +26,10 @@ export const useTranscript = create<TranscriptState>((set, get) => ({
     set({ noteId, lines: [] });
     const saved = await ipc.listSegments(noteId);
     if (get().noteId !== noteId) return;
-    const live = get().lines; // lo que haya llegado mientras tanto
+    // Lo que haya llegado en vivo mientras tanto, sin repetir lo guardado (dos
+    // `load` seguidos de la misma nota, p. ej. en StrictMode, se solapan).
+    const ids = new Set(saved.map((s) => s.id));
+    const live = get().lines.filter((l) => !ids.has(l.id));
     set({
       lines: [
         ...saved.map((s) => ({ id: s.id, channel: s.channel, start: s.start, end: s.end, text: s.text, final: true })),

@@ -108,3 +108,31 @@ pub async fn set_enhanced_doc(db: &Db, id: Id, doc: Option<&serde_json::Value>) 
 pub async fn set_status(db: &Db, id: Id, status: NoteStatus) -> Result<(), DbError> {
     touch(db, "UPDATE notes SET status = ? WHERE id = ?", id, Some(status_str(status).to_owned())).await
 }
+
+/// Manda la nota a la papelera; `restore` la recupera.
+pub async fn trash(db: &Db, id: Id) -> Result<(), DbError> {
+    sqlx::query("UPDATE notes SET trashed_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?")
+        .bind(id.to_string())
+        .execute(db.pool())
+        .await?;
+    Ok(())
+}
+
+pub async fn restore(db: &Db, id: Id) -> Result<(), DbError> {
+    sqlx::query("UPDATE notes SET trashed_at = NULL WHERE id = ?").bind(id.to_string()).execute(db.pool()).await?;
+    Ok(())
+}
+
+/// Notas en la papelera, la última borrada primero.
+pub async fn list_trashed(db: &Db) -> Result<Vec<Note>, DbError> {
+    let rows = sqlx::query(&format!("SELECT {COLS} FROM notes WHERE trashed_at IS NOT NULL ORDER BY trashed_at DESC"))
+        .fetch_all(db.pool())
+        .await?;
+    rows.iter().map(row_to_note).collect()
+}
+
+/// Borra la nota para siempre (con sus segmentos, por `ON DELETE CASCADE`).
+pub async fn delete_forever(db: &Db, id: Id) -> Result<(), DbError> {
+    sqlx::query("DELETE FROM notes WHERE id = ? AND trashed_at IS NOT NULL").bind(id.to_string()).execute(db.pool()).await?;
+    Ok(())
+}

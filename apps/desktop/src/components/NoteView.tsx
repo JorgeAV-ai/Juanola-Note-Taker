@@ -1,19 +1,49 @@
 import { useEffect, useRef, useState } from "react";
-import { events, ipc, type Note } from "../lib/ipc";
-import { useTranscript } from "../state/transcript";
-import { EnhancedView } from "./EnhancedView";
-import { NoteEditor } from "./NoteEditor";
-import { RecordingPill } from "./RecordingPill";
+import { AlignLeft, CalendarDays, ChevronDown, Ellipsis, Folder, FolderMinus, FolderPlus, Sparkles, Trash2, UsersRound } from "lucide-react";
+import { events, ipc, type Note, MODELS_MISSING } from "@/lib/ipc";
+import { useModels } from "@/state/models";
+import { dayLabel } from "@/lib/dates";
+import { cn } from "@/lib/utils";
+import { useTranscript } from "@/state/transcript";
+import { useLibrary } from "@/state/library";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { EnhancedView } from "@/components/EnhancedView";
+import { NoteEditor } from "@/components/NoteEditor";
+import { RecordingPill } from "@/components/RecordingPill";
+import { AskAnythingBar } from "@/components/AskAnythingBar";
 
 type Tab = "mine" | "enhanced";
 
-// Vista de nota: título inline, pestañas My notes / Enhanced, píldora de grabación.
-// Al parar la grabación se generan las notas mejoradas automáticamente.
-export function NoteView({ id }: { id: string }) {
+// Vista de nota de Granola: título en serif, fila de chips (My notes / Enhanced,
+// fecha y asistentes, carpeta, más) y abajo la píldora de grabación junto a
+// «Ask anything». Al parar la grabación se generan las notas mejoradas; si el
+// usuario ya las había editado, se pregunta antes de sustituirlas.
+export function NoteView({ id, onTrashed }: { id: string; onTrashed: () => void }) {
   const [note, setNote] = useState<Note | null>(null);
   const [tab, setTab] = useState<Tab>("mine");
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState(false);
+  const [folder, setFolder] = useState<string | null>(null);
+  const folders = useLibrary((s) => s.folders);
+  const reloadFolders = useLibrary((s) => s.reload);
   const load = useTranscript((s) => s.load);
   const titleTimer = useRef<number | undefined>(undefined);
 
@@ -24,9 +54,10 @@ export function NoteView({ id }: { id: string }) {
       if (n?.enhanced_doc) setTab("enhanced");
     });
     load(id);
+    ipc.getNoteFolder(id).then(setFolder).catch(() => setFolder(null));
     const un = events.noteStatus((e) => {
       if (e.note_id !== id) return;
-      setBusy(e.status === "enhancing" ? "Enhancing notes…" : null);
+      setBusy(e.status === "enhancing");
       if (e.status === "failed") setError(e.message ?? "Falló el enhance");
     });
     return () => {
@@ -35,25 +66,50 @@ export function NoteView({ id }: { id: string }) {
   }, [id, load]);
 
   const enhanceNow = async () => {
+    setConfirm(false);
     setError(null);
-    setBusy("Enhancing notes…");
+    setBusy(true);
     try {
       const enhanced = await ipc.enhanceNote(id);
       setNote((n) => (n ? { ...n, enhanced_doc: enhanced, status: "ready" } : n));
       setTab("enhanced");
     } catch (e) {
+      if (String(e) === MODELS_MISSING) useModels.getState().openDialog(true);
       setError(String(e));
     } finally {
-      setBusy(null);
+      setBusy(false);
+    }
+  };
+  const requestEnhance = () => (note?.enhanced_doc?.edited ? setConfirm(true) : enhanceNow());
+
+  const moveTo = async (folderId: string | null) => {
+    try {
+      await ipc.setNoteFolder(id, folderId);
+      setFolder(folderId);
+      await reloadFolders();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+  const trash = async () => {
+    try {
+      await ipc.trashNote(id);
+      await reloadFolders();
+      onTrashed();
+    } catch (e) {
+      setError(String(e));
     }
   };
 
   if (!note) return <div className="note" />;
+  const folderName = folders.find((f) => f.id === folder)?.name;
+  const hasEnhanced = !!note.enhanced_doc;
+
   return (
-    <div className="note" data-note-id={id}>
+    <div className="note relative mx-auto flex min-h-full max-w-[800px] flex-col px-12" data-note-id={id}>
       <input
-        className="note-title"
-        placeholder="Untitled"
+        className="note-title mt-4 w-full bg-transparent font-serif text-[38px] font-normal leading-tight outline-none placeholder:text-faint"
+        placeholder="New note"
         defaultValue={note.title}
         onChange={(e) => {
           const t = e.target.value;
@@ -61,22 +117,135 @@ export function NoteView({ id }: { id: string }) {
           titleTimer.current = window.setTimeout(() => ipc.setNoteTitle(id, t), 400);
         }}
       />
-      <div className="note-tabs">
-        <button className={`tab ${tab === "mine" ? "active" : ""}`} onClick={() => setTab("mine")}>My notes</button>
-        <button className={`tab ${tab === "enhanced" ? "active" : ""}`} onClick={() => setTab("enhanced")} disabled={!note.enhanced_doc}>
-          Enhanced
-        </button>
-        <span className="spacer" />
-        {busy && <span className="status">{busy}</span>}
-        <button className="icon-btn" title="Generate notes" onClick={enhanceNow} disabled={!!busy}>✨</button>
+
+      <div className="note-tabs mb-7 mt-4 flex flex-wrap items-center gap-2.5">
+        {hasEnhanced ? (
+          <div className="flex h-10 items-center rounded-full border border-line bg-hover/60 p-[3px]">
+            <button
+              className={cn("tab flex h-full items-center rounded-full px-3 text-ink-2 transition-colors", tab === "mine" && "active bg-surface text-ink shadow-sm")}
+              onClick={() => setTab("mine")}
+              title="My notes"
+              aria-label="My notes"
+            >
+              <AlignLeft className="size-[18px]" />
+              <span className="sr-only">My notes</span>
+            </button>
+            <div className={cn("flex h-full items-center rounded-full transition-colors", tab === "enhanced" && "bg-surface shadow-sm")}>
+              <button className={cn("tab flex h-full items-center gap-2 pl-3.5 pr-1 text-[15px]", tab === "enhanced" ? "active text-ink" : "text-ink-2")} onClick={() => setTab("enhanced")}>
+                <Sparkles className="size-[17px]" />
+                Enhanced
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="enhance-menu flex h-full items-center pl-0.5 pr-3 text-ink-2" aria-label="Opciones de Enhanced" disabled={busy}>
+                    <ChevronDown className="size-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem title="Generate notes" onSelect={requestEnhance}>
+                    <Sparkles /> Generar de nuevo
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        ) : (
+          <Button size="lg" title="Generate notes" onClick={requestEnhance} disabled={busy} className="text-[15px]">
+            <Sparkles /> Enhance notes
+          </Button>
+        )}
+
+        <div className="flex h-10 items-center gap-3 rounded-full border border-line px-4 text-[15px] text-ink-2">
+          <span className="flex items-center gap-2">
+            <CalendarDays className="size-[17px]" /> {dayLabel(new Date(note.created_at))}
+          </span>
+          <span className="flex items-center gap-2">
+            <UsersRound className="size-[17px]" /> Me
+          </span>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="lg" className="note-folder text-[15px] font-normal text-ink-2" data-folder={folder ?? ""}>
+              {folderName ? <Folder /> : <FolderPlus />}
+              {folderName ?? "Add to folder"}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[230px]">
+            <DropdownMenuLabel>Mover a</DropdownMenuLabel>
+            {folders.length === 0 && <div className="px-2.5 py-1.5 text-[13.5px] text-muted">Aún no hay carpetas: crea una con «Add folder».</div>}
+            {folders.map((f) => (
+              <DropdownMenuItem key={f.id} data-folder-id={f.id} onSelect={() => moveTo(f.id)}>
+                <Folder /> <span className="flex-1 truncate">{f.name}</span>
+                {f.id === folder && <span className="text-[12px] text-muted">actual</span>}
+              </DropdownMenuItem>
+            ))}
+            {folder && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => moveTo(null)}>
+                  <FolderMinus /> Quitar de la carpeta
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="icon" className="note-more size-10" aria-label="Más opciones">
+              <Ellipsis />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem destructive title="Mover a la papelera" onSelect={trash}>
+              <Trash2 /> Mover a la papelera
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
       </div>
-      {error && <div className="note-error">{error}</div>}
-      {tab === "mine" || !note.enhanced_doc ? (
-        <NoteEditor key={id} initial={note.raw_doc} onChange={(doc) => ipc.setNoteRawDoc(id, doc)} />
-      ) : (
-        <EnhancedView notes={note.enhanced_doc} />
-      )}
-      <RecordingPill noteId={id} onStopped={(saved) => (saved > 0 ? enhanceNow() : setError("No se ha transcrito nada."))} />
+
+      {error && <div className="note-error mb-4 rounded-xl border border-[#f1d3a8] bg-[#fdf6ea] px-4 py-2.5 text-[13.5px] text-[#8a4b0f] dark:border-[#6b4a1e] dark:bg-[#3a2e1c] dark:text-[#f3c98b]">{error}</div>}
+
+      <div className="flex-1">
+        {tab === "mine" || !note.enhanced_doc ? (
+          <NoteEditor key={id} initial={note.raw_doc} onChange={(doc) => ipc.setNoteRawDoc(id, doc)} />
+        ) : (
+          <EnhancedView
+            notes={note.enhanced_doc}
+            onChange={(doc) => {
+              setNote((n) => (n ? { ...n, enhanced_doc: doc } : n));
+              ipc.setNoteEnhancedDoc(id, doc).catch((e) => setError(String(e)));
+            }}
+          />
+        )}
+      </div>
+
+      <div className="sticky bottom-0 -mx-12 mt-6 bg-gradient-to-t from-canvas from-70% to-transparent px-12 pb-6 pt-10">
+        {busy && (
+          <div className="enhancing mb-4 flex h-[52px] items-center gap-3 rounded-full bg-hover px-5 text-[15px] font-medium text-ink">
+            <span className="licorice" aria-hidden="true"><i /></span>
+            Enhancing notes
+          </div>
+        )}
+        <RecordingPill
+          noteId={id}
+          onStopped={(saved) => (saved > 0 ? requestEnhance() : setError("No se ha transcrito nada."))}
+          askBar={<AskAnythingBar recipe="Write follow up email" onAsk={() => setError("El chat todavía no está conectado al modelo.")} />}
+        />
+      </div>
+
+      <AlertDialog open={confirm} onOpenChange={setConfirm}>
+        <AlertDialogContent className="note-confirm">
+          <AlertDialogTitle>¿Generar las notas de nuevo?</AlertDialogTitle>
+          <AlertDialogDescription>Has editado las notas mejoradas. Si las generas de nuevo, se perderán tus cambios.</AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Mantener</AlertDialogCancel>
+            <AlertDialogAction onClick={enhanceNow}>Generar de nuevo</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
