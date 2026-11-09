@@ -13,9 +13,15 @@
 //!   `is_user_text = true` y `Citation::UserNote`.
 //! - Las viñetas de «Próximos pasos» son `is_action_item`.
 //!
+//! Con plantilla, el modelo sigue escribiendo Markdown y [`fit_to_template`]
+//! encaja su salida en los apartados de la plantilla: los títulos finales son
+//! siempre los de la plantilla, en su orden, escriba lo que escriba el modelo.
+//! Si no encaja, se reintenta una vez con el motivo y, si vuelve a fallar, se
+//! genera en Auto (`EnhanceReport::template_fallback`).
+//!
 //! El resultado se valida contra [`crate::enhanced_notes_schema`].
 
-use juanola_core_types::{Channel, Citation, Id, Segment};
+use juanola_core_types::{fold, Channel, Citation, Id, SectionKind, Segment, Template, TemplateSection};
 use juanola_llm::{ChatModel, GenOptions, Message};
 
 use crate::{enhanced_notes_schema, Bullet, EnhanceInput, EnhancedNotes, Section};
@@ -192,11 +198,15 @@ pub struct EnhanceOptions {
     /// `None` = solo el resumen (3 veces más rápido, cobertura ~60 % frente a
     /// ~80 % en `fixtures/reunion_producto`).
     pub detail_chunk_secs: Option<f64>,
+    /// Con plantilla: gramática GBNF sobre Markdown que fija los títulos de la
+    /// plantilla, en su orden, y deja libre el texto de las viñetas (cada una
+    /// acaba en sus citas `[n, m]`). Experimental: ver `docs/plantillas.md` §6.4.
+    pub markdown_grammar: bool,
 }
 
 impl Default for EnhanceOptions {
     fn default() -> Self {
-        Self { itn: true, prompt: None, max_tokens: 3000, seed: None, detail_chunk_secs: Some(240.0) }
+        Self { itn: true, prompt: None, max_tokens: 3000, seed: None, detail_chunk_secs: Some(240.0), markdown_grammar: false }
     }
 }
 
@@ -225,15 +235,33 @@ pub fn chunk_ranges(segments: &[Segment], secs: f64) -> Vec<std::ops::Range<usiz
     out
 }
 
-/// Prompt completo para el enhance (un único mensaje de usuario).
-pub fn build_messages(input: &EnhanceInput<'_>, blocks: &[UserBlock], opts: &EnhanceOptions) -> Vec<Message> {
-    let mut notes = String::new();
-    if !blocks.is_empty() {
-        notes.push_str("\nNotas que tomó el usuario durante la reunión:\n");
-        for b in blocks {
-            notes.push_str(&format!("- {}\n", b.text));
+/// Las notas del usuario tal como van al prompt: los títulos se mantienen como
+/// títulos, las tareas llevan `[tarea]` y lo marcado en negrita o subrayado
+/// (o escrito bajo un título `###`) lleva `[importante]`.
+fn format_user_notes(blocks: &[UserBlock]) -> String {
+    if blocks.is_empty() {
+        return String::new();
+    }
+    let mut notes = String::from(
+        "\nNotas que tomó el usuario durante la reunión (marcan lo que le importó; \
+         desarrolla esos temas con lo que se dijo en la transcripción, sin copiarlas):\n",
+    );
+    let mut under_h3 = false;
+    for b in blocks {
+        match b.kind {
+            BlockKind::Heading(level) => {
+                under_h3 = level == 3;
+                notes.push_str(&format!("## {}\n", b.text));
+            }
+            BlockKind::Task { .. } => notes.push_str(&format!("- [tarea] {}\n", b.text)),
+            _ if b.emphasis || under_h3 => notes.push_str(&format!("- [importante] {}\n", b.text)),
+            _ => notes.push_str(&format!("- {}\n", b.text)),
         }
     }
+    notes
+}
+
+fn context_block(input: &EnhanceInput<'_>, template: Option<&Template>) -> String {
     let mut context = String::new();
     if !input.note.title.trim().is_empty() {
         context.push_str(&format!("Reunión: {}\n", input.note.title.trim()));
@@ -241,25 +269,134 @@ pub fn build_messages(input: &EnhanceInput<'_>, blocks: &[UserBlock], opts: &Enh
     if !input.user_profile.trim().is_empty() {
         context.push_str(&format!("Sobre el usuario: {}\n", input.user_profile.trim()));
     }
-    if let Some(t) = input.template {
-        context.push_str(&format!(
-            "Plantilla «{}». Propósito: {}. Estilo: {}. Estructura: {}.\n",
-            t.name, t.purpose, t.style, t.structure
-        ));
+    if let Some(t) = template {
+        let mut line = format!("Plantilla «{}».", t.name.trim());
+        if !t.purpose.trim().is_empty() {
+            line.push_str(&format!(" Propósito: {}.", t.purpose.trim().trim_end_matches('.')));
+        }
+        if !t.style.trim().is_empty() {
+            line.push_str(&format!(" Estilo: {}.", t.style.trim().trim_end_matches('.')));
+        }
+        context.push_str(&line);
+        context.push('\n');
     }
     if !context.is_empty() {
         context.push('\n');
     }
+    context
+}
+
+/// Descripción de un apartado para el prompt (`## título — descripción`).
+fn structure_lines(sections: &[TemplateSection]) -> String {
+    sections
+        .iter()
+        .map(|s| {
+            let hint = match (s.hint.trim(), s.kind) {
+                ("", SectionKind::Tasks) => "cada tarea: quién, qué y cuándo",
+                (h, _) => h,
+            };
+            if hint.is_empty() {
+                format!("## {}", s.heading.trim())
+            } else {
+                format!("## {} — {hint}", s.heading.trim())
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Gramática GBNF del resumen con plantilla: los títulos de la plantilla en su
+/// orden (y «Otros temas» opcional al final), cada uno con 0 a 8 viñetas que
+/// acaban en sus citas. El texto de las viñetas es libre: lo que hundía la
+/// calidad era forzar JSON, no la estructura.
+fn markdown_grammar(sections: &[TemplateSection], language: &str) -> String {
+    fn lit(s: &str) -> String {
+        format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
+    }
+    let mut g = String::from("root ::= ");
+    let names: Vec<String> = (0..sections.len()).map(|i| format!("s{i}")).collect();
+    g.push_str(&names.join(" "));
+    let other = !sections.iter().any(|s| crate::language::is_other_topics(&s.heading));
+    if other {
+        g.push_str(" other?");
+    }
+    g.push('\n');
+    for (i, s) in sections.iter().enumerate() {
+        g.push_str(&format!("s{i} ::= {} \"\\n\" body\n", lit(&format!("## {}", s.heading.trim()))));
+    }
+    if other {
+        g.push_str(&format!(
+            "other ::= {} \"\\n\" body\n",
+            lit(&format!("## {}", crate::language::localize_heading(OTHER_TOPICS, language)))
+        ));
+    }
+    g.push_str(concat!(
+        "body ::= \"\\n\"? bullet{0,8} \"\\n\"?\n",
+        "bullet ::= \"- \" text refs \"\\n\"\n",
+        "text ::= [^\\n\\[]{3,300}\n",
+        "refs ::= \"[\" [0-9]{1,4} (\", \" [0-9]{1,4}){0,9} \"]\"\n",
+    ));
+    g
+}
+
+/// Los apartados de la plantilla más un `## Otros temas` opcional: sin esa
+/// salida, el modelo mete en los apartados lo que no les corresponde (medido:
+/// con una plantilla que no encaja, rellena todos y copia frases literales).
+fn structure_with_outlet(sections: &[TemplateSection], language: &str) -> String {
+    let mut lines = structure_lines(sections);
+    if !sections.iter().any(|s| crate::language::is_other_topics(&s.heading)) {
+        lines.push_str(&format!(
+            "\n## {} — solo si hace falta: lo que se habló y no corresponde a ninguno de los apartados anteriores",
+            crate::language::localize_heading(OTHER_TOPICS, language)
+        ));
+    }
+    lines
+}
+
+/// Prompt completo para el enhance (un único mensaje de usuario). Con
+/// plantilla en `input.template` usa [`juanola_prompts::ENHANCE_TEMPLATE`].
+pub fn build_messages(input: &EnhanceInput<'_>, blocks: &[UserBlock], opts: &EnhanceOptions) -> Vec<Message> {
+    match input.template {
+        Some(t) => template_messages(input, t, blocks, opts, None),
+        None => auto_messages(input, blocks, opts),
+    }
+}
+
+fn auto_messages(input: &EnhanceInput<'_>, blocks: &[UserBlock], opts: &EnhanceOptions) -> Vec<Message> {
     let template = opts.prompt.as_deref().unwrap_or(juanola_prompts::ENHANCE_USER);
     let transcript = format_transcript(input.segments, opts.itn);
     let user = template
-        .replace("{{context}}", &context)
+        .replace("{{context}}", &context_block(input, None))
         .replace("{{transcript}}", transcript.trim_end())
-        .replace("{{notes}}", &notes)
+        .replace("{{notes}}", &format_user_notes(blocks))
         .replace("{{sections}}", sections_hint(transcript_words(input.segments)))
         .replace("{{language}}", input.summary_language)
         + &crate::language::prompt_suffix(input.summary_language);
     vec![Message { role: "user".into(), content: user }]
+}
+
+/// Prompt con plantilla; `retry` es el motivo del fallo del intento anterior,
+/// que va al final (lo último que lee el modelo).
+fn template_messages(
+    input: &EnhanceInput<'_>,
+    template: &Template,
+    blocks: &[UserBlock],
+    opts: &EnhanceOptions,
+    retry: Option<&str>,
+) -> Vec<Message> {
+    let transcript = format_transcript(input.segments, opts.itn);
+    let mut user = juanola_prompts::ENHANCE_TEMPLATE
+        .replace("{{context}}", &context_block(input, Some(template)))
+        .replace("{{transcript}}", transcript.trim_end())
+        .replace("{{notes}}", &format_user_notes(blocks))
+        .replace("{{structure}}", &structure_with_outlet(&template.structure, input.summary_language))
+        .replace("{{language}}", input.summary_language)
+        + &crate::language::template_prompt_suffix(input.summary_language);
+    if let Some(r) = retry {
+        user.push('\n');
+        user.push_str(r);
+    }
+    vec![Message { role: "user".into(), content: user.trim_end().to_owned() + "\n" }]
 }
 
 /// Menos palabras que esto en la transcripción no da para resumir: el modelo
@@ -283,6 +420,12 @@ fn sections_hint(words: usize) -> &'static str {
 /// resumen ocupa ~0,4 tokens por palabra; con margen, y nunca más de `max`.
 fn summary_budget(words: usize, max: u32) -> u32 {
     ((words as f32 * 0.8) as u32).clamp(300, max)
+}
+
+/// Tope de tokens con plantilla: el de Auto más ~150 por apartado (incluido
+/// «Otros temas»), con un mínimo de 800.
+fn template_budget(words: usize, sections: usize, max: u32) -> u32 {
+    (summary_budget(words, max) + 150 * (sections as u32 + 1)).clamp(800, max.max(800))
 }
 
 /// Viñeta tal como la escribe el modelo.
@@ -392,7 +535,8 @@ fn parse_markdown(md: &str) -> Vec<RawSection> {
             current = Some(RawSection { heading: clean_heading(&h), bullets: Vec::new() });
         } else if let Some(b) = bullet_of(l) {
             let (text, refs) = split_refs(b);
-            let text = text.trim_matches('*').trim().to_owned();
+            // Sin negritas: el editor muestra el texto tal cual.
+            let text = text.replace("**", "").trim_matches('*').trim().to_owned();
             if text.is_empty() {
                 continue;
             }
@@ -457,6 +601,228 @@ fn merge_sections(sections: Vec<RawSection>) -> Vec<RawSection> {
     topics
 }
 
+/// ¿El título `a` (del modelo o del usuario) es el apartado `b` de la
+/// plantilla? Por orden de confianza: iguales sin mayúsculas, tildes ni
+/// puntuación (3); uno contiene al otro como palabras enteras (2); al menos la
+/// mitad de palabras significativas en común (1).
+fn heading_match(a: &str, b: &str) -> Option<u8> {
+    let (fa, fb) = (fold(a), fold(b));
+    if fa.is_empty() || fb.is_empty() {
+        return None;
+    }
+    if fa == fb {
+        return Some(3);
+    }
+    let (pa, pb) = (format!(" {fa} "), format!(" {fb} "));
+    if pa.contains(&pb) || pb.contains(&pa) {
+        return Some(2);
+    }
+    let (wa, wb) = (heading_words(&fa), heading_words(&fb));
+    let (inter, uni) = (wa.intersection(&wb).count(), wa.union(&wb).count());
+    (inter > 0 && inter * 2 >= uni).then_some(1)
+}
+
+/// Apartado de `headings` que mejor encaja con `heading` por título (pasos
+/// 1.1 a 1.3 del plan); a igual confianza, el primero.
+fn best_heading(heading: &str, headings: &[&str]) -> Option<usize> {
+    headings
+        .iter()
+        .enumerate()
+        .filter_map(|(i, h)| heading_match(heading, h).map(|q| (i, q)))
+        .max_by_key(|(i, q)| (*q, std::cmp::Reverse(*i)))
+        .map(|(i, _)| i)
+}
+
+/// Palabras para colocar viñetas y notas: sin tildes y con las cifras
+/// normalizadas («112k» y «112.000» → 112000).
+fn place_words(s: &str) -> std::collections::HashSet<String> {
+    let text = fold(&crate::itn::normalize_numbers(&s.replace('.', "")));
+    text.split(' ')
+        .map(|w| match w.strip_suffix('k') {
+            Some(n) if !n.is_empty() && n.chars().all(|c| c.is_ascii_digit()) => format!("{n}000"),
+            _ => w.to_owned(),
+        })
+        .flat_map(|w| words(&w))
+        .collect()
+}
+
+/// Palabras de un apartado de la plantilla (título y descripción), sin tildes.
+fn section_words(s: &TemplateSection) -> std::collections::HashSet<String> {
+    words(&fold(&format!("{} {}", s.heading, s.hint)))
+}
+
+/// Salida del modelo encajada en una plantilla.
+#[derive(Debug, Clone)]
+struct Fit {
+    /// Un apartado por cada uno de la plantilla, en su orden, más «Otros
+    /// temas» al final (vacío si todo encajó).
+    sections: Vec<RawSection>,
+    /// Secciones del modelo que encajaron por título.
+    matched_by_title: usize,
+    /// Viñetas que acabaron en «Otros temas».
+    unmatched_bullets: usize,
+    bullets: usize,
+    /// Títulos que escribió el modelo (para el mensaje de reintento).
+    model_headings: Vec<String>,
+}
+
+pub(crate) const OTHER_TOPICS: &str = "Otros temas";
+
+/// Encaja las secciones del modelo en los apartados de la plantilla:
+/// 1. cada sección va al apartado cuyo título encaja ([`best_heading`]) o, si
+///    es de tareas, al apartado `Tasks`;
+/// 2. si no encaja, cada viñeta va al apartado `Topics` con más palabras en
+///    común con su título y su descripción, y si no hay ninguno, a «Otros temas».
+///
+/// Nada de lo que escribió el modelo se pierde, y las viñetas repetidas dentro
+/// de un apartado se quitan.
+fn fit_to_template(raw: Vec<RawSection>, template: &[TemplateSection]) -> Fit {
+    let headings: Vec<&str> = template.iter().map(|s| s.heading.as_str()).collect();
+    let tasks = template.iter().position(|s| s.kind == SectionKind::Tasks);
+    let topic_words: Vec<(usize, std::collections::HashSet<String>)> = template
+        .iter()
+        .enumerate()
+        .filter(|(_, s)| s.kind == SectionKind::Topics)
+        .map(|(i, s)| (i, section_words(s)))
+        .collect();
+    let mut out: Vec<RawSection> = template.iter().map(|s| RawSection { heading: s.heading.clone(), bullets: Vec::new() }).collect();
+    out.push(RawSection { heading: OTHER_TOPICS.into(), bullets: Vec::new() });
+    let mut fit = Fit { sections: Vec::new(), matched_by_title: 0, unmatched_bullets: 0, bullets: 0, model_headings: Vec::new() };
+    fn push(target: &mut RawSection, b: RawBullet) {
+        if !target.bullets.iter().any(|x| x.text.to_lowercase() == b.text.to_lowercase()) {
+            target.bullets.push(b);
+        }
+    }
+    for s in raw {
+        fit.model_headings.push(s.heading.clone());
+        fit.bullets += s.bullets.len();
+        // Lo que el propio modelo puso en «Otros temas» se queda ahí (salvo que
+        // la plantilla tenga un apartado con ese nombre).
+        if crate::language::is_other_topics(&s.heading) && best_heading(&s.heading, &headings).is_none() {
+            for b in s.bullets {
+                fit.unmatched_bullets += 1;
+                push(out.last_mut().unwrap(), b);
+            }
+            continue;
+        }
+        let by_title = best_heading(&s.heading, &headings);
+        if by_title.is_some() {
+            fit.matched_by_title += 1;
+        }
+        match by_title.or(tasks.filter(|_| is_next_steps(&s.heading))) {
+            Some(i) => s.bullets.into_iter().for_each(|b| push(&mut out[i], b)),
+            None => {
+                for b in s.bullets {
+                    let bw = place_words(&format!("{} {}", s.heading, b.text));
+                    let best = topic_words
+                        .iter()
+                        .map(|(i, tw)| (*i, bw.intersection(tw).count()))
+                        .filter(|(_, n)| *n > 0)
+                        .max_by_key(|(i, n)| (*n, std::cmp::Reverse(*i)));
+                    match best {
+                        Some((i, _)) => push(&mut out[i], b),
+                        None => {
+                            fit.unmatched_bullets += 1;
+                            push(out.last_mut().unwrap(), b);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    drop_cross_duplicates(&mut out, template);
+    fit.sections = out;
+    fit
+}
+
+/// Quita las viñetas que repiten, en otro apartado, lo que ya dice otra: citan
+/// alguna línea en común y comparten al menos la mitad de sus términos. Se
+/// queda la del apartado de tareas si una de las dos está ahí; si no, la del
+/// apartado que mejor encaja con la viñeta (por título y descripción) y, a
+/// igualdad, la del primero. Así un apartado del que no se
+/// habló no se rellena repitiendo otro (medido: «Feedback» en el 1:1).
+fn drop_cross_duplicates(sections: &mut [RawSection], template: &[TemplateSection]) {
+    let fitness = |i: usize, terms: &std::collections::HashSet<String>| {
+        template.get(i).map_or(0, |t| section_words(t).intersection(terms).count())
+    };
+    let mut items: Vec<(usize, usize, std::collections::HashSet<String>)> = Vec::new();
+    for (i, s) in sections.iter().enumerate() {
+        for (j, b) in s.bullets.iter().enumerate() {
+            items.push((i, j, key_terms(&b.text)));
+        }
+    }
+    let mut drop: std::collections::HashSet<(usize, usize)> = std::collections::HashSet::new();
+    for a in 0..items.len() {
+        for b in a + 1..items.len() {
+            let ((ia, ja, ta), (ib, jb, tb)) = (&items[a], &items[b]);
+            if ia == ib || drop.contains(&(*ia, *ja)) || drop.contains(&(*ib, *jb)) {
+                continue;
+            }
+            let (ra, rb) = (&sections[*ia].bullets[*ja].refs, &sections[*ib].bullets[*jb].refs);
+            let small = ta.len().min(tb.len());
+            if small == 0 || !ra.iter().any(|r| rb.contains(r)) || ta.intersection(tb).count() * 2 < small {
+                continue;
+            }
+            // Una tarea repetida se queda en el apartado de tareas: si no, se
+            // pierde como tarea (medido en el stand-up).
+            let is_tasks = |i: usize| template.get(i).is_some_and(|t| t.kind == SectionKind::Tasks);
+            let both: std::collections::HashSet<String> = ta.union(tb).cloned().collect();
+            let loser = match (is_tasks(*ia), is_tasks(*ib)) {
+                (true, false) => (*ib, *jb),
+                (false, true) => (*ia, *ja),
+                _ if fitness(*ib, &both) > fitness(*ia, &both) => (*ia, *ja),
+                _ => (*ib, *jb),
+            };
+            drop.insert(loser);
+        }
+    }
+    for (i, s) in sections.iter_mut().enumerate() {
+        let mut j = 0;
+        s.bullets.retain(|_| {
+            let keep = !drop.contains(&(i, j));
+            j += 1;
+            keep
+        });
+    }
+}
+
+/// `` `## A`, `## B` y `## C` ``
+fn heading_list(headings: &[&str], last_sep: &str) -> String {
+    let items: Vec<String> = headings.iter().map(|h| format!("`## {h}`")).collect();
+    match items.split_last() {
+        None => String::new(),
+        Some((last, [])) => last.clone(),
+        Some((last, rest)) => format!("{}{last_sep}{last}", rest.join(", ")),
+    }
+}
+
+/// Motivo por el que una salida no sirve para la plantilla (y que se le dice
+/// al modelo en el reintento), o `None` si sirve.
+fn template_failure(fit: &Fit, report: &EnhanceReport, template: &[TemplateSection]) -> Option<String> {
+    let expected: Vec<&str> = template.iter().map(|s| s.heading.as_str()).collect();
+    let expected = heading_list(&expected, ", ");
+    if fit.matched_by_title == 0 || fit.unmatched_bullets * 2 > fit.bullets {
+        let wrote: Vec<&str> = fit.model_headings.iter().map(String::as_str).collect();
+        let what = if wrote.is_empty() {
+            "no escribiste ningún apartado con viñetas".to_owned()
+        } else {
+            format!("escribiste {}", heading_list(&wrote, " y "))
+        };
+        return Some(format!(
+            "El intento anterior no siguió la plantilla: {what}. Usa exactamente estos títulos y en este orden: {expected}."
+        ));
+    }
+    if report.empty_sections * 2 > template.len() {
+        let empty: Vec<&str> = report.empty_headings.iter().map(String::as_str).collect();
+        return Some(format!(
+            "El intento anterior dejó sin viñetas {}. Si en la transcripción se habló de esos apartados, escribe sus viñetas con sus números de línea; \
+             si no se habló, déjalos vacíos. Usa exactamente estos títulos y en este orden: {expected}.",
+            heading_list(&empty, " y ")
+        ));
+    }
+    None
+}
+
 /// Palabras de 4+ letras y números de un texto, para detectar duplicados.
 fn key_terms(s: &str) -> std::collections::HashSet<String> {
     words(&crate::itn::normalize_numbers(s))
@@ -483,10 +849,11 @@ fn is_concrete(text: &str) -> bool {
 const MAX_DETAILS_PER_SECTION: usize = 4;
 
 /// Añade a `sections` los datos de la pasada de detalle que no estén ya:
-/// cada uno va a la sección (que no sea de tareas) cuyas citas están más
-/// cerca de las suyas. Se descartan los que no citan nada válido y los que se
-/// solapan con una viñeta existente (citas cercanas y palabras en común).
-fn add_details(sections: &mut [RawSection], details: Vec<RawBullet>, n_lines: usize) {
+/// cada uno va a la sección (que no sea de tareas: `tasks[i]`) cuyas citas
+/// están más cerca de las suyas. Se descartan los que no citan nada válido y
+/// los que se solapan con una viñeta existente (citas cercanas y palabras en
+/// común).
+fn add_details(sections: &mut [RawSection], details: Vec<RawBullet>, n_lines: usize, tasks: &[bool]) {
     let valid = |r: &i64| *r >= 1 && (*r as usize) <= n_lines;
     let mut added = vec![0usize; sections.len()];
     for d in details.into_iter().filter(|d| is_concrete(&d.text)) {
@@ -514,7 +881,7 @@ fn add_details(sections: &mut [RawSection], details: Vec<RawBullet>, n_lines: us
         let target = sections
             .iter()
             .enumerate()
-            .filter(|(_, s)| !is_next_steps(&s.heading))
+            .filter(|(i, _)| !tasks[*i])
             .filter_map(|(i, s)| {
                 s.bullets.iter().flat_map(|b| b.refs.iter()).filter(|r| valid(r)).map(|r| (r - anchor).abs()).min().map(|dist| (i, dist))
             })
@@ -555,6 +922,41 @@ pub struct EnhanceReport {
     pub uncited: usize,
     /// Números de línea fuera de rango.
     pub invalid_refs: usize,
+    /// Con plantilla: no se pudo aplicar y las notas se generaron en Auto.
+    pub template_fallback: bool,
+    /// Con plantilla: intentos repetidos por no encajar (0 o 1).
+    pub template_retries: usize,
+    /// Con plantilla: viñetas del modelo que fueron a «Otros temas».
+    pub unmatched_bullets: usize,
+    /// Con plantilla: apartados que quedaron con «No se habló de esto».
+    pub empty_sections: usize,
+    pub empty_headings: Vec<String>,
+}
+
+/// Cómo se interpretan las secciones que recibe [`resolve`].
+#[derive(Clone, Copy)]
+enum Layout<'a> {
+    /// Temas libres: las secciones sin viñetas citadas desaparecen y las
+    /// notas del usuario sin sitio van a «Tus notas».
+    Auto,
+    /// Salida de [`fit_to_template`]: un apartado por cada uno de la
+    /// plantilla más «Otros temas» al final.
+    Template { sections: &'a [TemplateSection], language: &'a str },
+}
+
+/// Viñeta de una nota del usuario.
+fn user_bullet(b: &UserBlock, note_id: Id) -> Bullet {
+    let (is_action_item, done) = match b.kind {
+        BlockKind::Task { checked } => (true, checked),
+        _ => (false, false),
+    };
+    Bullet {
+        text: b.text.clone(),
+        is_user_text: true,
+        source: Some(Citation::UserNote { note_id, block_id: b.id.clone() }),
+        is_action_item,
+        done,
+    }
 }
 
 fn resolve(
@@ -562,12 +964,22 @@ fn resolve(
     segments: &[Segment],
     blocks: &[UserBlock],
     note_id: Id,
+    layout: Layout<'_>,
 ) -> Result<(EnhancedNotes, EnhanceReport), EnhanceError> {
     let mut report = EnhanceReport::default();
+    let template = match layout {
+        Layout::Template { sections, .. } => Some(sections),
+        Layout::Auto => None,
+    };
+    let is_tasks = |i: usize, heading: &str| match template {
+        Some(t) => t.get(i).is_some_and(|s| s.kind == SectionKind::Tasks),
+        None => is_next_steps(heading),
+    };
     let mut sections: Vec<Section> = raw
         .into_iter()
-        .map(|rs| {
-            let action = is_next_steps(&rs.heading);
+        .enumerate()
+        .map(|(i, rs)| {
+            let action = is_tasks(i, &rs.heading);
             let bullets = rs
                 .bullets
                 .into_iter()
@@ -602,38 +1014,72 @@ fn resolve(
                 .collect();
             Section { heading: rs.heading, bullets }
         })
-        .filter(|s: &Section| !s.bullets.is_empty())
         .collect();
-    if sections.is_empty() && blocks.is_empty() {
-        return Err(EnhanceError::NoSections("ninguna viñeta cita la transcripción".into()));
+    if template.is_none() {
+        sections.retain(|s| !s.bullets.is_empty());
+        if sections.is_empty() && blocks.is_empty() {
+            return Err(EnhanceError::NoSections("ninguna viñeta cita la transcripción".into()));
+        }
     }
 
-    // Notas del usuario: al principio de la sección (que no sea de tareas) con
-    // la que más palabras comparten; si ninguna coincide, a una sección propia.
-    let mut orphans = Vec::new();
+    // Notas del usuario, por orden de prioridad:
+    // 1. una tarea va al apartado de tareas (en Auto, «Próximos pasos», que se
+    //    crea si no existe; con una plantilla sin tareas, como nota normal);
+    // 2. una nota bajo un título del usuario que encaja con un apartado, a ese apartado;
+    // 3. al apartado (que no sea de tareas) con más palabras en común;
+    // 4. si no, en Auto a «Tus notas» al principio y con plantilla a «Otros temas».
+    // Siempre al principio del apartado y en el orden en que las escribió.
+    let mut tasks_idx = (0..sections.len()).find(|&i| is_tasks(i, &sections[i].heading));
     let mut placed: Vec<Vec<Bullet>> = vec![Vec::new(); sections.len()];
-    for b in blocks {
-        let bw = words(&b.text);
-        let best = sections
-            .iter()
-            .enumerate()
-            .filter(|(_, s)| !is_next_steps(&s.heading))
-            .map(|(i, s)| {
-                let sw: std::collections::HashSet<String> =
-                    std::iter::once(s.heading.as_str()).chain(s.bullets.iter().map(|b| b.text.as_str())).flat_map(words).collect();
-                (i, bw.intersection(&sw).count())
-            })
-            .filter(|(_, n)| *n > 0)
-            .max_by_key(|(i, n)| (*n, std::cmp::Reverse(*i)));
-        let bullet = Bullet {
-            text: b.text.clone(),
-            is_user_text: true,
-            source: Some(Citation::UserNote { note_id, block_id: b.id.clone() }),
-            is_action_item: false,
-            done: false,
+    let mut orphans = Vec::new();
+    let mut user_heading: Option<&str> = None;
+    for (n, b) in blocks.iter().enumerate() {
+        if let BlockKind::Heading(_) = b.kind {
+            user_heading = Some(&b.text);
+            // Un título con notas debajo solo sirve para colocarlas; uno suelto
+            // se coloca como cualquier nota.
+            if blocks.get(n + 1).is_some_and(|next| !matches!(next.kind, BlockKind::Heading(_))) {
+                continue;
+            }
+        }
+        let bullet = user_bullet(b, note_id);
+        if matches!(b.kind, BlockKind::Task { .. }) && (template.is_none() || tasks_idx.is_some()) {
+            let i = *tasks_idx.get_or_insert_with(|| {
+                sections.push(Section { heading: "Próximos pasos".into(), bullets: Vec::new() });
+                placed.push(Vec::new());
+                sections.len() - 1
+            });
+            placed[i].push(bullet);
+            continue;
+        }
+        let bullet = Bullet { is_action_item: false, done: false, ..bullet };
+        let candidates: Vec<usize> = (0..sections.len()).filter(|&i| Some(i) != tasks_idx).collect();
+        let by_heading = user_heading.filter(|h| *h != b.text).and_then(|h| {
+            let heads: Vec<&str> = candidates.iter().map(|&i| sections[i].heading.as_str()).collect();
+            best_heading(h, &heads).map(|k| candidates[k])
+        });
+        let bw = place_words(&b.text);
+        let by_words = || {
+            candidates
+                .iter()
+                .map(|&i| {
+                    let s = &sections[i];
+                    let mut sw: std::collections::HashSet<String> = std::iter::once(s.heading.as_str())
+                        .chain(s.bullets.iter().map(|b| b.text.as_str()))
+                        .flat_map(place_words)
+                        .collect();
+                    if let Some(ts) = template.and_then(|t| t.get(i)) {
+                        sw.extend(section_words(ts));
+                    }
+                    (i, bw.intersection(&sw).count())
+                })
+                .filter(|(_, n)| *n > 0)
+                .max_by_key(|(i, n)| (*n, std::cmp::Reverse(*i)))
+                .map(|(i, _)| i)
         };
-        match best {
-            Some((i, _)) => placed[i].push(bullet),
+        match by_heading.or_else(by_words) {
+            Some(i) => placed[i].push(bullet),
+            None if template.is_some() => placed[sections.len() - 1].push(bullet),
             None => orphans.push(bullet),
         }
     }
@@ -645,6 +1091,30 @@ fn resolve(
     if !orphans.is_empty() {
         report.user_bullets += orphans.len();
         sections.insert(0, Section { heading: "Tus notas".into(), bullets: orphans });
+    }
+
+    match layout {
+        Layout::Template { sections: tpl, language } => {
+            // «Otros temas» solo si tiene algo; los apartados vacíos de la
+            // plantilla se ven, con una línea que pone el código.
+            if sections.last().is_some_and(|s| s.bullets.is_empty()) {
+                sections.pop();
+            } else if let Some(other) = sections.get_mut(tpl.len()) {
+                other.heading = crate::language::localize_heading(OTHER_TOPICS, language);
+            }
+            for s in sections.iter_mut().take(tpl.len()).filter(|s| s.bullets.is_empty()) {
+                report.empty_sections += 1;
+                report.empty_headings.push(s.heading.clone());
+                s.bullets.push(Bullet {
+                    text: crate::language::not_discussed(language).into(),
+                    is_user_text: false,
+                    source: None,
+                    is_action_item: false,
+                    done: false,
+                });
+            }
+        }
+        Layout::Auto => {}
     }
 
     report.sections = sections.len();
@@ -672,7 +1142,9 @@ pub async fn enhance(model: &dyn ChatModel, input: &EnhanceInput<'_>) -> Result<
     enhance_with(model, input, &EnhanceOptions::default()).await
 }
 
-/// Ejecuta el enhance con opciones explícitas.
+/// Ejecuta el enhance con opciones explícitas. Con plantilla
+/// (`input.template`), encaja la salida en ella; si no se puede, reintenta una
+/// vez y después genera en Auto con `template_fallback`.
 pub async fn enhance_with(
     model: &dyn ChatModel,
     input: &EnhanceInput<'_>,
@@ -688,41 +1160,121 @@ pub async fn enhance_with(
         if blocks.is_empty() {
             return Err(EnhanceError::TooShort { words });
         }
-        return resolve(Vec::new(), input.segments, &blocks, input.note.id);
+        return resolve(Vec::new(), input.segments, &blocks, input.note.id, Layout::Auto);
     }
     let gen = GenOptions { max_tokens: Some(summary_budget(words, opts.max_tokens)), seed: opts.seed, ..Default::default() };
-    // 1. Resumen en una pasada: da la estructura y las tareas.
-    let md = model.complete(&build_messages(input, &blocks, opts), &gen).await?;
-    if std::env::var_os("JUANOLA_LLM_TRACE").is_some() {
-        eprintln!("[enhance] resumen:\n{md}\n[/enhance]");
+    let Some(template) = input.template else {
+        return enhance_auto(model, input, &blocks, opts, &gen).await;
+    };
+    if let Err(e) = template.validate() {
+        trace(&format!("plantilla «{}» no válida ({e}): se usa Auto", template.name));
+        let (notes, mut report) = enhance_auto(model, input, &blocks, opts, &gen).await?;
+        report.template_fallback = true;
+        return Ok((notes, report));
     }
-    let mut raw = merge_sections(parse_markdown(&md));
-    // 2. Pasadas de detalle por fragmentos: datos concretos que el resumen omitió.
-    // (Resumir por fragmentos y reagrupar los temas con el modelo se probó y
-    // daba peor estructura y perdía tareas.)
-    if let (Some(secs), false) = (opts.detail_chunk_secs, raw.is_empty()) {
-        for range in chunk_ranges(input.segments, secs) {
-            let segs = &input.segments[range.clone()];
-            let prompt = juanola_prompts::ENHANCE_DETAILS
-                .replace("{{from}}", &clock(segs[0].start))
-                .replace("{{to}}", &clock(segs[segs.len() - 1].end))
-                .replace("{{transcript}}", format_transcript_from(segs, range.start + 1, opts.itn).trim_end())
-                .replace("{{language}}", input.summary_language)
-                + &crate::language::prompt_suffix(input.summary_language);
-            // 12 datos caben en ~450 tokens; el tope corta las listas que el
-            // modelo alarga sin fin (es lo que más tiempo cuesta).
-            let detail_gen = GenOptions { max_tokens: Some(450), ..gen.clone() };
-            let md = model.complete(&[Message { role: "user".into(), content: prompt }], &detail_gen).await?;
-            let details: Vec<RawBullet> = parse_markdown(&md).into_iter().flat_map(|s| s.bullets).collect();
-            add_details(&mut raw, details, input.segments.len());
+    let tpl = &template.structure;
+    let layout = Layout::Template { sections: tpl, language: input.summary_language };
+    // Con plantilla el modelo escribe más (todos los apartados, a veces con su
+    // descripción en el título): con el tope de Auto se cortaba antes de llegar
+    // a las tareas, que van al final (medido en el 1:1).
+    let auto_gen = gen.clone();
+    let gen = GenOptions { max_tokens: Some(template_budget(words, tpl.len(), opts.max_tokens)), ..gen };
+    let mut reason: Option<String> = None;
+    let mut chosen = None;
+    for attempt in 0..2 {
+        // El reintento cambia de semilla (si se fijó) y lleva el motivo del fallo.
+        let grammar = opts.markdown_grammar.then(|| markdown_grammar(tpl, input.summary_language));
+        let gen = GenOptions { seed: gen.seed.map(|s| s.wrapping_add(attempt)), grammar, ..gen.clone() };
+        let md = model.complete(&template_messages(input, template, &blocks, opts, reason.as_deref()), &gen).await?;
+        trace(&format!("resumen con plantilla «{}», intento {}:\n{md}", template.name, attempt + 1));
+        let fit = fit_to_template(parse_markdown(&md), tpl);
+        let (_, report) = resolve(fit.sections.clone(), input.segments, &blocks, input.note.id, layout)?;
+        match template_failure(&fit, &report, tpl) {
+            None => {
+                chosen = Some((fit, attempt as usize, gen));
+                break;
+            }
+            Some(r) => {
+                trace(&format!("no encaja: {r}"));
+                reason = Some(r);
+            }
         }
     }
+    let Some((fit, retries, gen)) = chosen else {
+        let (notes, mut report) = enhance_auto(model, input, &blocks, opts, &auto_gen).await?;
+        report.template_fallback = true;
+        report.template_retries = 1;
+        return Ok((notes, report));
+    };
+    let mut raw = fit.sections;
+    let mut tasks: Vec<bool> = tpl.iter().map(|s| s.kind == SectionKind::Tasks).collect();
+    tasks.push(false);
+    detail_passes(model, input, opts, &gen, &mut raw, &tasks).await?;
+    let (notes, mut report) = resolve(raw, input.segments, &blocks, input.note.id, layout)?;
+    report.template_retries = retries;
+    report.unmatched_bullets = fit.unmatched_bullets;
+    Ok((notes, report))
+}
+
+fn trace(msg: &str) {
+    if std::env::var_os("JUANOLA_LLM_TRACE").is_some() {
+        eprintln!("[enhance] {msg}\n[/enhance]");
+    }
+}
+
+/// Pasadas de detalle por fragmentos: datos concretos que el resumen omitió.
+/// (Resumir por fragmentos y reagrupar los temas con el modelo se probó y daba
+/// peor estructura y perdía tareas.)
+async fn detail_passes(
+    model: &dyn ChatModel,
+    input: &EnhanceInput<'_>,
+    opts: &EnhanceOptions,
+    gen: &GenOptions,
+    raw: &mut [RawSection],
+    tasks: &[bool],
+) -> Result<(), EnhanceError> {
+    let (Some(secs), false) = (opts.detail_chunk_secs, raw.iter().all(|s| s.bullets.is_empty())) else {
+        return Ok(());
+    };
+    for range in chunk_ranges(input.segments, secs) {
+        let segs = &input.segments[range.clone()];
+        let prompt = juanola_prompts::ENHANCE_DETAILS
+            .replace("{{from}}", &clock(segs[0].start))
+            .replace("{{to}}", &clock(segs[segs.len() - 1].end))
+            .replace("{{transcript}}", format_transcript_from(segs, range.start + 1, opts.itn).trim_end())
+            .replace("{{language}}", input.summary_language)
+            + &crate::language::prompt_suffix(input.summary_language);
+        // 12 datos caben en ~450 tokens; el tope corta las listas que el
+        // modelo alarga sin fin (es lo que más tiempo cuesta).
+        let detail_gen = GenOptions { max_tokens: Some(450), ..gen.clone() };
+        let md = model.complete(&[Message { role: "user".into(), content: prompt }], &detail_gen).await?;
+        let details: Vec<RawBullet> = parse_markdown(&md).into_iter().flat_map(|s| s.bullets).collect();
+        add_details(raw, details, input.segments.len(), tasks);
+    }
+    Ok(())
+}
+
+/// Enhance sin plantilla: temas libres.
+async fn enhance_auto(
+    model: &dyn ChatModel,
+    input: &EnhanceInput<'_>,
+    blocks: &[UserBlock],
+    opts: &EnhanceOptions,
+    gen: &GenOptions,
+) -> Result<(EnhancedNotes, EnhanceReport), EnhanceError> {
+    // 1. Resumen en una pasada: da la estructura y las tareas.
+    let md = model.complete(&auto_messages(input, blocks, opts), gen).await?;
+    trace(&format!("resumen:\n{md}"));
+    let mut raw = merge_sections(parse_markdown(&md));
+    // 2. Pasadas de detalle por fragmentos.
+    let tasks: Vec<bool> = raw.iter().map(|s| is_next_steps(&s.heading)).collect();
+    detail_passes(model, input, opts, gen, &mut raw, &tasks).await?;
     if raw.is_empty() {
         return Err(EnhanceError::NoSections(md));
     }
     // (Se probó una pasada aparte para las tareas en JSON con gramática: daba
     // peores tareas, con frases copiadas y sin responsable.)
-    let (mut notes, report) = resolve(raw, input.segments, &blocks, input.note.id)?;
+    let (mut notes, report) = resolve(raw, input.segments, blocks, input.note.id, Layout::Auto)?;
     for s in notes.sections.iter_mut() {
         s.heading = crate::language::localize_heading(&s.heading, input.summary_language);
     }
@@ -921,7 +1473,7 @@ mod tests {
         .into_iter()
         .flat_map(|s| s.bullets)
         .collect();
-        add_details(&mut secs, details, 100);
+        add_details(&mut secs, details, 100, &[false, false, true]);
         let m: Vec<&str> = secs[0].bullets.iter().map(|b| b.text.as_str()).collect();
         assert_eq!(m, ["1840 clínicas activas", "MRR de 112000 euros"], "el duplicado del MRR no entra; el nuevo va en orden");
         assert_eq!(secs[1].bullets.len(), 2);
@@ -967,7 +1519,7 @@ mod tests {
             UserBlock { id: "b1".into(), text: "llamar a la gestoría".into(), kind: BlockKind::Paragraph, emphasis: false },
         ];
         let raw = parse_markdown("## Errores\n- Citas duplicadas [3, 2, 99]\n## Precios\n- Los precios nuevos entran en enero [1]\n- Sin cita\n## Inventado\n- Nada que lo respalde\n## Próximos pasos\n- Luis llama hoy [2]\n");
-        let (notes, rep) = resolve(raw, &segs, &blocks, Id::nil()).unwrap();
+        let (notes, rep) = resolve(raw, &segs, &blocks, Id::nil(), Layout::Auto).unwrap();
         assert_eq!(notes.sections[0].heading, "Tus notas", "la nota sin coincidencias va a su sección");
         let precios = notes.sections.iter().find(|s| s.heading == "Precios").unwrap();
         assert!(precios.bullets[0].is_user_text && precios.bullets[0].text == "precios nuevos: enero");
@@ -981,5 +1533,343 @@ mod tests {
         assert!(notes.sections.iter().all(|s| s.heading != "Inventado"), "las secciones sin citas desaparecen");
         let precios = notes.sections.iter().find(|s| s.heading == "Precios").unwrap();
         assert!(precios.bullets.iter().all(|b| b.text != "Sin cita"));
+    }
+
+    // --- Plantillas -------------------------------------------------------
+
+    fn tpl_sections(spec: &[(&str, &str, SectionKind)]) -> Vec<TemplateSection> {
+        spec.iter().map(|(h, hint, k)| TemplateSection { heading: (*h).into(), hint: (*hint).into(), kind: *k }).collect()
+    }
+
+    fn weekly() -> Vec<TemplateSection> {
+        tpl_sections(&[
+            ("Métricas y estado", "cifras, resultados y cómo van los proyectos", SectionKind::Topics),
+            ("Temas tratados", "asuntos de los que se habló", SectionKind::Topics),
+            ("Decisiones", "lo que se acordó o decidió", SectionKind::Topics),
+            ("Próximos pasos", "cada tarea: quién, qué y cuándo", SectionKind::Tasks),
+        ])
+    }
+
+    fn heads(f: &Fit) -> Vec<&str> {
+        f.sections.iter().map(|s| s.heading.as_str()).collect()
+    }
+
+    fn texts_of(s: &RawSection) -> Vec<&str> {
+        s.bullets.iter().map(|b| b.text.as_str()).collect()
+    }
+
+    #[test]
+    fn heading_matching_levels() {
+        assert_eq!(heading_match("Metricas y Estado:", "Métricas y estado"), Some(3));
+        assert_eq!(heading_match("Decisiones tomadas", "Decisiones"), Some(2));
+        // El modelo copia la descripción detrás del título.
+        assert_eq!(heading_match("Métricas y estado — cifras y resultados", "Métricas y estado"), Some(2));
+        assert_eq!(heading_match("Estado de las métricas", "Métricas y estado"), Some(1));
+        assert_eq!(heading_match("Contratación", "Decisiones"), None);
+        // «Temas» no está dentro de «Tematica» como palabra entera.
+        assert_eq!(heading_match("Temática", "Temas"), None);
+    }
+
+    #[test]
+    fn fit_keeps_template_order_and_places_everything() {
+        let md = "## Decisiones tomadas\n- Se aprueba el plan [5]\n\
+                  ## metricas y estado\n- MRR de 112000 euros [1]\n- MRR de 112000 euros [1]\n\
+                  ## Contratación\n- Elena empieza en enero [7]\n- Se decidió subir precios [8]\n\
+                  ## Tareas pendientes\n- Luis llama el lunes [9]\n";
+        let f = fit_to_template(parse_markdown(md), &weekly());
+        assert_eq!(heads(&f), ["Métricas y estado", "Temas tratados", "Decisiones", "Próximos pasos", OTHER_TOPICS]);
+        assert_eq!(texts_of(&f.sections[0]), ["MRR de 112000 euros"], "repetidas fuera");
+        assert_eq!(texts_of(&f.sections[2]), ["Se aprueba el plan", "Se decidió subir precios"], "por palabras con «decidió»/«acordó o decidió»");
+        assert_eq!(texts_of(&f.sections[3]), ["Luis llama el lunes"], "una sección de tareas va al apartado Tasks");
+        assert_eq!(texts_of(&f.sections[4]), ["Elena empieza en enero"], "sin palabras en común: «Otros temas»");
+        assert_eq!((f.matched_by_title, f.unmatched_bullets, f.bullets), (2, 1, 6));
+        assert_eq!(f.model_headings, ["Decisiones tomadas", "metricas y estado", "Contratación", "Tareas pendientes"]);
+    }
+
+    #[test]
+    fn retry_message_names_what_was_written_and_expected() {
+        let f = fit_to_template(parse_markdown("## Resumen\n- a [1]\n## Varios\n- b [2]\n"), &weekly());
+        let rep = EnhanceReport::default();
+        let msg = template_failure(&f, &rep, &weekly()).expect("no encaja por título");
+        assert!(msg.contains("escribiste `## Resumen` y `## Varios`"), "{msg}");
+        assert!(msg.contains("`## Métricas y estado`, `## Temas tratados`, `## Decisiones`, `## Próximos pasos`"), "{msg}");
+        // Encaja por título pero deja vacía más de la mitad.
+        let f = fit_to_template(parse_markdown("## Decisiones\n- a [1]\n"), &weekly());
+        let rep = EnhanceReport { empty_sections: 3, empty_headings: vec!["A".into(), "B".into(), "C".into()], ..Default::default() };
+        let msg = template_failure(&f, &rep, &weekly()).unwrap();
+        assert!(msg.contains("sin viñetas `## A`, `## B` y `## C`"), "{msg}");
+        let rep = EnhanceReport { empty_sections: 2, ..Default::default() };
+        assert_eq!(template_failure(&f, &rep, &weekly()), None, "la mitad justa todavía sirve");
+    }
+
+    fn three_segs() -> Vec<Segment> {
+        (0..10).map(|i| seg(i, Channel::System, i as f64 * 5.0, i as f64 * 5.0 + 4.0, "x")).collect()
+    }
+
+    fn ub(id: &str, text: &str, kind: BlockKind) -> UserBlock {
+        UserBlock { id: id.into(), text: text.into(), kind, emphasis: false }
+    }
+
+    #[test]
+    fn template_sections_are_all_shown_and_empty_ones_marked() {
+        let segs = three_segs();
+        let f = fit_to_template(parse_markdown("## Decisiones\n- Se aprueba el plan [2]\n- Inventado sin cita\n"), &weekly());
+        let layout = Layout::Template { sections: &weekly(), language: "inglés" };
+        let (notes, rep) = resolve(f.sections, &segs, &[], Id::nil(), layout).unwrap();
+        let h: Vec<&str> = notes.sections.iter().map(|s| s.heading.as_str()).collect();
+        assert_eq!(h, ["Métricas y estado", "Temas tratados", "Decisiones", "Próximos pasos"], "los títulos de la plantilla no se traducen; sin «Otros temas» vacío");
+        let empty = &notes.sections[0].bullets;
+        assert_eq!(empty.len(), 1);
+        assert_eq!(empty[0].text, "Not discussed");
+        assert!(empty[0].source.is_none() && !empty[0].is_user_text && !empty[0].is_action_item);
+        assert_eq!((rep.empty_sections, rep.uncited), (3, 1));
+        assert_eq!(rep.empty_headings, ["Métricas y estado", "Temas tratados", "Próximos pasos"]);
+    }
+
+    #[test]
+    fn tasks_are_marked_by_kind_and_other_topics_is_localized() {
+        let segs = three_segs();
+        let tpl = tpl_sections(&[("Bloqueos", "lo que impide avanzar", SectionKind::Topics), ("Acciones", "", SectionKind::Tasks)]);
+        let f = fit_to_template(parse_markdown("## Acciones\n- Ana revisa el contrato [3]\n## Viaje\n- Barcelona en marzo [4]\n"), &tpl);
+        let (notes, rep) = resolve(f.sections, &segs, &[], Id::nil(), Layout::Template { sections: &tpl, language: "inglés" }).unwrap();
+        assert!(notes.sections[1].bullets[0].is_action_item, "«Acciones» no es un título de tareas conocido, pero es Tasks");
+        assert_eq!(notes.sections[2].heading, "Other topics");
+        assert!(!notes.sections[2].bullets[0].is_action_item);
+        assert_eq!(rep.empty_sections, 1);
+    }
+
+    #[test]
+    fn user_notes_with_template() {
+        let segs = three_segs();
+        // Lo que va detrás de un título queda bajo él hasta el siguiente título.
+        let blocks = [
+            ub("b0", "cumpleaños de Marta", BlockKind::Paragraph),
+            ub("b1", "MRR sube", BlockKind::Paragraph),
+            ub("b2", "Decisiones", BlockKind::Heading(2)),
+            ub("b2.0", "nada de rebajas", BlockKind::ListItem),
+            ub("b3", "llamar a Luis", BlockKind::Task { checked: true }),
+        ];
+        let f = fit_to_template(parse_markdown("## Métricas y estado\n- El MRR sube un 4 % [1]\n"), &weekly());
+        let (notes, rep) = resolve(f.sections, &segs, &blocks, Id::nil(), Layout::Template { sections: &weekly(), language: "español" }).unwrap();
+        let sec = |h: &str| notes.sections.iter().find(|s| s.heading == h).unwrap_or_else(|| panic!("falta {h}"));
+        let dec = sec("Decisiones");
+        assert_eq!(dec.bullets.len(), 1, "solo la nota del usuario, sin «No se habló de esto»");
+        assert!(dec.bullets[0].is_user_text && dec.bullets[0].text == "nada de rebajas");
+        let tasks = sec("Próximos pasos");
+        assert!(tasks.bullets[0].is_action_item && tasks.bullets[0].done && tasks.bullets[0].text == "llamar a Luis");
+        assert_eq!(sec("Métricas y estado").bullets[0].text, "MRR sube", "por palabras, al principio");
+        assert_eq!(sec("Otros temas").bullets[0].text, "cumpleaños de Marta");
+        assert!(notes.sections.iter().all(|s| s.heading != "Tus notas"));
+        assert!(notes.sections.iter().all(|s| s.heading != "Decisiones" || s.bullets.iter().all(|b| b.text != "Decisiones")), "el título del usuario no se coloca");
+        assert_eq!((rep.user_bullets, rep.empty_sections), (4, 1));
+        match &dec.bullets[0].source {
+            Some(Citation::UserNote { block_id, .. }) => assert_eq!(block_id, "b2.0"),
+            other => panic!("{other:?}"),
+        }
+    }
+
+    #[test]
+    fn user_tasks_in_auto_go_to_next_steps() {
+        let segs = three_segs();
+        let blocks = [ub("b0", "enviar la oferta", BlockKind::Task { checked: false }), ub("b1", "sin relación", BlockKind::Paragraph)];
+        let raw = parse_markdown("## Precios\n- Planes nuevos [1]\n");
+        let (notes, _) = resolve(raw, &segs, &blocks, Id::nil(), Layout::Auto).unwrap();
+        let h: Vec<&str> = notes.sections.iter().map(|s| s.heading.as_str()).collect();
+        assert_eq!(h, ["Tus notas", "Precios", "Próximos pasos"], "se crea «Próximos pasos» para la tarea");
+        assert!(notes.sections[2].bullets[0].is_action_item && !notes.sections[2].bullets[0].done);
+        // Una plantilla sin apartado de tareas: la tarea se coloca como nota normal.
+        let tpl = tpl_sections(&[("Oferta", "", SectionKind::Topics)]);
+        let f = fit_to_template(parse_markdown("## Oferta\n- Precio cerrado [2]\n"), &tpl);
+        let (notes, _) = resolve(f.sections, &segs, &blocks[..1], Id::nil(), Layout::Template { sections: &tpl, language: "español" }).unwrap();
+        assert_eq!(notes.sections[0].bullets[0].text, "enviar la oferta");
+        assert!(!notes.sections[0].bullets[0].is_action_item);
+    }
+
+    #[test]
+    fn user_notes_in_the_prompt() {
+        let blocks = [
+            ub("b0", "Contratación", BlockKind::Heading(2)),
+            ub("b1", "Elena empieza en enero", BlockKind::ListItem),
+            ub("b2", "llamar a Luis", BlockKind::Task { checked: false }),
+            UserBlock { emphasis: true, ..ub("b3", "presupuesto Q3", BlockKind::Paragraph) },
+            ub("b4", "Riesgos", BlockKind::Heading(3)),
+            ub("b5", "retraso del proveedor", BlockKind::ListItem),
+        ];
+        let n = format_user_notes(&blocks);
+        assert!(n.contains("marcan lo que le importó"));
+        assert!(n.ends_with(
+            "## Contratación\n- Elena empieza en enero\n- [tarea] llamar a Luis\n- [importante] presupuesto Q3\n## Riesgos\n- [importante] retraso del proveedor\n"
+        ), "{n}");
+        assert_eq!(format_user_notes(&[]), "");
+    }
+
+    #[test]
+    fn template_prompt_lists_sections_and_retry_reason() {
+        let n = note(serde_json::json!({"type": "doc", "content": []}));
+        let segs = three_segs();
+        let t = Template {
+            id: Id::nil(),
+            name: "Semanal".into(),
+            purpose: "revisar el estado".into(),
+            style: "conciso".into(),
+            structure: weekly(),
+            is_builtin: true,
+            shared_with_workspace: false,
+        };
+        let input = EnhanceInput { note: &n, segments: &segs, template: Some(&t), summary_language: "español", user_profile: "" };
+        let m = &template_messages(&input, &t, &[], &EnhanceOptions::default(), Some("MOTIVO"))[0].content;
+        assert!(m.contains("Plantilla «Semanal». Propósito: revisar el estado. Estilo: conciso."));
+        assert!(m.contains("## Métricas y estado — cifras, resultados y cómo van los proyectos\n## Temas tratados"));
+        assert!(!m.contains("{{"), "{m}");
+        assert!(m.trim_end().ends_with("MOTIVO"));
+    }
+
+    /// Modelo falso: responde con `template` a los prompts con plantilla y con
+    /// `auto` a los demás, y cuenta las llamadas.
+    struct Scripted {
+        template: Vec<&'static str>,
+        auto: &'static str,
+        calls: std::sync::Mutex<Vec<String>>,
+    }
+
+    #[async_trait::async_trait]
+    impl ChatModel for Scripted {
+        fn context_window(&self) -> usize {
+            8192
+        }
+        async fn complete(&self, m: &[Message], _: &GenOptions) -> Result<String, juanola_llm::LlmError> {
+            let mut calls = self.calls.lock().unwrap();
+            calls.push(m[0].content.clone());
+            let n_tpl = calls.iter().filter(|c| c.contains("usando exactamente estos apartados")).count();
+            Ok(if m[0].content.contains("usando exactamente estos apartados") {
+                self.template[(n_tpl - 1).min(self.template.len() - 1)].into()
+            } else {
+                self.auto.into()
+            })
+        }
+        fn stream<'a>(&'a self, _: &'a [Message], _: &'a GenOptions) -> futures::stream::BoxStream<'a, Result<String, juanola_llm::LlmError>> {
+            unreachable!()
+        }
+    }
+
+    fn long_segs() -> Vec<Segment> {
+        let text = "Hoy repasamos las métricas del mes y decidimos subir los precios del plan básico";
+        (0..6).map(|i| seg(i, Channel::System, i as f64 * 10.0, i as f64 * 10.0 + 9.0, text)).collect()
+    }
+
+    fn weekly_template() -> Template {
+        crate::templates::builtin_template(crate::templates::WEEKLY_TEAM, "español").unwrap()
+    }
+
+    const GOOD: &str = "## Métricas y estado\n- MRR de 112000 euros [1]\n## Temas tratados\n- Precios del plan básico [2]\n## Decisiones\n- Se suben los precios [3]\n## Próximos pasos\n- Luis prepara la tabla [4]\n";
+    const GARBAGE: &str = "## Resumen\n- Algo pasó [1]\n## Varios\n- Otra cosa [2]\n";
+    const AUTO: &str = "## Precios\n- Suben los precios [2]\n## Próximos pasos\n- Luis prepara la tabla [4]\n";
+
+    #[tokio::test]
+    async fn template_retries_once_with_the_reason() {
+        let n = note(serde_json::json!({"type": "doc", "content": []}));
+        let segs = long_segs();
+        let t = weekly_template();
+        let model = Scripted { template: vec![GARBAGE, GOOD], auto: AUTO, calls: Default::default() };
+        let input = EnhanceInput { note: &n, segments: &segs, template: Some(&t), summary_language: "español", user_profile: "" };
+        let opts = EnhanceOptions { detail_chunk_secs: None, ..Default::default() };
+        let (notes, rep) = enhance_with(&model, &input, &opts).await.unwrap();
+        assert!(!rep.template_fallback);
+        assert_eq!(rep.template_retries, 1);
+        let h: Vec<&str> = notes.sections.iter().map(|s| s.heading.as_str()).collect();
+        assert_eq!(h, ["Métricas y estado", "Temas tratados", "Decisiones", "Próximos pasos"]);
+        let calls = model.calls.lock().unwrap();
+        assert_eq!(calls.len(), 2);
+        assert!(calls[1].contains("El intento anterior no siguió la plantilla: escribiste `## Resumen` y `## Varios`"));
+    }
+
+    #[tokio::test]
+    async fn template_falls_back_to_auto() {
+        let n = note(serde_json::json!({"type": "doc", "content": []}));
+        let segs = long_segs();
+        let t = weekly_template();
+        let model = Scripted { template: vec![GARBAGE], auto: AUTO, calls: Default::default() };
+        let input = EnhanceInput { note: &n, segments: &segs, template: Some(&t), summary_language: "español", user_profile: "" };
+        let opts = EnhanceOptions { detail_chunk_secs: None, ..Default::default() };
+        let (notes, rep) = enhance_with(&model, &input, &opts).await.unwrap();
+        assert!(rep.template_fallback);
+        assert_eq!(rep.template_retries, 1);
+        assert_eq!(notes.sections[0].heading, "Precios", "salida de Auto");
+        assert_eq!(model.calls.lock().unwrap().len(), 3, "dos intentos con plantilla y uno en Auto");
+        // Una plantilla no válida va directa a Auto.
+        let mut bad = weekly_template();
+        bad.structure.clear();
+        let model = Scripted { template: vec![GOOD], auto: AUTO, calls: Default::default() };
+        let input = EnhanceInput { template: Some(&bad), ..input };
+        let (_, rep) = enhance_with(&model, &input, &opts).await.unwrap();
+        assert!(rep.template_fallback && model.calls.lock().unwrap().len() == 1);
+    }
+
+    #[test]
+    fn placement_words_normalize_numbers() {
+        let w = place_words("MRR 112k, objetivo de 120.000 euros");
+        assert!(w.contains("112000") && w.contains("120000") && w.contains("objetivo"), "{w:?}");
+    }
+
+    #[test]
+    fn model_other_topics_stays_there_and_counts() {
+        let f = fit_to_template(parse_markdown("## Decisiones\n- Se aprueba [1]\n## Other topics\n- Viaje a Lisboa [2]\n- Decisión de algo [3]\n"), &weekly());
+        assert_eq!(texts_of(&f.sections[4]), ["Viaje a Lisboa", "Decisión de algo"], "no se redistribuye");
+        assert_eq!((f.unmatched_bullets, f.bullets, f.matched_by_title), (2, 3, 1));
+        let t = Template { id: Id::nil(), name: "x".into(), purpose: String::new(), style: String::new(), structure: weekly(), is_builtin: false, shared_with_workspace: false };
+        assert!(structure_with_outlet(&t.structure, "inglés").ends_with("## Other topics — solo si hace falta: lo que se habló y no corresponde a ninguno de los apartados anteriores"));
+    }
+
+    #[test]
+    fn repeated_bullets_in_another_section_are_dropped() {
+        let md = "## Cómo está\n- Diego está cansado por las guardias del mes [2, 3]\n\
+                  ## Feedback\n- Diego dice que está cansado y le tocan más guardias [3]\n\
+                  ## Temas tratados\n- Guardias de plataforma en la rotación [9]\n";
+        let tpl = tpl_sections(&[
+            ("Cómo está", "estado de ánimo y carga de trabajo", SectionKind::Topics),
+            ("Temas tratados", "asuntos de trabajo", SectionKind::Topics),
+            ("Feedback", "comentarios sobre el trabajo", SectionKind::Topics),
+        ]);
+        let f = fit_to_template(parse_markdown(md), &tpl);
+        assert_eq!(texts_of(&f.sections[0]).len(), 1);
+        assert!(f.sections[2].bullets.is_empty(), "la repetición de «Cómo está» no rellena «Feedback»");
+        assert_eq!(texts_of(&f.sections[1]).len(), 1, "sin líneas en común no es repetición");
+    }
+
+    #[test]
+    fn bold_is_removed() {
+        let s = parse_markdown("## A\n- Tiene **3 guardias** este mes [1]\n");
+        assert_eq!(s[0].bullets[0].text, "Tiene 3 guardias este mes");
+    }
+
+    #[test]
+    fn templates_get_more_tokens() {
+        assert_eq!(template_budget(764, 4, 3000), 611 + 750);
+        assert_eq!(template_budget(30, 1, 3000), 800);
+        assert_eq!(template_budget(2400, 4, 3000), 2670);
+        assert_eq!(template_budget(10_000, 4, 3000), 3000);
+    }
+
+    #[test]
+    fn repeated_task_stays_in_tasks() {
+        let md = "## Hecho desde la última\n- Yo renuevo el certificado de Apple esta mañana [8]\n\
+                  ## Próximos pasos\n- Yo renuevo el certificado Apple esta mañana [8]\n";
+        let tpl = tpl_sections(&[
+            ("Hecho desde la última", "lo que cada persona ya terminó", SectionKind::Topics),
+            ("Próximos pasos", "cada tarea", SectionKind::Tasks),
+        ]);
+        let f = fit_to_template(parse_markdown(md), &tpl);
+        assert!(f.sections[0].bullets.is_empty());
+        assert_eq!(f.sections[1].bullets.len(), 1);
+    }
+
+    #[test]
+    fn grammar_fixes_headings_in_order() {
+        let g = markdown_grammar(&weekly(), "español");
+        assert!(g.starts_with("root ::= s0 s1 s2 s3 other?\n"), "{g}");
+        assert!(g.contains("s0 ::= \"## Métricas y estado\" \"\\n\" body\n"), "{g}");
+        assert!(g.contains("other ::= \"## Otros temas\""));
+        let q = markdown_grammar(&tpl_sections(&[("Dice \"hola\"", "", SectionKind::Topics)]), "español");
+        assert!(q.contains(r###""## Dice \"hola\"""###), "{q}");
     }
 }

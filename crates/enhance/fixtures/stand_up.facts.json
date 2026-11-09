@@ -1,0 +1,27 @@
+{
+  "_doc": "Hechos del stand-up ficticio (stand_up.txt). Mismo formato que reunion_producto.facts.json.",
+  "facts": [
+    {"id": "version_3_2_jueves", "all": [["3.2", "3,2", "3 punto 2"]], "section": {"standup": ["Plan de hoy", "Terminado", "Próximos pasos"]}},
+    {"id": "ana_login_google", "all": [["google"]], "section": {"standup": ["Terminado"]}},
+    {"id": "ana_14_pruebas", "all": [["14"]], "section": {"standup": ["Terminado"]}},
+    {"id": "pedro_redondeo", "all": [["redondeo"]], "section": {"standup": ["Terminado"]}},
+    {"id": "lucia_onboarding_5", "all": [["5 pantallas", "cinco pantallas"]], "section": {"standup": ["Terminado"]}},
+    {"id": "ana_push", "all": [["push", "notificaciones"]], "section": {"standup": ["Plan de hoy"]}},
+    {"id": "pedro_carrito", "all": [["carrito"], ["impuestos", "refactor"]], "section": {"standup": ["Plan de hoy"]}},
+    {"id": "lucia_5_usuarios", "all": [["5 usuarios", "cinco usuarios"]], "section": {"standup": ["Plan de hoy"]}},
+    {"id": "certificado_apple", "all": [["certificado"]], "section": {"standup": ["Bloqueos"]}},
+    {"id": "pasarela_100", "all": [["100"]], "section": {"standup": ["Bloqueos"]}},
+    {"id": "textos_legales", "all": [["legal"]], "section": {"standup": ["Bloqueos"]}},
+    {"id": "carrito_3_3", "all": [["3.3", "3,3", "3 punto 3"]], "section": {"standup": ["Plan de hoy", "Terminado", "Bloqueos"]}},
+    {"id": "t_renovar_certificado", "task": true, "all": [["certificado"], ["renov"]]},
+    {"id": "t_pedro_incidencia", "task": true, "all": [["pedro"], ["incidencia", "ticket"]]},
+    {"id": "t_ana_legal", "task": true, "all": [["ana"], ["legal"]]},
+    {"id": "t_lucia_figma", "task": true, "all": [["lucia"], ["figma"]]}
+  ],
+  "user_notes": {
+    "Ana: login Google y Apple listo": {"standup": ["Terminado"]},
+    "certificado Apple caduca el domingo": {"standup": ["Bloqueos"]},
+    "Lucía entrevistas con usuarios": {"standup": ["Plan de hoy"]},
+    "renovar certificado Apple": {"standup": ["Próximos pasos"]}
+  }
+}

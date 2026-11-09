@@ -17,6 +17,9 @@ pub struct GenOptions {
     pub temperature: Option<f32>,
     /// JSON Schema que la salida debe cumplir (GBNF en llama.cpp, response_format en OpenAI).
     pub json_schema: Option<serde_json::Value>,
+    /// Gramática GBNF (raíz `root`) que la salida debe cumplir; solo llama.cpp.
+    /// Si también hay `json_schema`, gana este.
+    pub grammar: Option<String>,
     /// Semilla del muestreo; `None` = fija (resultados reproducibles).
     pub seed: Option<u32>,
 }

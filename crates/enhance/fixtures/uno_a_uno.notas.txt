@@ -1,0 +1,6 @@
+**Diego cansado, 3 guardias este mes**
+## Trabajo
+- migración Postgres: 30 nov o 13 dic
+- curso Kubernetes 1500 €
+- [ ] hablar con plataforma por la rotación
+paso a senior en marzo

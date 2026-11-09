@@ -66,3 +66,4 @@ pub fn enhanced_notes_schema() -> serde_json::Value {
 pub mod itn;
 pub mod language;
 pub mod pipelines;
+pub mod templates;

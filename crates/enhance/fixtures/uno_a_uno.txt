@@ -1,0 +1,40 @@
+# 1:1 ficticio para evaluar plantillas (~5 min). Formato: Hablante|texto.
+# «Yo» es la responsable (canal del micrófono); Diego, su ingeniero de backend.
+# A propósito no se habla de feedback: el apartado «Feedback» de la plantilla 1:1 debe quedar vacío.
+Yo|Hola, Diego. ¿Qué tal? Antes de entrar en temas de trabajo, ¿cómo estás tú?
+Diego|Pues, sinceramente, un poco cansado. Este mes me han tocado tres guardias de fin de semana y la última fue complicada, con la caída del servicio de facturas el domingo por la noche.
+Yo|Ya lo vi. Tres guardias en un mes es demasiado. ¿Cómo lo llevas aparte de eso?
+Diego|Bien en general, pero voy justo. Además estoy en plena mudanza. Nos vamos a vivir a Getafe a final de mes y estoy con cajas, con el banco y con la casa nueva. Así que ando con menos energía de lo normal.
+Yo|Entiendo. Si necesitas algún día libre para la mudanza, dímelo con tiempo y lo cuadramos.
+Diego|Gracias. Seguramente el viernes veintiocho. Y quería confirmar las vacaciones: me cogería del veintidós de diciembre al dos de enero.
+Yo|Me parece bien. Apúntalo en el calendario del equipo y lo apruebo. ¿Algo más que te preocupe?
+Diego|Las guardias, sobre todo. Somos cuatro en la rotación y dos compañeros están de baja, así que nos toca a los mismos.
+Yo|Tienes razón. Voy a hablar con el equipo de plataforma para que entren en la rotación hasta que vuelvan los compañeros. Así bajamos a una guardia al mes por persona.
+Diego|Eso me ayudaría mucho.
+Yo|Vale. Pasemos al trabajo. ¿Cómo va la migración de la base de datos?
+Diego|Va bien, aunque más lenta de lo que queríamos. Estamos pasando de MySQL a Postgres dieciséis. El esquema ya está migrado en el entorno de pruebas y los datos de clientes también. Lo que falta es el módulo de informes, que tiene muchas consultas escritas a mano.
+Yo|¿Cuántas consultas son?
+Diego|Unas ciento veinte. He revisado cuarenta y la mayoría funcionan sin cambios, pero unas quince usan funciones propias de MySQL y hay que reescribirlas.
+Yo|¿Llegamos a la fecha del treinta de noviembre para hacer el cambio en producción?
+Diego|Creo que sí, pero muy justos. Si aparece algo raro en los informes, prefiero mover el cambio al trece de diciembre antes que hacerlo con prisas.
+Yo|De acuerdo. Mantenemos el treinta de noviembre como objetivo y el trece de diciembre como plan B. Prepárame un plan de migración con los pasos, la vuelta atrás y quién está de guardia esa noche, para revisarlo el jueves.
+Diego|Hecho. Lo tendrás el miércoles por la tarde.
+Yo|Otra cosa: la cobertura de pruebas del servicio de pagos. ¿En qué está?
+Diego|En un cuarenta y cinco por ciento. Es lo que más me preocupa del código, porque cualquier cambio en pagos da miedo.
+Yo|El objetivo del trimestre era llegar al setenta por ciento. ¿Lo ves posible?
+Diego|Al setenta, no con la migración en marcha. Al sesenta sí, si dedico los viernes a escribir pruebas.
+Yo|Vale, pues lo dejamos en el sesenta por ciento para este trimestre y el setenta para el siguiente. Me parece más realista.
+Diego|Perfecto.
+Yo|Quería hablar también de tu formación. El año pasado comentaste que querías aprender Kubernetes.
+Diego|Sí, sigo con ganas. Hay un curso de administración de Kubernetes de la Linux Foundation que cuesta mil quinientos euros, con examen de certificación incluido.
+Yo|Tenemos presupuesto de formación para eso. Mil quinientos entra. Inscríbete esta semana y pásame la factura para aprobarla.
+Diego|Genial, me inscribo mañana.
+Yo|Y lo último: tu paso a senior. Has dicho varias veces que te interesa.
+Diego|Sí, me gustaría. Llevo tres años en el equipo y creo que ya hago tareas de senior, como la migración.
+Yo|Estoy de acuerdo en que es el momento de plantearlo. La revisión salarial y de puestos es en marzo. Para presentarlo bien, necesito un documento con tus logros del año: la migración, las guardias, lo que has mejorado en pagos.
+Diego|¿Para cuándo lo necesitas?
+Yo|Para el quince de enero. Yo, por mi parte, voy a hablar con recursos humanos para saber qué criterios usan este año para el paso a senior y te lo cuento en nuestra próxima reunión.
+Diego|Me parece bien. ¿Algo más?
+Yo|Por mi parte, no. Repasemos: yo hablo con plataforma para la rotación de guardias y con recursos humanos sobre los criterios de senior. Tú preparas el plan de migración para el miércoles, te inscribes en el curso de Kubernetes y preparas el documento de logros para el quince de enero.
+Diego|Y apunto las vacaciones en el calendario del equipo.
+Yo|Eso es. Gracias, Diego. Nos vemos en dos semanas.

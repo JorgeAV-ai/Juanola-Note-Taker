@@ -1,0 +1,6 @@
+Ana: login Google y Apple listo
+## Bloqueos
+- **certificado Apple caduca el domingo**
+## Hoy
+- Lucía entrevistas con usuarios
+- [ ] renovar certificado Apple

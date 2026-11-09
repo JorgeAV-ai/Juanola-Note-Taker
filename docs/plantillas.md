@@ -1,6 +1,6 @@
 # Plan: plantillas en el enhance
 
-Fecha: 8 de noviembre de 2026. Estado: propuesta, sin nada construido.
+Fecha: 8 de noviembre de 2026. Estado: fases 0 y 1 construidas (núcleo, tests y evaluador); la evaluación no cumple aún todos los umbrales del §6.3 (ver §6.4). La app no está conectada.
 
 Objetivo: comprobar que LFM3-1.7B sirve para generar notas con plantillas (1:1, stand-up, llamada de ventas…) y que en la app falle lo menos posible. Se asume que el modelo basta; no se cambia de modelo ni se entrena.
 
@@ -43,10 +43,10 @@ En código (`crates/enhance/src/templates.rs`), no en la base de datos: así se 
 | Plantilla | Apartados |
 |---|---|
 | 1:1 | Cómo está · Temas tratados · Feedback · Próximos pasos (Tasks) |
-| Stand-up | Hecho desde la última · Plan de hoy · Bloqueos · Próximos pasos (Tasks) |
+| Stand-up | Terminado · Plan de hoy · Bloqueos · Próximos pasos (Tasks) |
 | Reunión semanal de equipo | Métricas y estado · Temas tratados · Decisiones · Próximos pasos (Tasks) |
 | Entrevista con cliente | Contexto del cliente · Problemas y necesidades · Lo que usan hoy · Citas destacables · Próximos pasos (Tasks) |
-| Llamada de ventas | Contexto y necesidades · Objeciones · Presupuesto y plazos · Próximos pasos (Tasks) |
+| Llamada de ventas | Situación del cliente · Dudas y reparos · Presupuesto y plazos · Próximos pasos (Tasks) |
 
 - Cada plantilla integrada trae sus títulos en los seis idiomas del selector (es, en, pt, fr, de, it), escritos a mano. Se usa el del idioma del resumen (`summary_language`). Las plantillas del usuario se muestran tal cual las escribió, sin traducir.
 - Un test comprueba que todas pasan `validate` y tienen los seis idiomas.
@@ -206,10 +206,115 @@ Más adelante, si el reintento resulta frecuente: generar en streaming (`ChatMod
 
 Si la colocación no llega al 80 %, antes de tocar el modelo se prueban dos variantes en `eval_enhance.rs`: (a) poner los `hint` más concretos; (b) una gramática GBNF **sobre Markdown** (no JSON) que fija los títulos `## …` de la plantilla y deja libre el texto de las viñetas. La variante (b) no se ha probado; la mala experiencia con JSON no garantiza que vaya igual de mal, pero tampoco que vaya bien.
 
+### 6.4 Resultados de la primera evaluación (8 nov)
+
+`reunion_producto` convertida con `tools/script_to_segments.py` (142 segmentos, 17 min), LFM3-1.7B Q4_K_M, 3 semillas, pasadas de detalle activadas. Notas del usuario: `notas_usuario.txt` (planas) o `notas_usuario_plantillas.txt` (con títulos, lista, tarea y negrita). Mediana entre paréntesis.
+
+| Configuración | Cobertura | Tareas | Cifras fieles | Copiadas | s |
+|---|---|---|---|---|---|
+| A. Auto, código anterior, notas planas | 89 / 79 / 93 % (89) | 2 / 2 / 4 (2) | 85-93 % | 4-12 % | ~40 |
+| B. Auto, código nuevo, notas planas | 93 / 89 / 86 % (89) | 3 / 4 / 2 (3) | 90-97 % | 11-12 % | ~42 |
+| C. Auto, código nuevo, notas con estructura | 79 / 93 / 86 % (86) | 3 / 2 / 3 (3) | 90-95 % | 9-14 % | ~39 |
+| D. «Reunión semanal de equipo» | 89 / 89 / 89 % (89) | 2 / 1 / 4 (2) | 93-98 % | 12-15 % | ~42 |
+| E. Desajuste: «Entrevista con cliente» | 75 / 82 / 82 % (82) | 5 / 2 / 4 (4) | 95-98 % | 25-28 % | ~52 |
+
+Con plantilla (D): colocación 58 / 83 / 71 % (71), viñetas en «Otros temas» 14 / 0 / 4 %, 0 apartados vacíos, notas del usuario en su apartado 3 / 5 / 3 de 6, 0 notas perdidas, 0 reintentos, 0 caídas.
+
+Frente al §6.3:
+
+- **Cumple:** títulos = plantilla (por construcción); cobertura igual que Auto; tiempo ≤ 1,3 × Auto; 0 notas perdidas; las tareas del usuario siempre en «Próximos pasos»; Auto no empeora con el cambio de las notas del usuario (B frente a A).
+- **No cumple:** colocación (71 % frente a ≥ 80 %); notas del usuario en su apartado (50 % frente a ≥ 90 %); tareas con responsable (2 frente a 3 en Auto, dentro del ruido entre semillas que ya se veía en Auto).
+- **Desajuste (E): no se comporta como se esperaba.** El modelo no deja apartados vacíos ni usa «Otros temas»: mete la reunión de producto en los apartados de la entrevista. En «Citas destacables» copia frases literales (25-28 % de viñetas copiadas) y en «Próximos pasos» repite tareas. Ninguno de los tres criterios de fallo del §4.4 lo detecta, así que no hay reintento ni caída a Auto.
+
+Lo que se ve en las salidas:
+
+- El modelo escribe apartados largos que mezclan categorías: «Decisiones» recoge también los planes de precios, la feria y algunas tareas, y en «Próximos pasos» acaban hechos que no son tareas (como en Auto).
+- Las notas del usuario se colocan junto a las viñetas de la IA que más se les parecen. Es lo correcto, pero hereda dónde las puso el modelo («bug citas duplicadas» va a «Decisiones», porque ahí puso el modelo el arreglo de Javier). Las etiquetas de `user_notes` en `facts.json` quizá sean demasiado estrictas.
+- «MRR 112k» no encaja con «112000 euros» al buscar palabras en común, porque la colocación compara palabras sin pasar por el ITN.
+
+**Segunda iteración (8 nov).** Dos cambios: el prompt añade un `## Otros temas` opcional al final de la estructura y pide no forzar el contenido en un apartado que no le corresponde (lo que el modelo pone ahí se queda en «Otros temas» y cuenta para el criterio de fallo); y la colocación compara cifras normalizadas («112k» = «112.000»).
+
+| | Cobertura | Tareas | Colocación | Notas del usuario | Otros temas | Copiadas | s |
+|---|---|---|---|---|---|---|---|
+| D. Semanal | 86 / 89 / 89 % (89) | 3 / 6 / 3 (3) | 87 / 88 / 83 % (87) | 5 / 5 / 6 de 6 (83 %) | 0 % | 16-23 % | ~46 |
+| E. Desajuste | 61 / 75 / 86 % (75) | 0 / 2 / 2 (2) | — | — | 0 / 7 / 25 % | 22-28 % | ~53 |
+
+- Con la plantilla adecuada ya se cumplen la colocación (87 % ≥ 80 %), las tareas (igual que Auto), «Otros temas» (0 % ≤ 10 %), la cobertura y el tiempo (1,15 × Auto). Las notas del usuario se quedan cerca del umbral (83 % frente a 90 %); la que falla suele ser «contratar móvil: remoto», que va a «Otros temas» porque la IA puso la contratación en «Próximos pasos».
+- Sube la proporción de viñetas copiadas (12-15 % → 16-23 %).
+- **El desajuste sigue sin detectarse.** El modelo usa «Otros temas» solo a veces (hasta un 25 %) y sigue rellenando los apartados de la entrevista. Sin una señal nueva no hay reintento ni caída a Auto. Como la plantilla la elige el usuario, el daño es una nota mal organizada, no una nota perdida.
+
+**Tercera iteración (8 nov): tres guiones nuevos.** `uno_a_uno.txt` (1:1, 5 min, sin feedback a propósito: `"empty": {"1on1": ["Feedback"]}`), `llamada_ventas.txt` (5,5 min) y `stand_up.txt` (4 min), cada uno con `.facts.json` (hechos con `section`, `user_notes` y `empty`) y `.notas.txt` (título, lista, tarea y negrita). Son más cortos que los 8-10 min previstos. El evaluador gana `--title`. Cambios en el pipeline:
+
+- **Tope de tokens propio con plantilla** (`template_budget`: el de Auto + 150 por apartado, mínimo 800). Con el tope de Auto, el 1:1 se cortaba a mitad de «Feedback» y nunca llegaba a «Próximos pasos» (1 de 5 tareas).
+- **Viñetas repetidas entre apartados** (`drop_cross_duplicates`): si dos viñetas de apartados distintos citan una línea en común y comparten la mitad de sus términos, se queda la del apartado que mejor encaja.
+- **Sin negritas** `**` dentro de las viñetas.
+- **Probado y descartado:** una instrucción explícita «cada tarea va solo en `## Próximos pasos`». Hundía las tareas de la semanal (3 / 0 / 0 de 7, frente a 3 / 5 / 3 sin ella). Las tareas perdidas del 1:1 eran por el tope de tokens.
+
+Resultado final (3 semillas, mediana; Auto con el mismo guion entre paréntesis):
+
+| Plantilla | Cobertura | Tareas | Colocación | Notas del usuario | Otros temas | Copiadas | Tiempo |
+|---|---|---|---|---|---|---|---|
+| 1:1 | 100 % (100 %) | 4/5 (4/5) | 86 % | 3 de 5 (60 %) | 0 % | 23-25 % | ~18 s (1,5 × Auto) |
+| Llamada de ventas | 78 % (83 %) | 3/4 (1/4) | 71 % | 4 de 4 | 3-4 % | 52-59 % | ~19 s (1,3 ×) |
+| Stand-up | 92 % (100 %) | 1/4 (2/4) | 55 % | 4 / 4 / 3 de 4 | 10-40 % | 44-62 % | ~20 s (1,7 ×) |
+| Reunión semanal | 86 % (86-89 %) | 3/7 (3/7) | 79 % | 5 / 5 / 6 de 6 | 0 % | 17-22 % | ~46 s (1,15 ×) |
+
+- **Bien:** con plantilla las tareas igualan o superan a Auto, salvo en el stand-up; en ventas pasan de 1 a 3 de 4. No se pierde ninguna nota del usuario y la cobertura queda dentro de los 5 puntos, salvo en el stand-up.
+- **Colocación por debajo del 80 %** en ventas (los retrasos, los campos personalizados de SAP y los servidores en Europa acaban en «Contexto y necesidades» en vez de en «Objeciones»; las etiquetas son discutibles) y sobre todo en el **stand-up (55 %)**. Ahí el modelo no separa «hecho» de «plan de hoy», manda mucho a «Otros temas» y copia frases (hasta un 62 %).
+- **«Feedback» del 1:1 se rellena en las 3 semillas** con viñetas que no son feedback («Diego pide un plan de migración…»). El deduplicado no lo evita, porque no son repeticiones.
+- **El tiempo pasa de 1,3 × Auto** en las reuniones cortas (1:1 y stand-up), porque el modelo escribe más con el tope nuevo.
+
+**Cuarta iteración (8 nov).** Descripciones más concretas en «Feedback» («solo opiniones explícitas sobre cómo trabaja alguien…; si nadie dio ninguna, va vacío») y en los tres apartados del stand-up («solo lo que ya terminó…, no lo que hará hoy», etc.). Además, el deduplicado deja una tarea repetida siempre en el apartado de tareas: antes se quedaba en «Hecho desde la última» y se perdía como tarea.
+
+| Plantilla | Cobertura | Tareas | Colocación | Notas del usuario | Otros temas | Tiempo |
+|---|---|---|---|---|---|---|
+| 1:1 | 100 % (Auto 100 %) | 4/5 (Auto 4/5) | 100 % | 5 de 5 (mediana) | 0 % | ~20 s (1,7 × Auto) |
+| Llamada de ventas | 78 % (83 %) | **4/4** (1/4) | 71 % | 4 de 4 | 3-4 % | ~20 s (1,3 ×) |
+| Stand-up | 83 % (100 %) | **4/4** (2/4) | 36 % | 3 de 4 | 25-29 % | ~15 s (1,25 ×) |
+| Reunión semanal | 86 % (86-89 %) | 3/7 (3/7) | 83 % | 5 / 5 / 6 de 6 | 0 % | ~50 s (1,25 ×) |
+
+- «Feedback» del 1:1 queda vacío en 2 de 3 semillas (antes, 0 de 3).
+- Con plantilla, las tareas igualan o superan a Auto en las cuatro.
+- **El stand-up es el punto débil y parece un límite del modelo:** el propio LFM3 escribe lo ya terminado bajo `## Otros temas` y las tareas bajo «Hecho desde la última» (visto en la traza), aunque la descripción lo diga. El encaje no puede corregirlo sin entender el texto.
+
+**Quinta iteración (9 nov): gramática GBNF sobre Markdown (variante «b») y título del stand-up.**
+
+- `EnhanceOptions::markdown_grammar` (desactivada por defecto) genera una gramática que fija los títulos `## …` de la plantilla, en su orden, más `## Otros temas` opcional. Cada viñeta tiene texto libre y acaba obligatoriamente en sus citas `[n, m]`. `GenOptions` gana `grammar` (GBNF directa) y el evaluador la activa con `+gbnf`. La gramática funciona (salida limpia, todas las viñetas citadas), pero **no corrige la colocación**: el modelo sigue eligiendo mal el apartado y además tarda más.
+- El problema del stand-up era el título: «Hecho desde la última» se leía como «un hecho». Con **«Terminado»** (y la descripción «…antes de esta reunión (ayer terminé…)») el modelo deja de mandar lo terminado a «Otros temas».
+
+| Stand-up | Cobertura | Tareas | Colocación | Otros temas | Tiempo |
+|---|---|---|---|---|---|
+| «Hecho desde la última» (cuarta iteración) | 83 % | 4/4 | 36 % | 25-29 % | ~15 s |
+| «Terminado» | 92 % | 4/4 | **67 %** (55 / 67 / 80) | 0-13 % | ~18 s |
+| «Terminado» + gramática | 100 / 83 / 100 % | 4/4 | 58 % | 12-19 % | ~27 s |
+
+Se adopta «Terminado» en la plantilla integrada (en, pt, fr, de, it: Done, Concluído, Terminé, Erledigt, Completato) y la gramática queda como opción experimental. El stand-up sigue por debajo del 80 % de colocación y con muchas viñetas copiadas (47-65 %).
+
+**Sexta iteración (9 nov): repaso de títulos.** El evaluador dice ahora adónde va cada hecho mal colocado (`id → apartado`). Con eso:
+
+- **Ventas:** «Objeciones» y «Contexto y necesidades» se intercambiaban. Las dudas sobre SAP, Europa y Ruteo360 iban a contexto y el 12 % de retrasos (un problema del cliente) a objeciones. Se probaron cuatro combinaciones como plantillas JSON. Se adopta **«Situación del cliente» · «Dudas y reparos»**, con descripciones nuevas («a qué se dedica el cliente, cómo trabaja hoy, qué le cuesta y qué objetivo tiene»; «lo que preocupa al cliente de la solución que se le ofrece: integración, datos, adopción por su equipo o la competencia»). Con una descripción calcada del guion («un competidor más barato») salía 100 %, pero se descarta por sobreajustada.
+- **Reunión semanal:** «Temas tratados» atrae decisiones y cifras, y algunas acaban en «Próximos pasos». Con «Cifras y resultados» / «Qué se decidió» (65-92 %) o «Cifras de la semana» / «Acuerdos» (80-86 %) no hay mejora clara frente a 78-83 %: se queda como está.
+- **1:1:** 86-100 %, sin cambios. **Entrevista con cliente:** no tiene guion, así que no se toca sin medir.
+
+| Llamada de ventas | Cobertura | Tareas | Colocación | Otros temas | Copiadas | Tiempo |
+|---|---|---|---|---|---|---|
+| Contexto y necesidades · Objeciones | 78 % | 4/4 | 71 % (71 / 71 / 69) | 3-4 % | 52-58 % | ~17 s |
+| **Situación del cliente · Dudas y reparos** | 78 % (78 / 89 / 78) | 4/4 | **93 %** (86 / 94 / 93) | 6-11 % | **26-33 %** | ~21 s |
+
+Ventas pasa el umbral de colocación y copia la mitad. El fallo que queda es el competidor, que el modelo pone en contexto o en «Próximos pasos».
+
+Siguientes pasos de la fase 1, por orden:
+
+1. ~~Salida explícita `## Otros temas`~~ (segunda iteración), ~~guiones nuevos~~ (tercera), ~~descripciones concretas~~ (cuarta) y ~~gramática GBNF~~ (quinta: no mejora).
+2. ~~**Títulos**~~ (sexta: ventas pasa a 93 %; semanal sin mejora clara). Falta un guion de entrevista con cliente para medir esa plantilla.
+3. **Viñetas copiadas** en reuniones cortas (47-65 % en el stand-up; ventas bajó a 26-33 % con los títulos nuevos): con plantilla se copia más que en Auto.
+4. **Tiempo en reuniones cortas** (1,7 × Auto en el 1:1): bajar el mínimo de `template_budget` o el margen por apartado, comprobando que las tareas no vuelven a cortarse.
+5. **Desajuste:** sigue sin detectarse.
+
 ## 7. Fases
 
-0. **Arreglo de las notas del usuario** (§4.5, paso 0): `user_blocks` por elemento, con tipo y énfasis, y sus tests. Va antes que todo porque afecta también a Auto, que es lo que usa hoy la app.
-1. **Núcleo y evaluación:** §2, §3, §4 y §6 (tests unitarios, `--template`, fixtures en texto). Termina con la tabla de §6.3. Si no se cumplen los umbrales, se itera aquí; la app no se toca.
+0. **Arreglo de las notas del usuario** (§4.5, paso 0), *hecho*: `user_blocks` por elemento, con tipo y énfasis, y sus tests. Va antes que todo porque afecta también a Auto, que es lo que usa hoy la app.
+1. **Núcleo y evaluación** (*núcleo, tests y evaluador hechos; iterando sobre la calidad, ver §6.4*): §2, §3, §4 y §6 (tests unitarios, `--template`, fixtures en texto). Termina con la tabla de §6.3. Si no se cumplen los umbrales, se itera aquí; la app no se toca.
 2. **Conexión con la app:** §5.1, §5.2, §5.3 (submenú y aviso) y §5.4.
 3. **Plantillas del usuario:** «Manage templates» (crear, duplicar una integrada, editar apartados con título, `hint` y tipo, borrar), `save_template` y `delete_template` con `validate`, y el menú `/` del editor. El encaje del §4.2 hace que una plantilla mal escrita por el usuario no rompa la nota.
 

@@ -1,0 +1,34 @@
+{
+  "_doc": "Hechos de la llamada de ventas ficticia (llamada_ventas.txt). Mismo formato que reunion_producto.facts.json.",
+  "facts": [
+    {"id": "camiones_85", "all": [["85"]], "section": {"ventas": ["Situación del cliente"]}},
+    {"id": "almacenes_santander", "all": [["santander"]], "section": {"ventas": ["Situación del cliente"]}},
+    {"id": "excel", "all": [["excel"]], "section": {"ventas": ["Situación del cliente"]}},
+    {"id": "cuatro_horas", "all": [["4 horas", "cuatro horas"]], "section": {"ventas": ["Situación del cliente"]}},
+    {"id": "retrasos_12", "all": [["12"]], "section": {"ventas": ["Situación del cliente"]}},
+    {"id": "objetivo_5", "all": [["5 %", "5%", "5 por ciento"]], "section": {"ventas": ["Situación del cliente"]}},
+    {"id": "integracion_sap", "all": [["sap"]], "section": {"ventas": ["Dudas y reparos", "Situación del cliente"]}},
+    {"id": "campos_personalizados", "all": [["personalizad"]], "section": {"ventas": ["Dudas y reparos"]}},
+    {"id": "datos_europa", "all": [["europa"]], "section": {"ventas": ["Dudas y reparos"]}},
+    {"id": "conductores_resistencia", "all": [["conductores"], ["resistencia", "gustar", "rechaz", "reticen"]], "section": {"ventas": ["Dudas y reparos"]}},
+    {"id": "competidor_ruteo360", "all": [["ruteo360", "ruteo 360"]], "section": {"ventas": ["Dudas y reparos"]}},
+    {"id": "presupuesto_40k", "all": [["40000", "40 mil"]], "section": {"ventas": ["Presupuesto y plazos"]}},
+    {"id": "precio_35_vehiculo", "all": [["35"], ["vehiculo", "camion"]], "section": {"ventas": ["Presupuesto y plazos"]}},
+    {"id": "puesta_marcha_4000", "all": [["4000", "4 mil"]], "section": {"ventas": ["Presupuesto y plazos"]}},
+    {"id": "descuento_10", "all": [["10"], ["descuento"]], "section": {"ventas": ["Presupuesto y plazos"]}},
+    {"id": "seis_semanas", "all": [["6 semanas", "seis semanas"]], "section": {"ventas": ["Presupuesto y plazos"]}},
+    {"id": "decide_consejero", "all": [["etxeberria", "consejero"]], "section": {"ventas": ["Presupuesto y plazos", "Situación del cliente"]}},
+    {"id": "empezar_vitoria", "all": [["vitoria"], ["empez", "primer", "piloto"]], "section": {"ventas": ["Presupuesto y plazos", "Situación del cliente"]}},
+    {"id": "t_enviar_propuesta", "task": true, "all": [["propuesta"], ["viernes"]]},
+    {"id": "t_raul_api", "task": true, "all": [["raul"], ["api", "documentacion"]]},
+    {"id": "t_contacto_cliente", "task": true, "all": [["contacto", "cliente"], ["ruteo"]]},
+    {"id": "t_demo_vitoria", "task": true, "all": [["demo"]]},
+    {"id": "t_patricia_reunion", "task": true, "all": [["patricia"], ["reunion", "etxeberria", "iñigo", "inigo"]]}
+  ],
+  "user_notes": {
+    "85 camiones, 3 almacenes": {"ventas": ["Situación del cliente"]},
+    "dudas con SAP": {"ventas": ["Dudas y reparos"]},
+    "presupuesto 40k": {"ventas": ["Presupuesto y plazos"]},
+    "enviar propuesta el viernes": {"ventas": ["Próximos pasos"]}
+  }
+}

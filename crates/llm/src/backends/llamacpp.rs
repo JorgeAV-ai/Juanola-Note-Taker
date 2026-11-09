@@ -124,7 +124,9 @@ impl LlamaCpp {
                 &[llama_cpp_2::token::logit_bias::LlamaLogitBias::new(tok, f32::NEG_INFINITY)],
             ));
         }
-        if let Some(schema) = &opts.json_schema {
+        if let Some(g) = &opts.grammar {
+            samplers.push(LlamaSampler::grammar(&self.model, g, "root").map_err(err)?);
+        } else if let Some(schema) = &opts.json_schema {
             let gbnf = llama_cpp_2::json_schema_to_grammar(&schema.to_string()).map_err(err)?;
             samplers.push(LlamaSampler::grammar(&self.model, &gbnf, "root").map_err(err)?);
         }

@@ -1,0 +1,8 @@
+MRR 112k, objetivo 120k
+**precios nuevos: enero**
+feria Valencia 20 nov
+## Errores
+- bug citas duplicadas -> Javier miércoles
+- [ ] revisar el error del PDF
+## Contratación
+- contratar móvil: remoto
