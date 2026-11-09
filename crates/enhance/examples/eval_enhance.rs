@@ -2,7 +2,7 @@
 //!
 //! ```text
 //! cargo run --release -p juanola-enhance --example eval_enhance -- \
-//!   <segments.json> <facts.json> [notas.txt] [--runs N] [--variant nombre=itn|noitn[+detail<seg>|+nodetail][+gbnf][:prompt.md]]...
+//!   <segments.json> <facts.json> [notas.txt] [--runs N] [--variant nombre=itn|noitn[+detail<seg>|+nodetail][+gbnf][+tasks][:prompt.md]]...
 //!   [--template 1on1|standup|semanal|entrevista|ventas|plantilla.json] [--title «Título de la reunión»] [--lang inglés] [--check]
 //! ```
 //! `segments.json` sale del STT o, sin audio, de `tools/script_to_segments.py`.
@@ -360,7 +360,8 @@ async fn main() -> anyhow::Result<()> {
                 };
                 let itn = !mode.split('+').any(|m| m == "noitn");
                 let markdown_grammar = mode.split('+').any(|m| m == "gbnf");
-                variants.push((name.to_owned(), EnhanceOptions { itn, prompt, detail_chunk_secs, markdown_grammar, ..Default::default() }));
+                let detail_tasks = mode.split('+').any(|m| m == "tasks");
+                variants.push((name.to_owned(), EnhanceOptions { itn, prompt, detail_chunk_secs, markdown_grammar, detail_tasks, ..Default::default() }));
                 i += 1;
             }
             _ => {}
@@ -506,6 +507,8 @@ async fn main() -> anyhow::Result<()> {
                 sc.secs
             );
             println!("               faltan: {}", sc.missed.join(", "));
+            // Las tareas acertadas no dicen nada si entran muchas que no lo son.
+            println!("               tareas escritas: {} (en el guion: {})", report.action_items, sc.tasks_reachable);
             if tkey.is_some() {
                 print_template(&sc, &report, pct);
             }

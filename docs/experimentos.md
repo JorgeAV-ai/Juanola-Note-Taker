@@ -6,6 +6,8 @@ Qué se ha probado, qué resultado dio y si se quedó o se descartó, para no re
 
 Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda como opción desactivada · ⏳ idea sin probar.
 
+**Foco (desde el 9 nov): solo castellano e inglés.** Para acotar el tiempo, los experimentos se miden y se ajustan en reuniones en esos dos idiomas. Los guiones en portugués, francés, alemán e italiano se quedan en `fixtures/` pero no se usan para decidir; el resto de idiomas tiene que seguir funcionando, sin más.
+
 ## Cómo se mide
 
 - Enhance: `cargo run --release -p juanola-enhance --example eval_enhance -- <segmentos.json> <hechos.facts.json> [notas.txt] --runs 3 --variant … [--template clave|archivo.json] [--title …]`. Guiones en `crates/enhance/fixtures/`. Para pasarlos a segmentos: `tools/script_to_segments.py`.
@@ -29,6 +31,8 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 | Resumen y pasadas de detalle a la vez, en un lote multi-secuencia de llama.cpp (`complete_many`) | Mismas métricas en todas las semillas (las salidas no cambian) y 35-55 % menos tiempo: semanal en Auto 67 → 31 s, con plantilla 72 → 40 s; 1:1 en Auto 20 → 13 s. Con Q8_0 queda por debajo de lo que tardaba Q4_K_M una a una | ✅ | 9 nov | «Generación en lote», abajo |
 | Q8_0 (1,85 GB) frente a Q4_K_M, las 4 reuniones, Auto y plantilla | Reunión larga (17 min) mejor en todo: Auto con cobertura del 86 % al 96 %, tareas de 3/7 a 5/7 y cifras fieles del 91 % al 98 %; con plantilla, colocación del 83 % al 88 % y tareas de 3/7 a 4/7. Reuniones cortas mixtas: en el 1:1 empeora (colocación del 100 % al 77 %, «Feedback» relleno 3 de 3, tareas en Auto de 4/5 a 1/5); el stand-up y ventas, dentro del ruido. Tarda 1,35-2 × | ✅ adoptado (9 nov) | 9 nov | «Q8_0 frente a Q4_K_M», abajo |
 | Cerrar cada cita al llegar a 6 referencias, en el bucle de llama.cpp (`GenOptions::max_refs`), Auto y plantilla | Ninguna cita de más de 6 (antes hasta 410); topes de 3000 tokens de 6 tandas a 1 (otra causa); algo más de tareas y de colocación a los 60 min | ✅ | 9 nov | «Límite de citas» |
+| Tope de Auto: base + 400, mínimo 800 (`summary_budget`); antes ~600 en reuniones de 4-5 min | Todos los resúmenes Auto cortos se cortaban antes de «Próximos pasos». Tareas en Auto: 1:1 1/5 → 4-5/5, ventas 1/4 → 2-4/4, stand-up 1/4 → 1-4/4, revisión trimestral 5-6 → 6-9/14 | ✅ | 9 nov | «Tareas en las pasadas de detalle» |
+| Tareas también en las pasadas de detalle (`## Tareas`), añadidas a «Próximos pasos» sin duplicados (`detail_tasks`) | 1-3 tareas acertadas más, pero escribe el doble (29-41 en una reunión de 14), muchas falsas o atribuidas a «Yo» | ⚗️ `detail_tasks` | 9 nov | «Tareas en las pasadas de detalle» |
 | QAD-Q4_0, Q6_K o un modelo mayor solo para las tareas | — | ⏳ | | HANDOFF, punto 3 |
 | Mostrar el resumen a los ~20 s y añadir los detalles después | — | ⏳ | | HANDOFF, punto 3 |
 
@@ -155,6 +159,30 @@ Medido en las cuatro reuniones que tenían citas largas, 3 semillas, antes → d
 - **Guiones Unicode en los rangos:** el modelo escribe a veces `[162‑166, 167, …` (U+2011). Ni el corte ni `split_refs` lo tomaban por cita (la weekly con plantilla seguía llegando al tope). Ahora aceptan ‐ ‑ ‒ – —; la fila de la weekly es la de después de ese arreglo.
 - **El tope que queda** (team_meeting, plantilla) no son citas: con «elftausendfünfhundert» el modelo se pone a razonar en inglés dentro de las notas («Actually line 251 says…», «Let's re-read») hasta agotar el presupuesto. Pendiente.
 - **Tareas en Auto** no mejoran (weekly 2/14 en las tres semillas): ahí no se pierden por falta de tokens. Siguen siendo lo más flojo.
+
+## Tareas en las pasadas de detalle (9 nov) ⚗️ y tope de Auto ✅
+
+Idea: cada pasada de detalle (4 min) ve su trozo con más atención que el resumen; si también lista las tareas, se recuperan las que el resumen omite. Solo castellano e inglés.
+
+- **Lo primero que salió:** en Auto, el tope de tokens de reuniones de 4-5 min (~600) cortaba **todos** los resúmenes antes de «Próximos pasos» (el 1:1, ventas y stand-up acababan justo en el tope; ventas a mitad de frase). Con plantilla ya tenía mínimo 800. Ahora Auto tiene la base + 400, con mínimo 800. Era la causa de las tareas en Auto a 1/4 o 1/5 desde hacía días.
+- **Pasadas de detalle:** con las tareas al final del prompt nunca llegaban a escribirse (la lista de datos agotaba los 600 tokens). Van primero (`## Tareas` y luego `## Datos`).
+- **Cuántas entran:** sin límite, ~58 «tareas» por reunión de una hora («Yo: Ask Aisha and Sophie if they are there», «Ellos: Confirm present»). Con 2 por fragmento, filtro de preguntas, de «Ellos…», de verbos de la propia reunión (ask, tell, preguntar, explicar…) y duplicados lejanos (dos tercios de palabras en común), siguen siendo 29-41. Muchas llevan «Yo:» aunque sean de otro.
+- **El evaluador** ahora imprime `tareas escritas: N (en el guion: M)`: las acertadas solas no detectan la basura.
+
+Tareas acertadas / escritas, 3 semillas, ambos con el tope nuevo (`+tasks` frente a sin él):
+
+| Guion · modo | Con tareas en detalle | Sin ellas (por defecto) |
+|---|---|---|
+| entrevista_cliente (es, 30) · plantilla | 6/6/6 de 8 · 15-17 escritas | 6/5/5 · 8-9 |
+| entrevista_cliente · Auto | 6/5/5 · 13-15 | 2/2/3 · 4-7 |
+| revision_trimestral (es, 60) · plantilla | 8/8/7 de 14 · 36-40 | 5/5/7 · 17-19 |
+| revision_trimestral · Auto | 8/5/7 · 29-37 | 6/9/7 · 15-18 |
+| weekly_planning (en, 60) · plantilla | 6/9/8 de 14 · 37-41 | 3/8/9 · 30-33 |
+| weekly_planning · Auto | 4/6/6 · 32-34 | 2/7/5 · 18-26 |
+
+Cobertura y colocación, parecidas en los dos. Con el tope nuevo y sin tareas en detalle, frente a la mañana (tras el límite de citas): revisión trimestral con plantilla 1/5/4 → 5/5/7 de 14, Auto 6/5/5 → 6/9/7; weekly Auto 2/2/2 → 2/7/5; entrevista con plantilla 2-5 → 5-6 de 8. Las reuniones cortas se midieron con las tareas en detalle activadas, pero ahí añadían 0-2 por ejecución: la mejora es del tope.
+
+Decisión: el tope se queda; las tareas en detalle quedan desactivadas (`detail_tasks`, `--variant x=itn+tasks` en el evaluador). Para reactivarlas haría falta filtrar con el modelo (¿es un compromiso?, ¿de quién?) o que el resumen elija entre las candidatas. Las de la weekly con plantilla siguen siendo muchas (30-33) aun sin ellas: es el propio resumen en inglés.
 
 ## Otras áreas (descartes medidos)
 

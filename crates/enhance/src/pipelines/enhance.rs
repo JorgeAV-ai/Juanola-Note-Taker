@@ -208,11 +208,16 @@ pub struct EnhanceOptions {
     /// plantilla, en su orden, y deja libre el texto de las viñetas (cada una
     /// acaba en sus citas `[n, m]`). Experimental: ver `docs/plantillas.md` §6.4.
     pub markdown_grammar: bool,
+    /// Pedir también tareas en las pasadas de detalle y añadir a «Próximos
+    /// pasos» las que falten. Desactivado: acierta 1-3 tareas más por reunión
+    /// pero escribe el doble, muchas falsas o con otro responsable (ver
+    /// `docs/experimentos.md`, «Tareas en las pasadas de detalle»).
+    pub detail_tasks: bool,
 }
 
 impl Default for EnhanceOptions {
     fn default() -> Self {
-        Self { itn: true, prompt: None, max_tokens: 3000, seed: None, detail_chunk_secs: Some(240.0), markdown_grammar: false }
+        Self { itn: true, prompt: None, max_tokens: 3000, seed: None, detail_chunk_secs: Some(240.0), markdown_grammar: false, detail_tasks: false }
     }
 }
 
@@ -426,16 +431,23 @@ fn sections_hint(words: usize) -> &'static str {
     }
 }
 
-/// Tope de tokens del resumen según la longitud: en reuniones largas el
-/// resumen ocupa ~0,4 tokens por palabra; con margen, y nunca más de `max`.
-fn summary_budget(words: usize, max: u32) -> u32 {
+/// Base de los topes: en reuniones largas el resumen ocupa ~0,4 tokens por
+/// palabra; con margen.
+fn base_budget(words: usize, max: u32) -> u32 {
     ((words as f32 * 0.8) as u32).clamp(300, max)
 }
 
-/// Tope de tokens con plantilla: el de Auto más ~150 por apartado (incluido
+/// Tope de tokens del resumen en Auto: la base más 400, con un mínimo de 800
+/// y nunca más de `max`. Con la base sola, los resúmenes de 4-5 min (~600
+/// tokens) se cortaban todos antes de «Próximos pasos», que va al final.
+fn summary_budget(words: usize, max: u32) -> u32 {
+    (base_budget(words, max) + 400).clamp(800, max.max(800))
+}
+
+/// Tope de tokens con plantilla: la base más ~150 por apartado (incluido
 /// «Otros temas»), con un mínimo de 800.
 fn template_budget(words: usize, sections: usize, max: u32) -> u32 {
-    (summary_budget(words, max) + 150 * (sections as u32 + 1)).clamp(800, max.max(800))
+    (base_budget(words, max) + 150 * (sections as u32 + 1)).clamp(800, max.max(800))
 }
 
 /// Viñeta tal como la escribe el modelo.
@@ -911,7 +923,7 @@ fn add_details(sections: &mut [RawSection], details: Vec<RawBullet>, n_lines: us
 
 fn is_next_steps(heading: &str) -> bool {
     let h = heading.to_lowercase();
-    ["próximos pasos", "proximos pasos", "tareas", "next steps", "action items"].iter().any(|k| h.contains(k))
+    ["próximos pasos", "proximos pasos", "tarea", "next steps", "action items", "task"].iter().any(|k| h.contains(k))
 }
 
 /// Palabras de 4+ letras en minúsculas (para emparejar notas con secciones).
@@ -1225,7 +1237,7 @@ pub async fn enhance_with(
     let mut raw = fit.sections;
     let mut tasks: Vec<bool> = tpl.iter().map(|s| s.kind == SectionKind::Tasks).collect();
     tasks.push(false);
-    apply_details(&mut raw, details.as_deref().unwrap_or_default(), input.segments.len(), &tasks);
+    apply_details(&mut raw, details.as_deref().unwrap_or_default(), input.segments.len(), &tasks, false);
     let (notes, mut report) = resolve(raw, input.segments, &blocks, input.note.id, layout)?;
     report.template_retries = retries;
     report.unmatched_bullets = fit.unmatched_bullets;
@@ -1251,28 +1263,97 @@ fn detail_requests(input: &EnhanceInput<'_>, opts: &EnhanceOptions) -> Vec<(Vec<
         .map(|range| {
             let segs = &input.segments[range.clone()];
             let prompt = juanola_prompts::ENHANCE_DETAILS
+                .replace("{{tasks}}", if opts.detail_tasks { DETAIL_TASKS } else { "Escribe" })
                 .replace("{{from}}", &clock(segs[0].start))
                 .replace("{{to}}", &clock(segs[segs.len() - 1].end))
                 .replace("{{transcript}}", format_transcript_from(segs, range.start + 1, itn(input, opts)).trim_end())
                 .replace("{{language}}", input.summary_language)
                 + &crate::language::prompt_suffix(input.summary_language);
-            // 12 datos caben en ~450 tokens; el tope corta las listas que el
-            // modelo alarga sin fin (es lo que más tiempo cuesta).
-            let gen = GenOptions { max_tokens: Some(450), seed: opts.seed, max_refs: Some(MAX_REFS), ..Default::default() };
+            // 12 datos caben en ~450 tokens, y las tareas, en otros ~150; el
+            // tope corta las listas que el modelo alarga sin fin.
+            let gen = GenOptions { max_tokens: Some(600), seed: opts.seed, max_refs: Some(MAX_REFS), ..Default::default() };
             (vec![Message { role: "user".into(), content: prompt }], gen)
         })
         .collect()
 }
 
-/// Añade a `raw` los datos de las pasadas de detalle (nada si el resumen no
-/// dio ninguna viñeta).
-fn apply_details(raw: &mut [RawSection], details_md: &[String], n_lines: usize, tasks: &[bool]) {
+/// Párrafo del prompt de detalle que pide las tareas (con `detail_tasks`).
+const DETAIL_TASKS: &str = "Primero, si en el fragmento alguien se compromete a hacer algo concreto o se le encarga, escribe un apartado `## Tareas` con una viñeta por tarea: quién (su nombre, o «Yo» si es el usuario), qué hará y, si se dijo, para cuándo. Una tarea es un compromiso de hacer algo después de la reunión: no son tareas las preguntas, los saludos, las opiniones ni lo que solo se comentó. Si no hay ninguna tarea, no pongas el apartado.\n\nDespués, escribe";
+
+/// Añade a `raw` los datos de las pasadas de detalle y sus tareas (nada si
+/// el resumen no dio ninguna viñeta). `tasks[i]`: ¿es `raw[i]` el apartado de
+/// tareas? `auto`: si no hay ninguno, se crea un «Próximos pasos» al final.
+fn apply_details(raw: &mut Vec<RawSection>, details_md: &[String], n_lines: usize, tasks: &[bool], auto: bool) {
     if raw.iter().all(|s| s.bullets.is_empty()) {
         return;
     }
+    let mut found_tasks = Vec::new();
     for md in details_md {
-        let details: Vec<RawBullet> = parse_markdown(md).into_iter().flat_map(|s| s.bullets).collect();
-        add_details(raw, details, n_lines, tasks);
+        let (steps, details): (Vec<RawSection>, Vec<RawSection>) = parse_markdown(md).into_iter().partition(|s| is_next_steps(&s.heading));
+        add_details(raw, details.into_iter().flat_map(|s| s.bullets).collect(), n_lines, tasks);
+        found_tasks.extend(steps.into_iter().flat_map(|s| s.bullets).filter(|b| looks_like_task(&b.text)).take(MAX_TASKS_PER_CHUNK));
+    }
+    let target = match tasks.iter().position(|t| *t) {
+        Some(i) => i,
+        None if auto && !found_tasks.is_empty() => {
+            raw.push(RawSection { heading: "Próximos pasos".into(), bullets: Vec::new() });
+            raw.len() - 1
+        }
+        None => return,
+    };
+    add_tasks(&mut raw[target], found_tasks, n_lines);
+}
+
+/// Tareas por fragmento como mucho: una reunión real tiene ~1 cada 4 min, y
+/// más suele ser el modelo listando lo que se dijo (medido: ~58 por reunión
+/// de una hora con 4).
+const MAX_TASKS_PER_CHUNK: usize = 2;
+
+/// ¿Parece una tarea? Descarta lo que la pasada de detalle mete en `## Tareas`
+/// sin serlo: preguntas, líneas copiadas de «Ellos» y viñetas sin verbo de
+/// acción claro no se pueden detectar sin modelo, pero estas sí.
+fn looks_like_task(text: &str) -> bool {
+    let t = text.trim();
+    if t.is_empty() || t.contains('?') || t.starts_with("Ellos") || t.split_whitespace().count() < 3 {
+        return false;
+    }
+    // Lo que se dice en la reunión misma («Yo: Ask Aisha if…», «Preguntar a
+    // Luis…») no es un compromiso para después. Solo castellano e inglés.
+    let rest = t.trim_start_matches(['[', '-', '*', ' ']);
+    let rest = rest.split_once(':').filter(|(who, _)| who.split_whitespace().count() <= 3).map_or(rest, |(_, r)| r);
+    let first = rest.trim_start_matches(['[', ']', ' ']).split_whitespace().next().unwrap_or("").to_lowercase();
+    !matches!(
+        first.as_str(),
+        "ask" | "asks" | "tell" | "tells" | "explain" | "explains" | "mention" | "mentions" | "confirm" | "confirms"
+            | "preguntar" | "pregunta" | "decir" | "dice" | "explicar" | "explica" | "mencionar" | "menciona" | "confirmar" | "confirma"
+    )
+}
+
+/// Añade a `steps` las tareas de las pasadas de detalle que no estén ya, en
+/// el orden de la reunión. Ya está si otra cita a ≤ 3 líneas y comparte la
+/// mitad de los términos, o si comparte dos tercios aunque esté lejos (las
+/// tareas se repiten en el repaso del final).
+fn add_tasks(steps: &mut RawSection, found: Vec<RawBullet>, n_lines: usize) {
+    let valid = |r: &i64| *r >= 1 && (*r as usize) <= n_lines;
+    for t in found {
+        let refs: Vec<i64> = t.refs.iter().copied().filter(valid).collect();
+        let Some(&anchor) = refs.first() else { continue };
+        let terms = key_terms(&t.text);
+        if terms.len() < 2 {
+            continue;
+        }
+        let duplicate = steps.bullets.iter().any(|b| {
+            let bt = key_terms(&b.text);
+            let (common, shorter) = (terms.intersection(&bt).count(), terms.len().min(bt.len()));
+            let near = b.refs.iter().any(|r| refs.iter().any(|x| (r - x).abs() <= 3));
+            (near && common * 2 >= shorter) || common * 3 >= shorter * 2
+        });
+        if duplicate {
+            continue;
+        }
+        let pos = steps.bullets.iter().rposition(|b| b.refs.iter().any(|r| valid(r) && *r <= anchor)).map_or(0, |p| p + 1);
+        trace(&format!("tarea de los detalles añadida: {}", t.text));
+        steps.bullets.insert(pos, RawBullet { text: t.text, refs });
     }
 }
 
@@ -1291,7 +1372,11 @@ async fn complete_with_details(
     reqs.extend(detail_reqs);
     let mut out = model.complete_many(&reqs).await?.into_iter();
     let md = out.next().unwrap_or_default();
-    *details = Some(out.collect());
+    let found: Vec<String> = out.collect();
+    for (i, d) in found.iter().enumerate() {
+        trace(&format!("detalle {}:\n{d}", i + 1));
+    }
+    *details = Some(found);
     Ok(md)
 }
 
@@ -1312,7 +1397,7 @@ async fn enhance_auto(
     trace(&format!("resumen:\n{md}"));
     let mut raw = merge_sections(parse_markdown(&md));
     let tasks: Vec<bool> = raw.iter().map(|s| is_next_steps(&s.heading)).collect();
-    apply_details(&mut raw, details.as_deref().unwrap_or_default(), input.segments.len(), &tasks);
+    apply_details(&mut raw, details.as_deref().unwrap_or_default(), input.segments.len(), &tasks, true);
     if raw.is_empty() {
         return Err(EnhanceError::NoSections(md));
     }
@@ -1495,8 +1580,8 @@ mod tests {
     fn budget_and_sections_scale_with_length() {
         assert_eq!(sections_hint(20), "entre 1 y 3 apartados");
         assert_eq!(sections_hint(2400), "entre 4 y 10 apartados");
-        assert_eq!(summary_budget(30, 3000), 300);
-        assert_eq!(summary_budget(2400, 3000), 1920);
+        assert_eq!(summary_budget(30, 3000), 800);
+        assert_eq!(summary_budget(2400, 3000), 2320);
         assert_eq!(summary_budget(10_000, 3000), 3000);
     }
 
@@ -1523,6 +1608,30 @@ mod tests {
         assert_eq!(m, ["1840 clínicas activas", "MRR de 112000 euros"], "el duplicado del MRR no entra; el nuevo va en orden");
         assert_eq!(secs[1].bullets.len(), 2);
         assert_eq!(secs[2].bullets.len(), 1, "las tareas no reciben detalles");
+    }
+
+    #[test]
+    fn detail_tasks_go_to_next_steps_without_duplicates() {
+        let mut secs = parse_markdown("## Métricas\n- MRR de 112000 euros [7]\n## Próximos pasos\n- Luis llama al proveedor el lunes [50]\n");
+        let md = ["- 1840 clínicas activas [6]\n## Tareas\n- Ana prepara la propuesta para el viernes [20]\n- Luis llama al proveedor [51]\n".to_owned()];
+        apply_details(&mut secs, &md, 100, &[false, true], false);
+        let t: Vec<&str> = secs[1].bullets.iter().map(|b| b.text.as_str()).collect();
+        assert_eq!(t, ["Ana prepara la propuesta para el viernes", "Luis llama al proveedor el lunes"], "la de Luis ya estaba; la de Ana entra en orden");
+        assert_eq!(secs[0].bullets.len(), 2, "el dato va a Métricas, no las tareas");
+        // En Auto, sin «Próximos pasos», se crea.
+        let mut secs = parse_markdown("## Métricas\n- MRR de 112000 euros [7]\n");
+        apply_details(&mut secs, &md, 100, &[false], true);
+        assert_eq!((secs.len(), secs[1].heading.as_str(), secs[1].bullets.len()), (2, "Próximos pasos", 2));
+    }
+
+    #[test]
+    fn what_is_said_in_the_meeting_is_not_a_task() {
+        assert!(!looks_like_task("Yo: Ask Aisha and Sophie if they are there."));
+        assert!(!looks_like_task("Preguntar a Luis por el presupuesto"));
+        assert!(!looks_like_task("Ellos: Confirm present"));
+        assert!(!looks_like_task("¿Quién lleva la demo?"));
+        assert!(looks_like_task("Hannah: Prepare the list of UK accountants by end of next week."));
+        assert!(looks_like_task("Yo: Start on the euro invoice templates next week."));
     }
 
     #[test]
