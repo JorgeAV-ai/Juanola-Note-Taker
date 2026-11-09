@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AudioLines, BellRing, Boxes, CalendarDays, ChevronLeft, FolderOpen, Globe, HardDrive, House, Info, Mic, SlidersHorizontal, Speaker } from "lucide-react";
+import { AudioLines, BellRing, BookA, Boxes, CalendarDays, ChevronLeft, FolderOpen, Globe, HardDrive, House, Info, Mic, SlidersHorizontal, Speaker } from "lucide-react";
 import type { Route } from "@/App";
 import { ipc, type AudioDevice, type CalendarAccess, type DetectionSettings, type Permission } from "@/lib/ipc";
 import { LANGUAGES, saveLanguage, savedLanguage } from "@/lib/language";
@@ -160,8 +160,58 @@ function Preferences() {
             ))}
           </select>
         </Row>
+        <Glossary />
       </Group>
     </Page>
+  );
+}
+
+// Términos que el STT debe conocer: van en el prompt del modelo junto con el
+// título, los asistentes y las notas de la reunión.
+function Glossary() {
+  const [text, setText] = useState<string | null>(null);
+  const [saved, setSaved] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    ipc
+      .sttGlossary()
+      .then((g) => {
+        setText(g);
+        setSaved(g);
+      })
+      .catch((e) => setError(String(e)));
+  }, []);
+  const save = () => {
+    if (text === null || text === saved) return;
+    ipc
+      .setSttGlossary(text)
+      .then(() => setSaved(text))
+      .catch((e) => setError(String(e)));
+  };
+  return (
+    <div className="settings-row px-5 py-4">
+      <div className="flex items-center gap-4">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-line bg-canvas text-ink-2 [&_svg]:size-[18px]">
+          <BookA />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px]">Vocabulario</span>
+          <span className="mt-0.5 block text-[13.5px] leading-snug text-muted">
+            Nombres de personas, empresas, productos y siglas que salen en tus reuniones, separados por comas o uno por línea. Ayuda a transcribirlos bien; el título, los asistentes y tus notas ya se usan solos.
+          </span>
+        </span>
+      </div>
+      <textarea
+        className="stt-glossary mt-3 min-h-[88px] w-full resize-y rounded-xl border border-line bg-surface px-3 py-2 text-[14px] outline-none focus:border-ink-2"
+        value={text ?? ""}
+        disabled={text === null}
+        placeholder="Rutario, SAP S/4HANA, Íñigo Etxeberria…"
+        onChange={(e) => setText(e.target.value)}
+        onBlur={save}
+        aria-label="Vocabulario"
+      />
+      {error && <div className="note-error mt-2 text-[13px] text-danger">{error}</div>}
+    </div>
   );
 }
 

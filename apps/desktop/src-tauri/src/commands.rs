@@ -363,6 +363,17 @@ pub async fn note_event(state: State<'_, AppState>, note_id: Id) -> Res<Option<C
     }
 }
 
+/// Glosario del usuario para la transcripción (texto tal cual lo escribió).
+#[tauri::command]
+pub async fn stt_glossary(state: State<'_, AppState>) -> Res<String> {
+    Ok(repo::settings::get(&state.db, crate::recording::KEY_GLOSSARY).await.map_err(e)?.unwrap_or_default())
+}
+
+#[tauri::command]
+pub async fn set_stt_glossary(state: State<'_, AppState>, glossary: String) -> Res<()> {
+    repo::settings::set(&state.db, crate::recording::KEY_GLOSSARY, &glossary).await.map_err(e)
+}
+
 #[tauri::command]
 pub fn detection_settings(state: State<'_, AppState>) -> DetectionSettings {
     state.detection.settings()
@@ -508,9 +519,25 @@ pub fn autotest_config() -> Option<String> {
     autotest_enabled().then(|| std::env::var("JUANOLA_AUTOTEST").unwrap_or_default())
 }
 
+/// Variable de entorno para el autotest (`None` fuera de él).
+#[tauri::command]
+pub fn autotest_env(key: String) -> Option<String> {
+    autotest_enabled().then(|| std::env::var(key).ok()).flatten()
+}
+
 #[tauri::command]
 pub fn autotest_log(line: String) {
     tracing::info!(target: "autotest", "{line}");
+}
+
+/// Reproduce con `afplay` el WAV de `JUANOLA_AUTOTEST_AUDIO` por la salida del
+/// sistema y vuelve al terminar (modo `context`).
+#[tauri::command]
+pub async fn autotest_play() -> Res<()> {
+    let path = std::env::var_os("JUANOLA_AUTOTEST_AUDIO").filter(|_| autotest_enabled()).ok_or("falta JUANOLA_AUTOTEST_AUDIO")?;
+    tauri::async_runtime::spawn_blocking(move || std::process::Command::new("afplay").arg(path).status().map_err(e).map(|_| ()))
+        .await
+        .map_err(e)?
 }
 
 /// Reproduce `text` con `say` por la salida del sistema y vuelve al terminar.

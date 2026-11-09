@@ -147,7 +147,11 @@ mod tests {
     fn mac_arm_prefers_native_ready_formats() {
         let c = catalog();
         let m = Machine { platform: Platform::MacosArm64, ram_gb: 16 };
-        assert_eq!(c.pick("stt_streaming", &m).unwrap().format, "mlx");
+        let stt = c.pick("stt_streaming", &m).unwrap();
+        assert_eq!((stt.format.as_str(), stt.repo.as_str()), ("mlx", "mlx-community/Qwen3-ASR-1.7B-4bit"));
+        // Con 8 GB, el 1.7B no cabe junto al LLM: cae al 0.6B.
+        let small = Machine { platform: Platform::MacosArm64, ram_gb: 8 };
+        assert_eq!(c.pick("stt_streaming", &small).unwrap().repo, "mlx-community/Qwen3-ASR-0.6B-4bit");
         // LFM3 en MLX está marcado ready = false hasta que mlxrs lo soporte: cae a GGUF (Metal).
         let llm = c.pick("llm_main", &m).unwrap();
         assert_eq!(llm.name, "lfm3-1.7b");

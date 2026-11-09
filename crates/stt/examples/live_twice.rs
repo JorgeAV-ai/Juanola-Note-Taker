@@ -13,9 +13,10 @@ fn main() -> anyhow::Result<()> {
     for n in 1..=2 {
         let mut w = SttWorker::spawn(&WorkerConfig {
             program: program.clone(),
-            model_dir: models.join("stt_streaming/qwen3-asr-0.6b-mlx"),
+            model_dir: models.join("stt_streaming/qwen3-asr-1.7b-4bit-mlx"),
             vad_dir: models.join("vad/silero-vad-mlx"),
             language: Some("Spanish".into()),
+            context: None,
         })?;
         let WorkerEvent::Ready { .. } = w.events().recv_timeout(Duration::from_secs(60))? else { anyhow::bail!("worker") };
         let mut cap = CpalCapture::new();

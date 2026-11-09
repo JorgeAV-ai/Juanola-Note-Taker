@@ -37,9 +37,10 @@ async fn main() -> anyhow::Result<()> {
     });
     let mut worker = SttWorker::spawn(&WorkerConfig {
         program,
-        model_dir: models.join("stt_streaming/qwen3-asr-0.6b-mlx"),
+        model_dir: models.join("stt_streaming/qwen3-asr-1.7b-4bit-mlx"),
         vad_dir: models.join("vad/silero-vad-mlx"),
         language,
+        context: None,
     })?;
     match worker.events().recv()? {
         WorkerEvent::Ready { load_ms } => println!("STT listo en {load_ms} ms"),

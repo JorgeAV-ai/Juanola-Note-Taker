@@ -4,7 +4,7 @@ Fecha: 6 de noviembre de 2026. Criterio: relación calidad/peso, no licencia. Fo
 
 ## 1. Decisión en una frase
 
-**LFM3-1.7B** para texto (MLX 4-bit en Mac cuando el runtime Rust lo soporte, GGUF Q4 mientras tanto y en Windows), **Qwen3-ASR 0.6B** para voz en streaming (MLX 4-bit en Mac, ONNX int8 en Windows), **EmbeddingGemma 2** solo texto para búsqueda (ONNX q8 en todas; CoreML opcional en Mac), Silero VAD y `speakrs` para diarización. Todo junto pesa unos 2,3 GB de disco y cabe de sobra en 8 GB de RAM.
+**LFM3-1.7B** para texto (MLX 4-bit en Mac cuando el runtime Rust lo soporte, GGUF Q4 mientras tanto y en Windows), **Qwen3-ASR** para voz en streaming (1.7B MLX de 4 bits en Mac desde el 9 nov, 0.6B de 4 bits en Mac con menos de 16 GB; 0.6B ONNX int8 en Windows), **EmbeddingGemma 2** solo texto para búsqueda (ONNX q8 en todas; CoreML opcional en Mac), Silero VAD y `speakrs` para diarización. Todo junto pesa unos 3,9 GB de disco en Mac con el STT de 1.7B (unos 3 GB con el 0.6B, que es lo que se instala con menos de 16 GB de RAM).
 
 ## 2. Catálogo de Liquid AI y qué sirve aquí
 
@@ -88,8 +88,8 @@ Tier de RAM:
 | RAM | STT | LLM | Comentario |
 |---|---|---|---|
 | 8 GB | Qwen3-ASR 0.6B | LFM3-1.7B Q4 | Cómodo: STT 0,7 + LLM 1,1 + embeddings 0,3 + KV de 32K de contexto cabe con margen |
-| 16 GB | igual | igual, contexto completo de la reunión sin recorte | Recomendado; permite LFM3-Audio-2B como STT alternativo |
-| 32 GB+ | Qwen3-ASR 1.7B opcional | LFM2-2.6B-Transcript como tier de inglés, o modelos mayores | Elegible en Settings > Models |
+| 16 GB | Qwen3-ASR 1.7B de 4 bits (Mac) | igual, contexto completo de la reunión sin recorte | Recomendado y predeterminado desde el 9 nov: STT 1,6 + LLM 1,85 |
+| 32 GB+ | igual | LFM2-2.6B-Transcript como tier de inglés, o modelos mayores | Elegible en Settings > Models |
 
 ## 5. Requisitos de configuración para el MVP
 

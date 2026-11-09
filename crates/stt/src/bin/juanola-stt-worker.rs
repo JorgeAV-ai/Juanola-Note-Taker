@@ -2,7 +2,7 @@
 //! Protocolo en `juanola_stt::worker`.
 //!
 //! ```text
-//! juanola-stt-worker --model <dir> --vad <dir> [--language Spanish|auto]
+//! juanola-stt-worker --model <dir> --vad <dir> [--language Spanish|auto] [--context <texto>]
 //! ```
 
 use std::io::Write;
@@ -91,7 +91,10 @@ fn run() -> Result<(), String> {
     let language = arg(&args, "--language").filter(|l| l != "auto");
 
     let t = Instant::now();
-    let asr = Qwen3AsrMlx::load(&model_dir).map_err(|e| e.to_string())?;
+    let mut asr = Qwen3AsrMlx::load(&model_dir).map_err(|e| e.to_string())?;
+    if let Some(c) = arg(&args, "--context") {
+        asr.context = c;
+    }
     let mut channels = Vec::new();
     for channel in [Channel::Mic, Channel::System] {
         channels.push(ChannelState {
@@ -197,6 +200,9 @@ fn run_pending(asr: &Qwen3AsrMlx, ch: &mut ChannelState, fixed: Option<&str>, lo
                     id: ch.next_id,
                     start: span.start as f64 / TARGET_SAMPLE_RATE,
                     end: span.end as f64 / TARGET_SAMPLE_RATE,
+                    confidence: out.min_prob(),
+                    token_probs: if is_final { out.token_probs } else { Vec::new() },
+                    token_texts: if is_final { out.token_texts } else { Vec::new() },
                     text: out.text,
                     is_final,
                     language: out.language,

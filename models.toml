@@ -41,27 +41,47 @@ backends = ["cpu"]
 
 # ---------------------------------------------------------------- STT streaming
 [slots.stt_streaming]
-description = "Transcripción en vivo, dos canales en paralelo. Qwen3-ASR 0.6B: 30 idiomas con streaming."
-default = "qwen3-asr-0.6b"
+description = "Transcripción en vivo, dos canales en paralelo. Qwen3-ASR: 30 idiomas con streaming; 1.7B de 4 bits en Mac (0.6B con menos de 16 GB y en Windows)."
+default = "qwen3-asr"
+
+# Desde el 9 nov: 1.7B de 4 bits. En la llamada de ventas sintética, WER 6,3 %
+# frente al 7,9 % del 0.6B de 4 bits; el de 8 bits (5,9 %) no se distingue del
+# de 4 bits con una sola reunión y es un 25 % más lento y 0,9 GB mayor
+# (ver docs/experimentos.md).
+[[slots.stt_streaming.models]]
+name = "qwen3-asr"
+runtime = "mlx"
+format = "mlx"
+repo = "mlx-community/Qwen3-ASR-1.7B-4bit"
+dir = "stt_streaming/qwen3-asr-1.7b-4bit-mlx"
+# El repo no trae tokenizer.json: el instalador lo genera desde vocab.json + merges.txt
+# + tokenizer_config.json (juanola_models::tokenizer). Es el mismo que el del 0.6B.
+files = ["model.safetensors", "config.json", "vocab.json", "merges.txt", "tokenizer_config.json", "preprocessor_config.json"]
+size_mb = 1608
+notes = "Transcriptor propio sobre mlxrs (crates/stt/src/backends/qwen3_mlx.rs); carga el 1.7B sin cambios."
+platforms = ["macos-arm64"]
+backends = ["metal"]
+# Con LFM3 Q8_0 (1,85 GB) y su caché, en 8 GB no está comprobado que quepa: ahí va el 0.6B.
+min_ram_gb = 16
+languages = 30
 
 [[slots.stt_streaming.models]]
-name = "qwen3-asr-0.6b"
+name = "qwen3-asr"
 runtime = "mlx"
 format = "mlx"
 repo = "mlx-community/Qwen3-ASR-0.6B-4bit"
 dir = "stt_streaming/qwen3-asr-0.6b-mlx"
-# El repo no trae tokenizer.json: el instalador lo genera desde vocab.json + merges.txt
-# + tokenizer_config.json (juanola_models::tokenizer).
 files = ["model.safetensors", "config.json", "vocab.json", "merges.txt", "tokenizer_config.json", "preprocessor_config.json"]
 size_mb = 710
-notes = "Transcriptor propio sobre mlxrs (crates/stt/src/backends/qwen3_mlx.rs), validado token a token contra mlx-audio."
+notes = "Respaldo en Mac con menos de 16 GB. Validado token a token contra mlx-audio."
 platforms = ["macos-arm64"]
 backends = ["metal"]
 wer_en = 6.99
 languages = 30
 
 [[slots.stt_streaming.models]]
-name = "qwen3-asr-0.6b"
+# 0.6B: sherpa-onnx solo publica este tamaño.
+name = "qwen3-asr"
 runtime = "sherpa-onnx"
 format = "onnx"
 # Paquete prebuilt de k2-fsa (tar.bz2, no es un repo HF).

@@ -54,6 +54,8 @@ pub trait Vad: Send {
 }
 
 pub mod backends;
+pub mod context;
+pub mod crosscheck;
 pub mod language_lock;
 pub mod segmenter;
 pub mod worker;

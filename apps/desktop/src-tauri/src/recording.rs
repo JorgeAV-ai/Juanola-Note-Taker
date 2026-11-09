@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 use juanola_audio_capture::{rms, AudioCapture, CaptureConfig, CpalCapture};
 use juanola_core_types::{Channel, Id, Segment};
 use juanola_db::{repo, Db};
+use juanola_stt::context::{parse_glossary, AsrContext};
 use juanola_stt::worker::{SttWorker, WorkerConfig, WorkerEvent};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
@@ -232,6 +233,42 @@ impl Sink<'_> {
     }
 }
 
+/// Clave del glosario del usuario en `settings`: texto libre, un término por
+/// línea o separados por comas.
+pub const KEY_GLOSSARY: &str = "stt.glossary";
+
+/// Lo que se sabe de la reunión antes de oírla, para el prompt del STT: título,
+/// evento de calendario, notas ya escritas y glosario. Si algo falla, se graba
+/// sin contexto.
+fn asr_context(db: &Db, note_id: Id) -> Option<String> {
+    let ctx = tauri::async_runtime::block_on(async {
+        let note = repo::notes::get(db, note_id).await.ok().flatten()?;
+        let event = match &note.calendar_event_id {
+            Some(id) => repo::events::get(db, id).await.ok().flatten(),
+            None => None,
+        };
+        let glossary: String = repo::settings::get(db, KEY_GLOSSARY).await.ok().flatten().unwrap_or_default();
+        let notes = juanola_enhance::pipelines::enhance::user_blocks(&note.raw_doc)
+            .into_iter()
+            .map(|b| b.text)
+            .collect::<Vec<_>>()
+            .join(". ");
+        Some(AsrContext {
+            title: note.title,
+            attendees: event
+                .as_ref()
+                .map(|e| e.attendees.iter().filter(|a| !a.declined).filter_map(|a| a.name.clone()).collect())
+                .unwrap_or_default(),
+            description: event.and_then(|e| e.description).unwrap_or_default(),
+            notes,
+            glossary: parse_glossary(&glossary),
+        })
+    })?;
+    let text = ctx.render();
+    tracing::info!(%note_id, chars = text.as_ref().map_or(0, |t| t.chars().count()), "contexto del STT");
+    text
+}
+
 fn run(
     app: &AppHandle,
     db: &Db,
@@ -274,6 +311,7 @@ fn run(
         model_dir: paths.stt_dir.clone(),
         vad_dir: paths.vad_dir.clone(),
         language,
+        context: asr_context(db, note_id),
     })
     .map_err(|e| e.to_string())?;
     match worker.events().recv_timeout(Duration::from_secs(120)) {

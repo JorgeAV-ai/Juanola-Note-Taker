@@ -102,7 +102,7 @@ mod tests {
     /// instalado. Se salta si el modelo no está en la máquina.
     #[test]
     fn matches_transformers_output() {
-        let Some(dir) = dirs::data_dir().map(|d| d.join("dev.juanola.desktop/models/stt_streaming/qwen3-asr-0.6b-mlx")) else {
+        let Some(dir) = dirs::data_dir().map(|d| d.join("dev.juanola.desktop/models/stt_streaming/qwen3-asr-1.7b-4bit-mlx")) else {
             return;
         };
         let Ok(reference) = std::fs::read_to_string(dir.join("tokenizer.json")) else {

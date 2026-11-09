@@ -90,6 +90,7 @@ export async function runAutotest(mode: string) {
     else if (mode === "detect") await detectFlow();
     else if (mode === "detect-live") await detectLiveFlow();
     else if (mode === "detect-calendar") await detectCalendarFlow();
+    else if (mode === "context") await contextFlow();
     else await flow();
   } catch (e) {
     check(false, "excepción", String(e));
@@ -97,6 +98,62 @@ export async function runAutotest(mode: string) {
   log(failures ? `FIN: ${failures} fallos` : "FIN: todo OK");
   await sleep(500);
   invoke("autotest_quit").catch(() => {});
+}
+
+// JUANOLA_AUTOTEST=context: graba dos veces el WAV de JUANOLA_AUTOTEST_AUDIO
+// (por los altavoces, canal del sistema), primero sin vocabulario y luego con
+// el de JUANOLA_AUTOTEST_GLOSSARY, y deja cada transcripción en el log como
+// `SEGMENTOS <etiqueta> <json>`. Restaura el vocabulario y manda las notas a
+// la papelera al acabar.
+async function contextFlow() {
+  const glossary = await invoke<string | null>("autotest_env", { key: "JUANOLA_AUTOTEST_GLOSSARY" });
+  const title = (await invoke<string | null>("autotest_env", { key: "JUANOLA_AUTOTEST_TITLE" })) ?? "Autotest contexto";
+  const before = await ipc.sttGlossary();
+  try {
+    for (const [label, terms] of [["sin", ""], ["con", glossary ?? ""]] as const) {
+      await ipc.setSttGlossary(terms);
+      const newNote = await waitFor("botón New note", () => document.querySelector<HTMLButtonElement>(".new-note"), 15_000);
+      newNote?.click();
+      const noteEl = await waitFor("vista de nota", () => document.querySelector<HTMLElement>(".note[data-note-id]"), 10_000);
+      if (!noteEl) return;
+      const id = noteEl.dataset.noteId!;
+      await ipc.setNoteTitle(id, title);
+      await sleep(500);
+      button(".pill-btn", "Start")?.click();
+      const rec = await waitFor(
+        `grabando (${label})`,
+        () => (button(".pill-btn", "Pause") ? "ok" : document.querySelector(".pill-msg.error") ? "error" : null),
+        150_000,
+      );
+      if (!check(rec === "ok", `arranque de la grabación (${label})`, document.querySelector(".pill-msg")?.textContent ?? "")) return;
+      // Con auriculares Bluetooth, abrir el audio del sistema tarda más de 6 s
+      // y se reintenta en segundo plano: margen antes de que empiece a sonar.
+      await sleep(12_000);
+      await invoke("autotest_play");
+      await sleep(8000);
+      button(".pill-btn.stop", "Stop")?.click();
+      // Esperar a que el enhance de después de parar empiece y acabe: si no,
+      // la siguiente grabación compite con él por la GPU.
+      await waitFor(`enhance empezado (${label})`, () => document.querySelector(".enhancing") || document.querySelector(".note-error"), 60_000);
+      await waitFor(
+        `enhance terminado (${label})`,
+        () => !document.querySelector(".enhancing") && (document.querySelector(".enhanced .ProseMirror") || document.querySelector(".note-error")),
+        300_000,
+      );
+      const enhErr = document.querySelector(".note-error");
+      if (enhErr) check(false, `enhance sin error (${label})`, enhErr.textContent ?? "");
+      const segs = await ipc.listSegments(id);
+      check(segs.some((s) => s.channel === "system"), `segmentos del sistema (${label})`, `${segs.length} segmentos`);
+      log(`SEGMENTOS ${label} ${JSON.stringify(segs)}`);
+      // Volver a Home antes de tirar la nota: «New note» solo está fuera de una nota.
+      document.querySelector<HTMLButtonElement>(".back-home")?.click();
+      await waitFor(`de vuelta en Home (${label})`, () => document.querySelector(".new-note"), 10_000);
+      await ipc.trashNote(id);
+      await sleep(1000);
+    }
+  } finally {
+    await ipc.setSttGlossary(before);
+  }
 }
 
 async function flow() {

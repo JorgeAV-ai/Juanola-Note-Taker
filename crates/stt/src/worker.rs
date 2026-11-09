@@ -81,6 +81,16 @@ pub enum WorkerEvent {
         language: Option<String>,
         /// Tiempo de decodificación de este tramo.
         decode_ms: u64,
+        /// Probabilidad del token menos seguro del texto (ver
+        /// `AsrOutput::token_probs`); sirve para decidir si se revisa la frase.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        confidence: Option<f32>,
+        /// Probabilidad de cada token; solo en los finales.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        token_probs: Vec<f32>,
+        /// Texto de cada token (mismo orden que `token_probs`); solo en los finales.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        token_texts: Vec<String>,
     },
     Error {
         message: String,
@@ -90,13 +100,13 @@ pub enum WorkerEvent {
 impl WorkerEvent {
     pub fn as_transcript(&self) -> Option<Transcript> {
         match self {
-            WorkerEvent::Segment { channel, start, end, text, is_final, .. } => Some(Transcript {
+            WorkerEvent::Segment { channel, start, end, text, is_final, confidence, .. } => Some(Transcript {
                 channel: *channel,
                 start: *start,
                 end: *end,
                 text: text.clone(),
                 is_final: *is_final,
-                confidence: None,
+                confidence: *confidence,
             }),
             _ => None,
         }
@@ -111,6 +121,8 @@ pub struct WorkerConfig {
     pub vad_dir: PathBuf,
     /// Nombre en inglés ("Spanish"); `None` = detección automática.
     pub language: Option<String>,
+    /// Contexto para el prompt del modelo (nombres, términos); `None` = sin él.
+    pub context: Option<String>,
 }
 
 /// Cliente: lanza el worker, le envía audio y recibe eventos.
@@ -125,6 +137,9 @@ impl SttWorker {
         let mut cmd = Command::new(&cfg.program);
         cmd.arg("--model").arg(&cfg.model_dir).arg("--vad").arg(&cfg.vad_dir);
         cmd.arg("--language").arg(cfg.language.as_deref().unwrap_or("auto"));
+        if let Some(c) = cfg.context.as_deref().filter(|c| !c.trim().is_empty()) {
+            cmd.arg("--context").arg(c);
+        }
         cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::inherit());
         let mut child = cmd
             .spawn()
@@ -215,10 +230,14 @@ mod tests {
             is_final: false,
             language: Some("Spanish".into()),
             decode_ms: 120,
+            confidence: Some(0.42),
+            token_probs: vec![],
+            token_texts: vec![],
         };
         let s = serde_json::to_string(&ev).unwrap();
         assert!(s.starts_with(r#"{"event":"segment","channel":"mic""#), "{s}");
+        assert!(!s.contains("token_probs"), "{s}");
         let back: WorkerEvent = serde_json::from_str(&s).unwrap();
-        assert!(back.as_transcript().is_some());
+        assert_eq!(back.as_transcript().unwrap().confidence, Some(0.42));
     }
 }

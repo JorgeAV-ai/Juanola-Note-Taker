@@ -21,7 +21,7 @@ fn main() -> anyhow::Result<()> {
         None => Some("Spanish".to_owned()),
     };
     let model_dir = args.get(2).map(PathBuf::from).unwrap_or_else(|| {
-        dirs_home().join("Library/Application Support/dev.juanola.desktop/models/stt_streaming/qwen3-asr-0.6b-mlx")
+        dirs_home().join("Library/Application Support/dev.juanola.desktop/models/stt_streaming/qwen3-asr-1.7b-4bit-mlx")
     });
 
     let mut reader = hound::WavReader::open(wav)?;
