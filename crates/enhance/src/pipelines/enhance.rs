@@ -1164,11 +1164,11 @@ pub async fn enhance_with(
     }
     let gen = GenOptions { max_tokens: Some(summary_budget(words, opts.max_tokens)), seed: opts.seed, ..Default::default() };
     let Some(template) = input.template else {
-        return enhance_auto(model, input, &blocks, opts, &gen).await;
+        return enhance_auto(model, input, &blocks, opts, &gen, None).await;
     };
     if let Err(e) = template.validate() {
         trace(&format!("plantilla «{}» no válida ({e}): se usa Auto", template.name));
-        let (notes, mut report) = enhance_auto(model, input, &blocks, opts, &gen).await?;
+        let (notes, mut report) = enhance_auto(model, input, &blocks, opts, &gen, None).await?;
         report.template_fallback = true;
         return Ok((notes, report));
     }
@@ -1181,17 +1181,21 @@ pub async fn enhance_with(
     let gen = GenOptions { max_tokens: Some(template_budget(words, tpl.len(), opts.max_tokens)), ..gen };
     let mut reason: Option<String> = None;
     let mut chosen = None;
+    // Las pasadas de detalle salen en el lote del primer intento y sirven
+    // también para el reintento y para la caída a Auto.
+    let mut details: Option<Vec<String>> = None;
     for attempt in 0..2 {
         // El reintento cambia de semilla (si se fijó) y lleva el motivo del fallo.
         let grammar = opts.markdown_grammar.then(|| markdown_grammar(tpl, input.summary_language));
         let gen = GenOptions { seed: gen.seed.map(|s| s.wrapping_add(attempt)), grammar, ..gen.clone() };
-        let md = model.complete(&template_messages(input, template, &blocks, opts, reason.as_deref()), &gen).await?;
+        let main = (template_messages(input, template, &blocks, opts, reason.as_deref()), gen);
+        let md = complete_with_details(model, main, &mut details, detail_requests(input, opts)).await?;
         trace(&format!("resumen con plantilla «{}», intento {}:\n{md}", template.name, attempt + 1));
         let fit = fit_to_template(parse_markdown(&md), tpl);
         let (_, report) = resolve(fit.sections.clone(), input.segments, &blocks, input.note.id, layout)?;
         match template_failure(&fit, &report, tpl) {
             None => {
-                chosen = Some((fit, attempt as usize, gen));
+                chosen = Some((fit, attempt as usize));
                 break;
             }
             Some(r) => {
@@ -1200,8 +1204,8 @@ pub async fn enhance_with(
             }
         }
     }
-    let Some((fit, retries, gen)) = chosen else {
-        let (notes, mut report) = enhance_auto(model, input, &blocks, opts, &auto_gen).await?;
+    let Some((fit, retries)) = chosen else {
+        let (notes, mut report) = enhance_auto(model, input, &blocks, opts, &auto_gen, details).await?;
         report.template_fallback = true;
         report.template_retries = 1;
         return Ok((notes, report));
@@ -1209,7 +1213,7 @@ pub async fn enhance_with(
     let mut raw = fit.sections;
     let mut tasks: Vec<bool> = tpl.iter().map(|s| s.kind == SectionKind::Tasks).collect();
     tasks.push(false);
-    detail_passes(model, input, opts, &gen, &mut raw, &tasks).await?;
+    apply_details(&mut raw, details.as_deref().unwrap_or_default(), input.segments.len(), &tasks);
     let (notes, mut report) = resolve(raw, input.segments, &blocks, input.note.id, layout)?;
     report.template_retries = retries;
     report.unmatched_bullets = fit.unmatched_bullets;
@@ -1223,52 +1227,80 @@ fn trace(msg: &str) {
 }
 
 /// Pasadas de detalle por fragmentos: datos concretos que el resumen omitió.
-/// (Resumir por fragmentos y reagrupar los temas con el modelo se probó y daba
-/// peor estructura y perdía tareas.)
-async fn detail_passes(
-    model: &dyn ChatModel,
-    input: &EnhanceInput<'_>,
-    opts: &EnhanceOptions,
-    gen: &GenOptions,
-    raw: &mut [RawSection],
-    tasks: &[bool],
-) -> Result<(), EnhanceError> {
-    let (Some(secs), false) = (opts.detail_chunk_secs, raw.iter().all(|s| s.bullets.is_empty())) else {
-        return Ok(());
+/// No dependen del resumen (solo se juntan al final), así que se generan en el
+/// mismo lote que él. (Resumir por fragmentos y reagrupar los temas con el
+/// modelo se probó y daba peor estructura y perdía tareas.)
+fn detail_requests(input: &EnhanceInput<'_>, opts: &EnhanceOptions) -> Vec<(Vec<Message>, GenOptions)> {
+    let Some(secs) = opts.detail_chunk_secs else {
+        return Vec::new();
     };
-    for range in chunk_ranges(input.segments, secs) {
-        let segs = &input.segments[range.clone()];
-        let prompt = juanola_prompts::ENHANCE_DETAILS
-            .replace("{{from}}", &clock(segs[0].start))
-            .replace("{{to}}", &clock(segs[segs.len() - 1].end))
-            .replace("{{transcript}}", format_transcript_from(segs, range.start + 1, opts.itn).trim_end())
-            .replace("{{language}}", input.summary_language)
-            + &crate::language::prompt_suffix(input.summary_language);
-        // 12 datos caben en ~450 tokens; el tope corta las listas que el
-        // modelo alarga sin fin (es lo que más tiempo cuesta).
-        let detail_gen = GenOptions { max_tokens: Some(450), ..gen.clone() };
-        let md = model.complete(&[Message { role: "user".into(), content: prompt }], &detail_gen).await?;
-        let details: Vec<RawBullet> = parse_markdown(&md).into_iter().flat_map(|s| s.bullets).collect();
-        add_details(raw, details, input.segments.len(), tasks);
-    }
-    Ok(())
+    chunk_ranges(input.segments, secs)
+        .into_iter()
+        .map(|range| {
+            let segs = &input.segments[range.clone()];
+            let prompt = juanola_prompts::ENHANCE_DETAILS
+                .replace("{{from}}", &clock(segs[0].start))
+                .replace("{{to}}", &clock(segs[segs.len() - 1].end))
+                .replace("{{transcript}}", format_transcript_from(segs, range.start + 1, opts.itn).trim_end())
+                .replace("{{language}}", input.summary_language)
+                + &crate::language::prompt_suffix(input.summary_language);
+            // 12 datos caben en ~450 tokens; el tope corta las listas que el
+            // modelo alarga sin fin (es lo que más tiempo cuesta).
+            let gen = GenOptions { max_tokens: Some(450), seed: opts.seed, ..Default::default() };
+            (vec![Message { role: "user".into(), content: prompt }], gen)
+        })
+        .collect()
 }
 
-/// Enhance sin plantilla: temas libres.
+/// Añade a `raw` los datos de las pasadas de detalle (nada si el resumen no
+/// dio ninguna viñeta).
+fn apply_details(raw: &mut [RawSection], details_md: &[String], n_lines: usize, tasks: &[bool]) {
+    if raw.iter().all(|s| s.bullets.is_empty()) {
+        return;
+    }
+    for md in details_md {
+        let details: Vec<RawBullet> = parse_markdown(md).into_iter().flat_map(|s| s.bullets).collect();
+        add_details(raw, details, n_lines, tasks);
+    }
+}
+
+/// Genera `main` junto con las peticiones de detalle (si no se tienen ya) en
+/// un solo lote. Devuelve la salida de `main` y la de los detalles.
+async fn complete_with_details(
+    model: &dyn ChatModel,
+    main: (Vec<Message>, GenOptions),
+    details: &mut Option<Vec<String>>,
+    detail_reqs: Vec<(Vec<Message>, GenOptions)>,
+) -> Result<String, EnhanceError> {
+    if details.is_some() {
+        return Ok(model.complete(&main.0, &main.1).await?);
+    }
+    let mut reqs = vec![main];
+    reqs.extend(detail_reqs);
+    let mut out = model.complete_many(&reqs).await?.into_iter();
+    let md = out.next().unwrap_or_default();
+    *details = Some(out.collect());
+    Ok(md)
+}
+
+/// Enhance sin plantilla: temas libres. `details` trae las pasadas de detalle
+/// si ya se generaron (caída desde una plantilla).
 async fn enhance_auto(
     model: &dyn ChatModel,
     input: &EnhanceInput<'_>,
     blocks: &[UserBlock],
     opts: &EnhanceOptions,
     gen: &GenOptions,
+    mut details: Option<Vec<String>>,
 ) -> Result<(EnhancedNotes, EnhanceReport), EnhanceError> {
-    // 1. Resumen en una pasada: da la estructura y las tareas.
-    let md = model.complete(&auto_messages(input, blocks, opts), gen).await?;
+    // 1. Resumen en una pasada (da la estructura y las tareas) y 2. pasadas
+    // de detalle por fragmentos, en el mismo lote.
+    let main = (auto_messages(input, blocks, opts), gen.clone());
+    let md = complete_with_details(model, main, &mut details, detail_requests(input, opts)).await?;
     trace(&format!("resumen:\n{md}"));
     let mut raw = merge_sections(parse_markdown(&md));
-    // 2. Pasadas de detalle por fragmentos.
     let tasks: Vec<bool> = raw.iter().map(|s| is_next_steps(&s.heading)).collect();
-    detail_passes(model, input, opts, gen, &mut raw, &tasks).await?;
+    apply_details(&mut raw, details.as_deref().unwrap_or_default(), input.segments.len(), &tasks);
     if raw.is_empty() {
         return Err(EnhanceError::NoSections(md));
     }
@@ -1803,6 +1835,26 @@ mod tests {
         let input = EnhanceInput { template: Some(&bad), ..input };
         let (_, rep) = enhance_with(&model, &input, &opts).await.unwrap();
         assert!(rep.template_fallback && model.calls.lock().unwrap().len() == 1);
+    }
+
+    #[tokio::test]
+    async fn details_are_generated_once_with_the_first_attempt() {
+        let n = note(serde_json::json!({"type": "doc", "content": []}));
+        let segs = long_segs();
+        let t = weekly_template();
+        let model = Scripted { template: vec![GARBAGE], auto: AUTO, calls: Default::default() };
+        let input = EnhanceInput { note: &n, segments: &segs, template: Some(&t), summary_language: "español", user_profile: "" };
+        // 60 s de reunión en fragmentos de 30 s: dos pasadas de detalle.
+        let opts = EnhanceOptions { detail_chunk_secs: Some(30.0), ..Default::default() };
+        let (_, rep) = enhance_with(&model, &input, &opts).await.unwrap();
+        assert!(rep.template_fallback);
+        let calls = model.calls.lock().unwrap();
+        let kinds: Vec<&str> = calls
+            .iter()
+            .map(|c| if c.starts_with("Fragmento de la transcripción") { "detalle" } else if c.contains("usando exactamente estos apartados") { "plantilla" } else { "auto" })
+            .collect();
+        // En el lote del primer intento van los detalles; el reintento y Auto los reutilizan.
+        assert_eq!(kinds, ["plantilla", "detalle", "detalle", "plantilla", "auto"]);
     }
 
     #[test]

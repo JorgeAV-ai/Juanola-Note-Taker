@@ -36,6 +36,16 @@ pub enum LlmError {
 pub trait ChatModel: Send + Sync {
     fn context_window(&self) -> usize;
     async fn complete(&self, msgs: &[Message], opts: &GenOptions) -> Result<String, LlmError>;
+    /// Varias generaciones independientes. Por defecto, una tras otra y en
+    /// orden; un backend local puede generarlas a la vez (llama.cpp las
+    /// decodifica en un mismo lote, que cuesta casi lo mismo que una sola).
+    async fn complete_many(&self, reqs: &[(Vec<Message>, GenOptions)]) -> Result<Vec<String>, LlmError> {
+        let mut out = Vec::with_capacity(reqs.len());
+        for (msgs, opts) in reqs {
+            out.push(self.complete(msgs, opts).await?);
+        }
+        Ok(out)
+    }
     fn stream<'a>(
         &'a self,
         msgs: &'a [Message],

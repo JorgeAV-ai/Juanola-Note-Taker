@@ -26,6 +26,7 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 | Flash attention o cambiar `n_ubatch` | No cambia la velocidad en contexto largo | ❌ | 6 nov | HANDOFF, punto 3 |
 | `prompt_suffix` por idioma para resúmenes que no son en español | Sin él se colaban «Yo»/«Ellos» en las viñetas | ✅ | 7 nov | HANDOFF, punto 4 |
 | Notas del usuario separadas por bloque (`user_blocks`) | Auto no empeora (89 % de cobertura, igual que antes) | ✅ | 8 nov | plantillas §6.4 (A frente a B) |
+| Resumen y pasadas de detalle a la vez, en un lote multi-secuencia de llama.cpp (`complete_many`) | Mismas métricas en todas las semillas (las salidas no cambian) y 35-55 % menos tiempo: semanal en Auto 67 → 31 s, con plantilla 72 → 40 s; 1:1 en Auto 20 → 13 s. Con Q8_0 queda por debajo de lo que tardaba Q4_K_M una a una | ✅ | 9 nov | «Generación en lote», abajo |
 | Q8_0 (1,85 GB) frente a Q4_K_M, las 4 reuniones, Auto y plantilla | Reunión larga (17 min) mejor en todo: Auto con cobertura del 86 % al 96 %, tareas de 3/7 a 5/7 y cifras fieles del 91 % al 98 %; con plantilla, colocación del 83 % al 88 % y tareas de 3/7 a 4/7. Reuniones cortas mixtas: en el 1:1 empeora (colocación del 100 % al 77 %, «Feedback» relleno 3 de 3, tareas en Auto de 4/5 a 1/5); el stand-up y ventas, dentro del ruido. Tarda 1,35-2 × | ✅ adoptado (9 nov) | 9 nov | «Q8_0 frente a Q4_K_M», abajo |
 | QAD-Q4_0, Q6_K o un modelo mayor solo para las tareas | — | ⏳ | | HANDOFF, punto 3 |
 | Mostrar el resumen a los ~20 s y añadir los detalles después | — | ⏳ | | HANDOFF, punto 3 |
@@ -57,7 +58,7 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 **Sin resolver:**
 - Detectar el desajuste: una plantilla que no encaja con la reunión no dispara reintento ni caída a Auto.
 - Viñetas copiadas en el stand-up (47-65 %).
-- Tiempo en reuniones cortas (1,7 × Auto en el 1:1).
+- Tiempo con plantilla: el resumen escribe ~1700 tokens en la reunión larga y es ahora casi todo el tiempo (~40 s).
 - Medir la plantilla de entrevista con cliente: no hay guion.
 
 ## Q8_0 frente a Q4_K_M (9 nov)
@@ -76,6 +77,21 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 | Semanal · Auto | 86 → **96 %** | 3/7 → **5/7** | — | 91 → 98 % | 9-14 → 4-15 % | 53 → 67 s |
 
 Decisión del usuario (9 nov): se adopta Q8_0 en el catálogo (`models.toml`, carpeta `llm/lfm3-1.7b-q8`), por la mejora en la reunión larga. Las mediciones anteriores de este registro son con Q4_K_M. Además, con Q8_0 «Feedback» del 1:1 se rellena en las 3 semillas (con Q4_K_M, 1 de 3). Archivo descargado en `<datos>/models/llm/lfm3-1.7b-q8/` (SHA-256 `8f6b2418…20b6`). Para medir con él: `JUANOLA_GGUF=<ruta> eval_enhance …`.
+
+## Generación en lote (9 nov)
+
+Las pasadas de detalle no dependen del resumen: solo se juntan al final. `ChatModel::complete_many` las genera junto con el resumen. En llama.cpp van en un contexto con una secuencia por petición (`n_seq_max`, caché KV unificada): el prefill va secuencia a secuencia y cada paso de decodificación lleva un token de cada secuencia viva, que cuesta casi lo mismo que uno solo. Con plantilla, los detalles salen en el lote del primer intento y los reutilizan el reintento y la caída a Auto. `JUANOLA_LLM_NO_BATCH=1` vuelve a generarlas una a una para comparar.
+
+Desglose antes del cambio (semanal en Auto, Q8_0, con la GPU compartida con otro proceso): resumen 9,8 s de prefill + 32,6 s de escritura (971 tokens); cada pasada de detalle, ~2 s + ~11-13 s (360-450 tokens). Escribir era el 82 % del tiempo.
+
+| Q8_0, mediana de 3 semillas | Una a una | En lote |
+|---|---|---|
+| 1:1 · plantilla / Auto | 33 / 20 s | 21 / 13 s |
+| Ventas · plantilla / Auto | 26 / 24 s | 17 / 15 s |
+| Stand-up · plantilla / Auto | 29 / 20 s | 19 / 11 s |
+| Semanal · plantilla / Auto | 72 / 67 s | 40 / 31 s |
+
+Medido con la máquina cargada (OrbStack y otros procesos usando CPU y GPU): los tiempos absolutos varían, pero la comparación alternando los dos modos daba 63 → 37 s.
 
 ## Otras áreas (descartes medidos)
 

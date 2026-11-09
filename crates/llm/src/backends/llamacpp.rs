@@ -91,28 +91,49 @@ impl LlamaCpp {
 
     /// Generación completa, bloqueante.
     pub fn complete_blocking(&self, msgs: &[Message], opts: &GenOptions) -> Result<(String, GenStats), LlmError> {
+        let mut out = self.complete_many_blocking(&[(msgs, opts)])?;
+        Ok(out.remove(0))
+    }
+
+    /// Varias generaciones independientes a la vez, en el orden de `reqs`.
+    /// Se agrupan mientras quepan en `n_ctx`; cada grupo comparte un contexto
+    /// con una secuencia por petición. El prefill va secuencia a secuencia y la
+    /// decodificación, en un mismo lote con un token de cada secuencia por paso:
+    /// leer los pesos domina el coste, así que un paso con N secuencias cuesta
+    /// casi lo mismo que con una.
+    pub fn complete_many_blocking(&self, reqs: &[(&[Message], &GenOptions)]) -> Result<Vec<(String, GenStats)>, LlmError> {
         let vocab = self.model.vocab();
-        let prompt = lfm3_prompt(msgs);
-        // El prompt ya trae `<|startoftext|>`: no añadir otro BOS.
-        let tokens = vocab.tokenize(prompt.as_bytes(), false, true);
-        let max_new = opts.max_tokens.unwrap_or(2048) as usize;
-        if tokens.len() + max_new > self.n_ctx as usize {
-            return Err(LlmError::ContextExceeded(tokens.len() + max_new));
+        let mut prepared = Vec::with_capacity(reqs.len());
+        for (msgs, opts) in reqs {
+            let prompt = lfm3_prompt(msgs);
+            // El prompt ya trae `<|startoftext|>`: no añadir otro BOS.
+            let tokens = vocab.tokenize(prompt.as_bytes(), false, true);
+            let max_new = opts.max_tokens.unwrap_or(2048) as usize;
+            if tokens.len() + max_new > self.n_ctx as usize {
+                return Err(LlmError::ContextExceeded(tokens.len() + max_new));
+            }
+            prepared.push((tokens, max_new, *opts));
         }
-
-        // La caché KV se dimensiona al prompt + salida (redondeado a 1024), no al
-        // máximo configurado: reservar 32K para un prompt de 2K cuesta tiempo.
-        let needed = ((tokens.len() + max_new).div_ceil(1024) * 1024) as u32;
-        let mut ctx_params = LlamaContextParams::default()
-            .with_n_ctx(NonZeroU32::new(needed.min(self.n_ctx)))
-            .with_n_batch(N_BATCH)
-            .with_n_ubatch(self.n_ubatch);
-        if let Some(on) = self.flash_attention {
-            // LLAMA_FLASH_ATTN_TYPE_ENABLED = 1, _DISABLED = 0 (llama.h).
-            ctx_params = ctx_params.with_flash_attention_policy(if on { 1 } else { 0 });
+        let mut out = Vec::with_capacity(reqs.len());
+        let mut group: Vec<(Vec<llama_cpp_2::token::LlamaToken>, usize, &GenOptions)> = Vec::new();
+        let mut used = 0;
+        for p in prepared {
+            let need = p.0.len() + p.1;
+            if !group.is_empty() && used + need > self.n_ctx as usize {
+                out.extend(self.generate_group(std::mem::take(&mut group))?);
+                used = 0;
+            }
+            used += need;
+            group.push(p);
         }
-        let mut ctx = self.model.new_context(backend()?, ctx_params).map_err(err)?;
+        if !group.is_empty() {
+            out.extend(self.generate_group(group)?);
+        }
+        Ok(out)
+    }
 
+    fn sampler(&self, opts: &GenOptions) -> Result<LlamaSampler, LlmError> {
+        let vocab = self.model.vocab();
         let mut samplers = Vec::new();
         // El razonamiento va desactivado (`<think></think>` en el prompt), pero
         // con entradas cortas LFM3 abre otro `<think>` y gasta todo el
@@ -134,43 +155,100 @@ impl LlamaCpp {
         samplers.push(LlamaSampler::top_k(TOP_K));
         samplers.push(LlamaSampler::temp(opts.temperature.unwrap_or(TEMPERATURE)));
         samplers.push(LlamaSampler::dist(opts.seed.unwrap_or(1234)));
-        let mut sampler = LlamaSampler::chain_simple(samplers);
+        Ok(LlamaSampler::chain_simple(samplers))
+    }
 
-        // Prefill por bloques de N_BATCH.
-        let t = std::time::Instant::now();
-        let mut batch = LlamaBatch::new(N_BATCH as usize, 1);
-        let last = tokens.len() - 1;
-        for (chunk_i, chunk) in tokens.chunks(N_BATCH as usize).enumerate() {
-            batch.clear();
-            for (j, tok) in chunk.iter().enumerate() {
-                let pos = chunk_i * N_BATCH as usize + j;
-                batch.add(*tok, pos as i32, &[0], pos == last).map_err(err)?;
-            }
-            ctx.decode(&mut batch).map_err(err)?;
+    fn generate_group(
+        &self,
+        group: Vec<(Vec<llama_cpp_2::token::LlamaToken>, usize, &GenOptions)>,
+    ) -> Result<Vec<(String, GenStats)>, LlmError> {
+        let vocab = self.model.vocab();
+        let n_seq = group.len();
+        // La caché KV se dimensiona a lo que hace falta (redondeado a 1024), no
+        // al máximo configurado: reservar 32K para un prompt de 2K cuesta tiempo.
+        // Unificada: las secuencias tienen longitudes muy distintas (el resumen
+        // lleva toda la transcripción; los detalles, 4 minutos).
+        let total: usize = group.iter().map(|(t, m, _)| t.len() + m).sum();
+        let needed = (total.div_ceil(1024) * 1024) as u32;
+        let mut ctx_params = LlamaContextParams::default()
+            .with_n_ctx(NonZeroU32::new(needed.min(self.n_ctx)))
+            .with_n_batch(N_BATCH)
+            .with_n_ubatch(self.n_ubatch)
+            .with_n_seq_max(n_seq as u32)
+            .with_kv_unified(true);
+        if let Some(on) = self.flash_attention {
+            // LLAMA_FLASH_ATTN_TYPE_ENABLED = 1, _DISABLED = 0 (llama.h).
+            ctx_params = ctx_params.with_flash_attention_policy(if on { 1 } else { 0 });
         }
-        let prefill_ms = t.elapsed().as_millis() as u64;
+        let mut ctx = self.model.new_context(backend()?, ctx_params).map_err(err)?;
 
+        struct Seq {
+            sampler: LlamaSampler,
+            next: llama_cpp_2::token::LlamaToken,
+            pos: i32,
+            max_new: usize,
+            out: Vec<u8>,
+            stats: GenStats,
+            done: bool,
+        }
+        let mut seqs = Vec::with_capacity(n_seq);
+        let mut batch = LlamaBatch::new(N_BATCH as usize, n_seq as i32);
+        // Prefill por bloques de N_BATCH, secuencia a secuencia; el primer token
+        // se muestrea en cuanto acaba su prompt.
+        for (s, (tokens, max_new, opts)) in group.iter().enumerate() {
+            let mut sampler = self.sampler(opts)?;
+            let t = std::time::Instant::now();
+            let last = tokens.len() - 1;
+            for (chunk_i, chunk) in tokens.chunks(N_BATCH as usize).enumerate() {
+                batch.clear();
+                for (j, tok) in chunk.iter().enumerate() {
+                    let pos = chunk_i * N_BATCH as usize + j;
+                    batch.add(*tok, pos as i32, &[s as i32], pos == last).map_err(err)?;
+                }
+                ctx.decode(&mut batch).map_err(err)?;
+            }
+            let next = sampler.sample(&ctx, batch.n_tokens() - 1);
+            let stats = GenStats { prompt_tokens: tokens.len(), prefill_ms: t.elapsed().as_millis() as u64, ..Default::default() };
+            seqs.push(Seq { sampler, next, pos: tokens.len() as i32, max_new: *max_new, out: Vec::new(), stats, done: false });
+        }
+
+        // Decodificación: en cada paso, un token de cada secuencia viva.
         let t = std::time::Instant::now();
-        let mut out: Vec<u8> = Vec::new();
-        let mut pos = tokens.len() as i32;
-        let mut generated = 0usize;
+        let mut in_batch: Vec<usize> = Vec::with_capacity(n_seq);
         loop {
-            let tok = sampler.sample(&ctx, batch.n_tokens() - 1);
-            if vocab.is_eog(tok) || generated >= max_new {
+            batch.clear();
+            in_batch.clear();
+            for (s, q) in seqs.iter_mut().enumerate() {
+                if q.done {
+                    continue;
+                }
+                if vocab.is_eog(q.next) || q.stats.generated_tokens >= q.max_new {
+                    q.done = true;
+                    q.stats.decode_ms = t.elapsed().as_millis() as u64;
+                    continue;
+                }
+                q.out.extend(vocab.token_to_piece(q.next, false, None));
+                q.stats.generated_tokens += 1;
+                batch.add(q.next, q.pos, &[s as i32], true).map_err(err)?;
+                q.pos += 1;
+                in_batch.push(s);
+            }
+            if in_batch.is_empty() {
                 break;
             }
-            out.extend(vocab.token_to_piece(tok, false, None));
-            generated += 1;
-            batch.clear();
-            batch.add(tok, pos, &[0], true).map_err(err)?;
-            pos += 1;
             ctx.decode(&mut batch).map_err(err)?;
+            for (i, &s) in in_batch.iter().enumerate() {
+                seqs[s].next = seqs[s].sampler.sample(&ctx, i as i32);
+            }
         }
-        let decode_ms = t.elapsed().as_millis() as u64;
 
-        let text = String::from_utf8_lossy(&out);
-        let text = strip_thinking(&text).trim().to_owned();
-        Ok((text, GenStats { prompt_tokens: tokens.len(), generated_tokens: generated, prefill_ms, decode_ms }))
+        Ok(seqs
+            .into_iter()
+            .map(|q| {
+                let text = String::from_utf8_lossy(&q.out);
+                (strip_thinking(&text).trim().to_owned(), q.stats)
+            })
+            .collect())
     }
 }
 
@@ -189,6 +267,28 @@ impl crate::ChatModel for LlamaCpp {
             eprintln!("[llm] {stats:?}");
         }
         Ok(text)
+    }
+
+    async fn complete_many(&self, reqs: &[(Vec<Message>, GenOptions)]) -> Result<Vec<String>, LlmError> {
+        let refs: Vec<(&[Message], &GenOptions)> = reqs.iter().map(|(m, o)| (m.as_slice(), o)).collect();
+        let t = std::time::Instant::now();
+        // JUANOLA_LLM_NO_BATCH=1: una tras otra, para comparar (diagnóstico).
+        let out = if std::env::var_os("JUANOLA_LLM_NO_BATCH").is_some() {
+            refs.iter().map(|r| tokio::task::block_in_place(|| self.complete_blocking(r.0, r.1))).collect::<Result<Vec<_>, _>>()?
+        } else {
+            tokio::task::block_in_place(|| self.complete_many_blocking(&refs))?
+        };
+        let trace = std::env::var_os("JUANOLA_LLM_TRACE").is_some();
+        for (_, stats) in &out {
+            tracing::debug!(?stats, "llamacpp: generación en lote");
+            if trace {
+                eprintln!("[llm] lote de {}: {stats:?}", out.len());
+            }
+        }
+        if trace {
+            eprintln!("[llm] lote de {} en {} ms", out.len(), t.elapsed().as_millis());
+        }
+        Ok(out.into_iter().map(|(text, _)| text).collect())
     }
 
     fn stream<'a>(
