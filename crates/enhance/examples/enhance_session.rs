@@ -66,7 +66,7 @@ async fn main() -> anyhow::Result<()> {
     let input = EnhanceInput { note: &note, segments: &segments, template: None, summary_language: juanola_enhance::language::summary_language(&segments), user_profile: "" };
 
     let gguf = PathBuf::from(std::env::var("HOME")?)
-        .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q4km/LFM3-1.7B-Q4_K_M.gguf");
+        .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q8/LFM3-1.7B-Q8_0.gguf");
     let llm = LlamaCpp::load(&gguf, 32_768)?;
     let prompt_tokens: usize = build_messages(&input, &user_blocks(&note.raw_doc), &EnhanceOptions::default()).iter().map(|m| llm.count_tokens(&m.content)).sum();
     println!("{} segmentos, {} bloques de notas, prompt ≈ {prompt_tokens} tokens", segments.len(), user_blocks(&note.raw_doc).len());

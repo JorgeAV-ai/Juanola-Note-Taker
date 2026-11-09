@@ -21,7 +21,7 @@ Proyecto en `/Users/jorgeav/toys/granola-rs`. Repo git con un commit inicial. Ha
 ## Decisiones cerradas por el usuario (no reabrir)
 
 - Stack: Tauri v2 + núcleo Rust + React/TipTap. Alternativas (Dioxus, GPUI) descartadas.
-- LLM: **LFM3-1.7B** de Liquid AI (`LiquidAI/LFM3-1.7B-GGUF` Q4_K_M 1,1 GB; `LiquidAI/LFM3-1.7B-MLX-4bit` 0,97 GB). Razonamiento viene activado por defecto: desactivar (`enable_thinking=false`) y filtrar `<think>`. Muestreo: temperature 0.1, top_k 50, repetition_penalty 1.1. Contexto 256K.
+- LLM: **LFM3-1.7B** de Liquid AI (`LiquidAI/LFM3-1.7B-GGUF` Q8_0 1,85 GB desde el 9 nov, antes Q4_K_M 1,1 GB: ver `docs/experimentos.md`; `LiquidAI/LFM3-1.7B-MLX-4bit` 0,97 GB). Razonamiento viene activado por defecto: desactivar (`enable_thinking=false`) y filtrar `<think>`. Muestreo: temperature 0.1, top_k 50, repetition_penalty 1.1. Contexto 256K.
 - STT: **Qwen3-ASR 0.6B** (confirmado frente a LFM3-Audio-2B, que solo hace streaming en inglés). MLX 4-bit `mlx-community/Qwen3-ASR-0.6B-4bit` (0,71 GB) en Mac; ONNX int8 de sherpa-onnx (`sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2`, 0,94 GB) en Windows.
 - Embeddings: **EmbeddingGemma 2** solo texto, ONNX q8 `onnx-community/embeddinggemma-2-ONNX` (314 MB), truncado a 256d, prefijos `task: search result | query: …` / `title: none | text: …`.
 - VAD Silero (ONNX), diarización pyannote community-1 vía crate `speakrs` (CoreML en Mac, ONNX en Windows).
@@ -67,7 +67,7 @@ Descargar modelos (~2 GB) a la carpeta de datos de la app requiere permiso del u
   - Entorno: `mlxrs` exige rustc ≥ 1.95 (se actualizó `stable` a 1.99.1). Sin Xcode no hay compilador `metal`, y por eso existe `third_party/mlxrs-sys` (ver `third_party/README.md`): usa el `mlx.metallib` de la wheel `mlx-metal` 0.32.2 (`scripts/fetch-mlx-metallib.sh`), lista los headers JIT con clang y enlaza `libclang_rt.osx.a`. `.cargo/config.toml` apunta `MLXRS_PREBUILT_METALLIB`.
   - Referencia Python de mlx-audio instalada en un venv temporal fuera del repo, que no persiste.
 
-- **Punto 3, enhance: hecho (con matices de calidad).** LFM3-1.7B Q4_K_M sobre `llama-cpp-2` con Metal.
+- **Punto 3, enhance: hecho (con matices de calidad).** LFM3-1.7B sobre `llama-cpp-2` con Metal (Q4_K_M en las medidas de este punto; Q8_0 desde el 9 nov).
   - `crates/llm/src/backends/llamacpp.rs` (feature `llamacpp`) implementa `ChatModel`. Usa el muestreo de Liquid AI (temperatura 0,1, top-k 50, repetición 1,1) y una gramática GBNF opcional a partir de JSON Schema (`json_schema_to_grammar`).
   - Prompt: `crates/llm/src/chat_format.rs` reproduce a mano la plantilla Jinja del GGUF con `enable_thinking=false`, porque usa `{% generation %}`, que `minijinja` no entiende. Hay tests contra la salida de jinja2. `<think>` se filtra.
   - Velocidad en el M4 Pro: 120 tok/s; carga en 0,3 s, salvo ~15 s la primera vez por la compilación de shaders. llama.cpp b11960 vía `third_party/llama-cpp-sys-2` (ver `third_party/README.md`).

@@ -5,7 +5,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     use juanola_llm::{GenOptions, Message};
     let a: Vec<String> = std::env::args().skip(1).collect();
     let gguf = std::path::PathBuf::from(std::env::var("HOME")?)
-        .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q4km/LFM3-1.7B-Q4_K_M.gguf");
+        .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q8/LFM3-1.7B-Q8_0.gguf");
     // Ajustes para medir rendimiento: JUANOLA_LLM_UBATCH, JUANOLA_LLM_FA=0|1.
     let mut llm = LlamaCpp::load(&gguf, 32_768)?;
     if let Some(u) = std::env::var("JUANOLA_LLM_UBATCH").ok().and_then(|v| v.parse().ok()) {

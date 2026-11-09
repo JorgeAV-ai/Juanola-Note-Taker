@@ -417,7 +417,7 @@ async fn main() -> anyhow::Result<()> {
     }
     let gguf = std::env::var("JUANOLA_GGUF").map(PathBuf::from).unwrap_or_else(|_| {
         PathBuf::from(std::env::var("HOME").unwrap())
-            .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q4km/LFM3-1.7B-Q4_K_M.gguf")
+            .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q8/LFM3-1.7B-Q8_0.gguf")
     });
     println!("modelo: {}", gguf.file_name().unwrap().to_string_lossy());
     let llm = LlamaCpp::load(&gguf, 32_768)?;

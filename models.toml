@@ -203,15 +203,15 @@ name = "lfm3-1.7b"
 runtime = "llama.cpp"
 format = "gguf"
 repo = "LiquidAI/LFM3-1.7B-GGUF"
-files = ["LFM3-1.7B-Q4_K_M.gguf"]
-dir = "llm/lfm3-1.7b-q4km"
-size_mb = 1100
+files = ["LFM3-1.7B-Q8_0.gguf"]
+dir = "llm/lfm3-1.7b-q8"
+size_mb = 1846
 platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
 backends = ["vulkan", "cuda", "metal", "cpu"]
 context = 262144
 languages = 16
-sha256 = "3793e1e6e2266919d6e015287221b41100175a98eddaba92e111aed3b05c93c4"
-notes = "llama.cpp b11960 vía third_party/llama-cpp-sys-2 (el crate trae uno sin LFM3). M4 Pro: 120 tok/s, enhance de 17,5 min en ~14 s. Alternativa QAD-Q4_0 (1050 MB) o Q8_0 (1846 MB) por si mejora la fidelidad de cifras: sin medir."
+sha256 = "8f6b24182258205e9e01e21f1f24a1f208c1e8115578825d202ce39976af20b6"
+notes = "llama.cpp b11960 vía third_party/llama-cpp-sys-2 (el crate trae uno sin LFM3). Q8_0 desde el 9 nov 2026: frente a Q4_K_M (1100 MB, sha256 3793e1e6…) mejora la reunión larga (cobertura, tareas y cifras) y tarda 1,35-2 ×; ver docs/experimentos.md. Sin medir: Q6_K y QAD-Q4_0."
 
 # Tier opcional para reuniones en inglés: modelo específico de resumen de transcripciones.
 [[slots.llm_main.models]]

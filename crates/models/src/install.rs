@@ -264,7 +264,7 @@ mod tests {
         let m = Machine { platform: Platform::MacosArm64, ram_gb: 16 };
         let plan = c.plan(APP_SLOTS, &m, Path::new("/m")).unwrap();
         let dirs: Vec<_> = plan.iter().map(|p| p.dir.to_string_lossy().into_owned()).collect();
-        assert_eq!(dirs, ["/m/vad/silero-vad-mlx", "/m/stt_streaming/qwen3-asr-0.6b-mlx", "/m/llm/lfm3-1.7b-q4km"]);
+        assert_eq!(dirs, ["/m/vad/silero-vad-mlx", "/m/stt_streaming/qwen3-asr-0.6b-mlx", "/m/llm/lfm3-1.7b-q8"]);
     }
 
     #[test]

@@ -12,7 +12,7 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 - Con plantilla mide la colocación y dice adónde fue cada hecho mal colocado (`id → apartado`). Para probar títulos sin tocar el código, pasa la plantilla como JSON con `--template archivo.json`: la clave de `section` en los hechos es el nombre del archivo.
 - 3 semillas como mínimo. Entre semillas hay ±10 puntos de ruido, así que una diferencia menor no se toma como mejora.
 
-## Enhance en Auto (LFM3-1.7B Q4_K_M)
+## Enhance en Auto (LFM3-1.7B; Q4_K_M hasta el 9 nov, Q8_0 desde entonces)
 
 | Experimento | Resultado | Estado | Fecha | Detalle |
 |---|---|---|---|---|
@@ -26,7 +26,8 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 | Flash attention o cambiar `n_ubatch` | No cambia la velocidad en contexto largo | ❌ | 6 nov | HANDOFF, punto 3 |
 | `prompt_suffix` por idioma para resúmenes que no son en español | Sin él se colaban «Yo»/«Ellos» en las viñetas | ✅ | 7 nov | HANDOFF, punto 4 |
 | Notas del usuario separadas por bloque (`user_blocks`) | Auto no empeora (89 % de cobertura, igual que antes) | ✅ | 8 nov | plantillas §6.4 (A frente a B) |
-| Q8_0, QAD-Q4_0 o un modelo mayor solo para las tareas | — | ⏳ | | HANDOFF, punto 3 |
+| Q8_0 (1,85 GB) frente a Q4_K_M, las 4 reuniones, Auto y plantilla | Reunión larga (17 min) mejor en todo: Auto con cobertura del 86 % al 96 %, tareas de 3/7 a 5/7 y cifras fieles del 91 % al 98 %; con plantilla, colocación del 83 % al 88 % y tareas de 3/7 a 4/7. Reuniones cortas mixtas: en el 1:1 empeora (colocación del 100 % al 77 %, «Feedback» relleno 3 de 3, tareas en Auto de 4/5 a 1/5); el stand-up y ventas, dentro del ruido. Tarda 1,35-2 × | ✅ adoptado (9 nov) | 9 nov | «Q8_0 frente a Q4_K_M», abajo |
+| QAD-Q4_0, Q6_K o un modelo mayor solo para las tareas | — | ⏳ | | HANDOFF, punto 3 |
 | Mostrar el resumen a los ~20 s y añadir los detalles después | — | ⏳ | | HANDOFF, punto 3 |
 
 ## Enhance con plantilla
@@ -58,6 +59,23 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 - Viñetas copiadas en el stand-up (47-65 %).
 - Tiempo en reuniones cortas (1,7 × Auto en el 1:1).
 - Medir la plantilla de entrevista con cliente: no hay guion.
+
+## Q8_0 frente a Q4_K_M (9 nov)
+
+`LiquidAI/LFM3-1.7B-GGUF`, código de `3c58b52`, 3 semillas, mediana. No existe «Q8_K_M»: las cuantizaciones publicadas son Q4_K_M, QAD-Q4_0, Q5_K_M, Q6_K, Q8_0, NVFP4, F16 y BF16.
+
+| Reunión · modo | Cobertura | Tareas | Colocación | Cifras fieles | Copiadas | Tiempo |
+|---|---|---|---|---|---|---|
+| 1:1 · plantilla | 100 → 100 % | 4/5 → 5/5 | 100 → **77 %** | 100 → 100 % | 16-50 → 6-21 % | 20 → 32 s |
+| 1:1 · Auto | 100 → 100 % | 4/5 → **1/5** | — | ~100 % | 14-28 → 21-25 % | 20 → 20 s |
+| Ventas · plantilla | 78 → 78 % | 4/4 → 4/4 | 93 → 100 % | 100 → 100 % | 26-33 → 21-45 % | 21 → 26 s |
+| Ventas · Auto | 83 → 83 % | 1/4 → 1/4 | — | 92 → 100 % | 27-43 → 11-28 % | 21 → 24 s |
+| Stand-up · plantilla | 83 → 92 % | 4/4 → 4/4 | 67 → 73 % | 100 → 100 % | 53-65 → 52-68 % | 15 → 29 s |
+| Stand-up · Auto | 100 → 100 % | 2/4 → 1/4 | — | 100 → 100 % | 26-42 → 42-47 % | 19 → 20 s |
+| Semanal · plantilla | 86 → 93 % | 3/7 → 4/7 | 83 → 88 % | 92 → 97 % | 17-22 → 8-15 % | 53 → 72 s |
+| Semanal · Auto | 86 → **96 %** | 3/7 → **5/7** | — | 91 → 98 % | 9-14 → 4-15 % | 53 → 67 s |
+
+Decisión del usuario (9 nov): se adopta Q8_0 en el catálogo (`models.toml`, carpeta `llm/lfm3-1.7b-q8`), por la mejora en la reunión larga. Las mediciones anteriores de este registro son con Q4_K_M. Además, con Q8_0 «Feedback» del 1:1 se rellena en las 3 semillas (con Q4_K_M, 1 de 3). Archivo descargado en `<datos>/models/llm/lfm3-1.7b-q8/` (SHA-256 `8f6b2418…20b6`). Para medir con él: `JUANOLA_GGUF=<ruta> eval_enhance …`.
 
 ## Otras áreas (descartes medidos)
 

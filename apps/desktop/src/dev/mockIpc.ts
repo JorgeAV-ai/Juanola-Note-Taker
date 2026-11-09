@@ -54,7 +54,7 @@ const modelsMissing = new URLSearchParams(location.search).get("models") === "mi
 const models: ModelStatus[] = [
   { slot: "vad", name: "silero-vad", format: "mlx", repo: "mlx-community/silero-vad", size_mb: 2, dir: "/mock/vad", installed: true, partial_bytes: 0 },
   { slot: "stt_streaming", name: "qwen3-asr-0.6b", format: "mlx", repo: "mlx-community/Qwen3-ASR-0.6B-4bit", size_mb: 710, dir: "/mock/stt", installed: !modelsMissing, partial_bytes: 0 },
-  { slot: "llm_main", name: "lfm3-1.7b", format: "gguf", repo: "LiquidAI/LFM3-1.7B-GGUF", size_mb: 1100, dir: "/mock/llm", installed: !modelsMissing, partial_bytes: 0 },
+  { slot: "llm_main", name: "lfm3-1.7b", format: "gguf", repo: "LiquidAI/LFM3-1.7B-GGUF", size_mb: 1846, dir: "/mock/llm", installed: !modelsMissing, partial_bytes: 0 },
 ];
 let installTimer: ReturnType<typeof setInterval> | null = null;
 
