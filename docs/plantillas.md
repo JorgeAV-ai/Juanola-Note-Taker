@@ -208,6 +208,8 @@ Si la colocación no llega al 80 %, antes de tocar el modelo se prueban dos vari
 
 ### 6.4 Resultados de la primera evaluación (8 nov)
 
+Resumen de todo lo probado, con su estado (adoptado o descartado), en [experimentos.md](experimentos.md).
+
 `reunion_producto` convertida con `tools/script_to_segments.py` (142 segmentos, 17 min), LFM3-1.7B Q4_K_M, 3 semillas, pasadas de detalle activadas. Notas del usuario: `notas_usuario.txt` (planas) o `notas_usuario_plantillas.txt` (con títulos, lista, tarea y negrita). Mediana entre paréntesis.
 
 | Configuración | Cobertura | Tareas | Cifras fieles | Copiadas | s |

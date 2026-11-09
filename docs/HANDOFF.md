@@ -1,6 +1,6 @@
 # Contexto para continuar el proyecto Juanola
 
-Eres el modelo que continúa este proyecto. Lee este documento y después `docs/plan.md` y `docs/modelos-mvp.md` antes de tocar nada. Responde siempre en español.
+Eres el modelo que continúa este proyecto. Lee este documento y después `docs/plan.md` y `docs/modelos-mvp.md` antes de tocar nada. Antes de probar un cambio de prompt, modelo o pipeline, mira `docs/experimentos.md`: recoge lo ya probado y descartado. Responde siempre en español.
 
 ## Qué es
 
