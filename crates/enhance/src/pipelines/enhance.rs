@@ -162,6 +162,12 @@ fn clock(secs: f64) -> String {
     format!("{:02}:{:02}", s / 60, s % 60)
 }
 
+/// El ITN solo conoce los números en español: en otros idiomas confundía
+/// palabras parecidas («vinte e cinco» → «vinte e 5» en portugués).
+fn itn(input: &EnhanceInput<'_>, opts: &EnhanceOptions) -> bool {
+    opts.itn && input.summary_language == crate::language::LANGUAGE_NAMES[0]
+}
+
 /// Transcripción numerada desde 1, una línea por segmento final. Con `itn`,
 /// los números escritos con letras pasan a dígitos.
 pub fn format_transcript(segments: &[Segment], itn: bool) -> String {
@@ -364,7 +370,7 @@ pub fn build_messages(input: &EnhanceInput<'_>, blocks: &[UserBlock], opts: &Enh
 
 fn auto_messages(input: &EnhanceInput<'_>, blocks: &[UserBlock], opts: &EnhanceOptions) -> Vec<Message> {
     let template = opts.prompt.as_deref().unwrap_or(juanola_prompts::ENHANCE_USER);
-    let transcript = format_transcript(input.segments, opts.itn);
+    let transcript = format_transcript(input.segments, itn(input, opts));
     let user = template
         .replace("{{context}}", &context_block(input, None))
         .replace("{{transcript}}", transcript.trim_end())
@@ -384,7 +390,7 @@ fn template_messages(
     opts: &EnhanceOptions,
     retry: Option<&str>,
 ) -> Vec<Message> {
-    let transcript = format_transcript(input.segments, opts.itn);
+    let transcript = format_transcript(input.segments, itn(input, opts));
     let mut user = juanola_prompts::ENHANCE_TEMPLATE
         .replace("{{context}}", &context_block(input, Some(template)))
         .replace("{{transcript}}", transcript.trim_end())
@@ -398,6 +404,10 @@ fn template_messages(
     }
     vec![Message { role: "user".into(), content: user.trim_end().to_owned() + "\n" }]
 }
+
+/// Referencias por cita como mucho: más allá, el modelo suele estar
+/// enumerando líneas seguidas (`[96, 97, 98, …]`) en vez de citar.
+const MAX_REFS: usize = 6;
 
 /// Menos palabras que esto en la transcripción no da para resumir: el modelo
 /// acaba repitiendo las instrucciones o inventando.
@@ -450,6 +460,8 @@ fn split_refs(line: &str) -> (String, Vec<i64>) {
             return None;
         }
         let mut found = Vec::new();
+        // El modelo escribe a veces los rangos con guiones Unicode (‐ ‑ ‒ – —).
+        let inner = inner.replace(['\u{2010}', '\u{2011}', '\u{2012}', '\u{2013}', '\u{2014}'], "-");
         for part in inner.split([',', ';']) {
             let part = part.trim();
             if let Some((a, b)) = part.split_once('-') {
@@ -1162,7 +1174,7 @@ pub async fn enhance_with(
         }
         return resolve(Vec::new(), input.segments, &blocks, input.note.id, Layout::Auto);
     }
-    let gen = GenOptions { max_tokens: Some(summary_budget(words, opts.max_tokens)), seed: opts.seed, ..Default::default() };
+    let gen = GenOptions { max_tokens: Some(summary_budget(words, opts.max_tokens)), seed: opts.seed, max_refs: Some(MAX_REFS), ..Default::default() };
     let Some(template) = input.template else {
         return enhance_auto(model, input, &blocks, opts, &gen, None).await;
     };
@@ -1241,12 +1253,12 @@ fn detail_requests(input: &EnhanceInput<'_>, opts: &EnhanceOptions) -> Vec<(Vec<
             let prompt = juanola_prompts::ENHANCE_DETAILS
                 .replace("{{from}}", &clock(segs[0].start))
                 .replace("{{to}}", &clock(segs[segs.len() - 1].end))
-                .replace("{{transcript}}", format_transcript_from(segs, range.start + 1, opts.itn).trim_end())
+                .replace("{{transcript}}", format_transcript_from(segs, range.start + 1, itn(input, opts)).trim_end())
                 .replace("{{language}}", input.summary_language)
                 + &crate::language::prompt_suffix(input.summary_language);
             // 12 datos caben en ~450 tokens; el tope corta las listas que el
             // modelo alarga sin fin (es lo que más tiempo cuesta).
-            let gen = GenOptions { max_tokens: Some(450), seed: opts.seed, ..Default::default() };
+            let gen = GenOptions { max_tokens: Some(450), seed: opts.seed, max_refs: Some(MAX_REFS), ..Default::default() };
             (vec![Message { role: "user".into(), content: prompt }], gen)
         })
         .collect()
@@ -1422,6 +1434,7 @@ mod tests {
         assert_eq!(split_refs("PDF falla con tildes [24]; se arregla esta semana."), ("PDF falla con tildes; se arregla esta semana.".into(), vec![24]));
         assert_eq!(split_refs("Lista [a, b]"), ("Lista [a, b]".into(), vec![]));
         assert_eq!(split_refs("Sin citas"), ("Sin citas".into(), vec![]));
+        assert_eq!(split_refs("Rango [162\u{2011}164, 170]"), ("Rango".into(), vec![162, 163, 164, 170]));
     }
 
     #[test]

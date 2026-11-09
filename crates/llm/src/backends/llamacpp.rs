@@ -190,7 +190,11 @@ impl LlamaCpp {
             out: Vec<u8>,
             stats: GenStats,
             done: bool,
+            max_refs: Option<usize>,
+            /// Tokens que se meten en lugar de los muestreados (el cierre de una cita).
+            forced: std::collections::VecDeque<llama_cpp_2::token::LlamaToken>,
         }
+        let close_cite = vocab.tokenize(b"]\n", false, false);
         let mut seqs = Vec::with_capacity(n_seq);
         let mut batch = LlamaBatch::new(N_BATCH as usize, n_seq as i32);
         // Prefill por bloques de N_BATCH, secuencia a secuencia; el primer token
@@ -209,7 +213,17 @@ impl LlamaCpp {
             }
             let next = sampler.sample(&ctx, batch.n_tokens() - 1);
             let stats = GenStats { prompt_tokens: tokens.len(), prefill_ms: t.elapsed().as_millis() as u64, ..Default::default() };
-            seqs.push(Seq { sampler, next, pos: tokens.len() as i32, max_new: *max_new, out: Vec::new(), stats, done: false });
+            seqs.push(Seq {
+                sampler,
+                next,
+                pos: tokens.len() as i32,
+                max_new: *max_new,
+                out: Vec::new(),
+                stats,
+                done: false,
+                max_refs: opts.max_refs,
+                forced: Default::default(),
+            });
         }
 
         // Decodificación: en cada paso, un token de cada secuencia viva.
@@ -221,6 +235,15 @@ impl LlamaCpp {
             for (s, q) in seqs.iter_mut().enumerate() {
                 if q.done {
                     continue;
+                }
+                if let Some(tok) = q.forced.pop_front() {
+                    q.next = tok;
+                } else if let Some(max) = q.max_refs {
+                    let piece = vocab.token_to_piece(q.next, false, None);
+                    if piece.contains(&b',') && open_cite_refs(&q.out) >= max {
+                        q.forced.extend(close_cite.iter().copied());
+                        q.next = q.forced.pop_front().expect("«]\\n» tiene tokens");
+                    }
                 }
                 if vocab.is_eog(q.next) || q.stats.generated_tokens >= q.max_new {
                     q.done = true;
@@ -250,6 +273,18 @@ impl LlamaCpp {
             })
             .collect())
     }
+}
+
+/// Referencias de la cita que está abierta al final de `out` (`[12, 14, 1` → 3);
+/// 0 si no hay ninguna abierta o lo abierto no es una cita (`[nota`).
+fn open_cite_refs(out: &[u8]) -> usize {
+    let Some(open) = out.iter().rposition(|&b| b == b'[') else { return 0 };
+    let inner = &out[open + 1..];
+    // Bytes no ASCII: los guiones Unicode de los rangos (`162‑166`, `12–14`).
+    if inner.contains(&b']') || !inner.iter().all(|b| b.is_ascii_digit() || b" ,-;".contains(b) || *b >= 0x80) {
+        return 0;
+    }
+    inner.split(|&b| b == b',' || b == b';').filter(|p| p.iter().any(u8::is_ascii_digit)).count()
 }
 
 #[async_trait::async_trait]
@@ -298,5 +333,21 @@ impl crate::ChatModel for LlamaCpp {
     ) -> futures::stream::BoxStream<'a, Result<String, LlmError>> {
         // Sin streaming token a token todavía: un único trozo con todo el texto.
         Box::pin(futures::stream::once(async move { crate::ChatModel::complete(self, msgs, opts).await }))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::open_cite_refs;
+
+    #[test]
+    fn counts_refs_of_the_open_citation() {
+        assert_eq!(open_cite_refs(b"- Algo [12, 14, 1"), 3);
+        assert_eq!(open_cite_refs(b"- Algo [12-14; 20"), 2);
+        assert_eq!(open_cite_refs("- Algo [162\u{2011}166, 167, 1".as_bytes()), 3);
+        assert_eq!(open_cite_refs(b"- Algo [12, 14]. Otra"), 0);
+        assert_eq!(open_cite_refs(b"- Algo [nota, 3"), 0);
+        assert_eq!(open_cite_refs(b"- Sin citas"), 0);
+        assert_eq!(open_cite_refs(b"- Algo ["), 0);
     }
 }

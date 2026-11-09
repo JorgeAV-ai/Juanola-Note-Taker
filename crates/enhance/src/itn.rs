@@ -215,7 +215,13 @@ pub fn normalize_numbers(text: &str) -> String {
                 pending.push_str(t.1);
             }
             let body = pending.strip_suffix(' ').unwrap_or("");
-            let num_start = body.rfind(|c: char| !(c.is_ascii_digit() || c == ',')).map_or(0, |i| i + 1);
+            // Tras el último carácter que no es cifra (que puede ocupar varios
+            // bytes: «≈112 mil», «€112 mil»).
+            let num_start = body
+                .char_indices()
+                .rev()
+                .find(|(_, c)| !(c.is_ascii_digit() || *c == ','))
+                .map_or(0, |(i, c)| i + c.len_utf8());
             let digits = &body[num_start..];
             if let Ok(v) = digits.replace(',', ".").parse::<f64>() {
                 if !digits.is_empty() && !digits.starts_with(',') {
@@ -301,6 +307,10 @@ mod tests {
         assert_eq!(n("llegaron a 112 mil euros"), "llegaron a 112000 euros");
         assert_eq!(n("unos 2,5 millones y 35 mil más"), "unos 2500000 y 35000 más");
         assert_eq!(n("Tenemos aprobado los 35 mil euros"), "Tenemos aprobado los 35000 euros");
+        // Un carácter de varios bytes justo antes de la cifra no la parte.
+        assert_eq!(n("un coste de ≈180 mil al mes"), "un coste de ≈180000 al mes");
+        assert_eq!(n("pagan €112 mil"), "pagan €112000");
+        assert_eq!(n("≈ mil"), "≈ 1000");
     }
 
     #[test]

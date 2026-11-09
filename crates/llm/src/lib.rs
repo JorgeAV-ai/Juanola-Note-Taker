@@ -22,6 +22,10 @@ pub struct GenOptions {
     pub grammar: Option<String>,
     /// Semilla del muestreo; `None` = fija (resultados reproducibles).
     pub seed: Option<u32>,
+    /// Cierra cada cita `[n, m, …]` (y la línea) en cuanto lleva este número
+    /// de referencias. Un modelo pequeño se queda a veces enumerando líneas
+    /// (`[96, 97, 98, …]`) hasta agotar el tope de tokens; solo llama.cpp.
+    pub max_refs: Option<usize>,
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -1,0 +1,210 @@
+# Entrevista de investigación ficticia en italiano (~30 min) para evaluar la plantilla «entrevista». Formato: Hablante|texto.
+# «Yo» es la diseñadora de producto de una app de reservas para estudios de yoga y pilates (canal del micrófono).
+# Francesca Bellini es la dueña de Respiro, cadena de cuatro estudios en Bolonia; Giulia, su recepcionista, se une a mitad de la llamada.
+Yo|Buongiorno Francesca! Mi sente bene? Vedo che la videocamera è ancora spenta.
+Francesca|Sì, sì, la sento benissimo. Scusi, un attimo che accendo... ecco. Adesso mi vede?
+Yo|Perfetto, adesso sì. Grazie mille per il tempo, so che il lunedì mattina per voi è sempre un caos.
+Francesca|Guardi, il lunedì è il giorno peggiore, perché tutti quelli che hanno mangiato troppo nel weekend vogliono venire a fare pilates alle sette di mattina. Ma va bene, ho mezz'ora tranquilla, ho chiuso la porta dell'ufficio.
+Yo|Ottimo. Ah, prima di iniziare, ma lei è nello studio adesso? Si vede un bel muro di mattoni dietro.
+Francesca|Sì, sono in via Saragozza, nella prima sede, quella storica. Il muro è originale, l'abbiamo trovato quando abbiamo tolto l'intonaco durante i lavori. Mio marito voleva ricoprirlo, io ho fatto la guerra per lasciarlo così.
+Yo|Ha fatto bene, è bellissimo. Allora, le spiego velocemente come funziona. Io mi occupo del design del prodotto in una piccola azienda che sta costruendo un'app di prenotazioni per studi di yoga e pilates. Non sono qui per venderle niente, giuro. Voglio solo capire come lavorate oggi, cosa funziona e cosa no.
+Francesca|Va bene, va bene. Tanto se vuole vendermi qualcosa glielo dico io alla fine se mi interessa.
+Yo|Esatto. Le dispiace se registro la chiamata? Serve solo a me per prendere appunti, non la condividiamo con nessuno fuori dal team.
+Francesca|Nessun problema, registri pure.
+Yo|Grazie. Allora partiamo dall'inizio: mi racconta un po' chi è lei e come è nato Respiro?
+Francesca|Allora, io nasco come fisioterapista. Ho lavorato dieci anni in una clinica ortopedica qui a Bologna, e lì ho scoperto il pilates come strumento di riabilitazione. Poi a un certo punto mi sono detta: ma perché devo usarlo solo con chi si è già fatto male?
+Yo|Quindi è partita dalla riabilitazione.
+Francesca|Esatto. Nel 2016 ho aperto il primo studio, questo di via Saragozza, con due reformer e una sala piccola per il matwork. Eravamo io e un'altra istruttrice, la Chiara, che ancora lavora con me.
+Yo|E adesso quante sedi avete?
+Francesca|Adesso abbiamo quattro sedi a Bologna: via Saragozza, la Bolognina, una in via Murri e l'ultima, che abbiamo aperto a marzo dell'anno scorso, a San Lazzaro, che tecnicamente è fuori Bologna ma per noi è Bologna lo stesso.
+Yo|E quante persone lavorano con lei, più o meno?
+Francesca|Tra istruttori e istruttrici siamo a ventidue, quasi tutti con partita IVA, a parte quattro dipendenti. Poi c'è la reception, che in pratica è la Giulia, più due ragazze part-time che coprono il sabato e le sere.
+Yo|E la Giulia è quella che si unirà dopo?
+Francesca|Sì, le ho chiesto di collegarsi verso metà chiamata, adesso sta aprendo la Bolognina e ha la lezione delle nove e mezza da sistemare. Lei sa tutto delle prenotazioni, molto più di me, onestamente.
+Yo|Perfetto. E come clienti, quante persone frequentano gli studi?
+Francesca|Iscritti attivi, cioè persone che sono venute almeno una volta nell'ultimo mese, sono circa seicentocinquanta. Poi ce ne sono altri che vanno e vengono, soprattutto d'estate spariscono tutti.
+Yo|E quante lezioni fate a settimana, sommando le quattro sedi?
+Francesca|Allora, mi faccia pensare... la Saragozza e la Murri sono le più piene. In tutto saranno circa centoquaranta lezioni a settimana, tra reformer, matwork, yoga, e un paio di corsi pre-parto.
+Yo|Centoquaranta, va bene. E il reformer immagino sia la parte più richiesta.
+Francesca|Il reformer è il nostro oro. Ogni sala reformer ha sei macchine, e una lezione di gruppo da noi costa trentacinque euro a persona se la prendi singola. Con il carnet da dieci si scende a ventotto.
+Yo|Quindi un posto vuoto sul reformer vi pesa parecchio.
+Francesca|Ci arriviamo, ci arriviamo. È esattamente il mio problema numero uno.
+Yo|Allora ci arriviamo tra poco, promesso. Prima vorrei capire come funziona oggi una prenotazione, dall'inizio alla fine. Mettiamo che io sono una cliente nuova e voglio provare una lezione.
+Francesca|Allora, se è nuova, quasi sicuramente ci scrive su Instagram. Il settanta per cento delle persone nuove arriva da Instagram, l'abbiamo contato l'anno scorso. Ci scrive in privato, tipo "ciao, quanto costa una lezione di prova?", e da lì inizia la conversazione.
+Yo|E chi risponde su Instagram?
+Francesca|La Giulia, quasi sempre dal suo telefono. Ogni tanto io, la sera, se vedo che ci sono messaggi rimasti lì. Poi le diamo il link per scaricare l'app.
+Yo|Quale app usate?
+Francesca|Usiamo Fitbook. Non so se la conosce, è quella spagnola, è abbastanza diffusa anche in Italia.
+Yo|Sì, la conosco, è uno dei nostri concorrenti principali, quindi mi interessa tantissimo sapere cosa ne pensa, anche nel male, soprattutto nel male.
+Francesca|Allora si prepari, perché ne ho da dire.
+Yo|Prima però, una curiosità: da quanto tempo la usate?
+Francesca|Da tre anni, più o meno. Prima avevamo solo un'agenda cartacea e un gruppo WhatsApp, quando eravamo solo due sedi. Poi con la terza non si reggeva più.
+Yo|E quanto pagate Fitbook?
+Francesca|Paghiamo centonovanta euro al mese per tutte e quattro le sedi, se non ricordo male. Più una commissione sui pagamenti online, quella del due per cento su ogni transazione.
+Yo|Il due per cento su tutto quello che passa dall'app?
+Francesca|Su tutto quello che pagano con la carta dentro l'app, sì. Il carnet, l'abbonamento mensile, le lezioni singole. Quando lo sommi a fine anno non è poco, eh.
+Yo|Immagino. E le persone pagano tutte dall'app?
+Francesca|No, magari! Questo è un altro punto. Diciamo metà e metà. Molti, soprattutto i clienti più grandi, pagano alla reception, in contanti o con il bancomat, oppure con Satispay, che qui a Bologna lo usano tutti.
+Yo|Satispay, giusto, qui è molto diffuso. E quando pagano alla reception, come lo registrate in Fitbook?
+Francesca|E qui casca l'asino. Lo dovrebbe segnare la Giulia a mano, come pagamento esterno. Ma se c'è la fila alle sei di sera, a volte lo segna dopo, a volte se lo scrive su un post-it, a volte se lo dimentica. E poi a fine mese io faccio i conti e non tornano.
+Yo|Quindi la riconciliazione dei pagamenti la fa lei a fine mese.
+Francesca|Io, con un foglio Excel, la domenica sera, con un bicchiere di vino. Non scherzo.
+Yo|Le credo. E l'agenda cartacea c'è ancora o l'avete eliminata del tutto?
+Francesca|Eh, no, non del tutto. Per le lezioni private sul reformer, quelle uno a uno, usiamo ancora l'agenda di carta qui in via Saragozza. Perché gli istruttori si spostano, cambiano orario, il paziente ti chiama e ti dice "posso spostarmi alle cinque?", e su Fitbook è un incubo modificare una lezione privata.
+Yo|In che senso un incubo? Mi può fare un esempio concreto?
+Francesca|Allora, se voglio spostare una privata, devo cancellarla, il sistema manda una notifica di cancellazione al cliente, che si spaventa e mi chiama, poi la devo ricreare e il cliente riceve un'altra notifica. E se ha pagato con la carta, il rimborso parte da solo. Un disastro.
+Yo|Quindi per non fare questo giro, usate la carta.
+Yo|Le chiedo un favore: mi potrebbe mandare una foto di una settimana dell'agenda cartacea delle private? Anche entro mercoledì, con calma, e ovviamente può coprire i nomi.
+Francesca|Sì, gliela mando io, la fotografo stasera e copro i cognomi dei pazienti.
+Francesca|Esatto. E poi ovviamente succede che la carta e l'app non si parlano, e ogni tanto c'è un reformer prenotato due volte: uno sull'agenda per una privata, uno sull'app per la lezione di gruppo. Ci è capitato un doppio turno sul reformer anche la settimana scorsa.
+Yo|E cosa fate in quel caso?
+Francesca|Chiedo scusa, offro una lezione gratis, e perdo i soldi due volte. Una volta perché non incasso, e una volta perché regalo.
+Yo|Mi segno questa cosa del doppio turno, perché è molto interessante. Torniamo un attimo a Instagram. Lei diceva che la Giulia risponde dal suo telefono personale?
+Francesca|Sì, beh, il telefono è dello studio, gliel'abbiamo comprato noi, ma lo tiene sempre lei, anche a casa. Glielo dico sempre: il mio vero gestionale è il telefono di Giulia. Se domani perde quel telefono, io chiudo.
+Yo|Questa me la segno parola per parola.
+Francesca|Ma è la verità! Lì dentro ci sono i messaggi Instagram, il gruppo WhatsApp della lista d'attesa, le foto delle ricevute dei bonifici, tutto.
+Yo|Aspetti, c'è anche un gruppo WhatsApp per la lista d'attesa?
+Francesca|Sì, perché Fitbook ha una lista d'attesa, ma funziona male. Quando qualcuno cancella, la notifica arriva a tutti nello stesso momento, ma poi il posto lo prende chi apre l'app per primo. E le clienti si arrabbiano, perché magari erano prime in lista e il posto se l'è preso un'altra.
+Yo|Quindi la Giulia gestisce la lista d'attesa a mano su WhatsApp.
+Francesca|Su WhatsApp. Scrive nel gruppo "si è liberato un posto alle diciotto in via Murri, chi lo vuole?", e la prima che risponde se lo prende. Poi lo deve segnare su Fitbook. Ogni volta.
+Yo|Ok. Lei prima ha detto che il problema numero uno è il posto vuoto sul reformer. Me ne parla?
+Francesca|Sì. Il problema sono le persone che prenotano e non si presentano. I no-show, come li chiamano. Da noi siamo intorno al quindici per cento delle prenotazioni di gruppo, che è tantissimo.
+Yo|Il quindici per cento. E come lo sapete? Lo misurate?
+Francesca|L'abbiamo misurato a settembre, a mano, la Giulia ha contato tutte le lezioni per tre settimane. Fitbook ti fa vedere le presenze, ma non ti fa un report decente, devi esportare e fare i conti.
+Yo|Avete ancora quel conteggio? Mi sarebbe utilissimo vederlo.
+Francesca|Sì, è un foglio Excel. Le mando io il conteggio dei no-show di settembre entro questa settimana, devo solo togliere i nomi delle clienti.
+Yo|E quanto vi costa, in soldi, questo quindici per cento?
+Francesca|Abbiamo fatto un calcolo approssimativo: considerando che molti hanno il carnet e quindi in teoria il posto l'hanno già pagato, il danno vero è sulle persone in lista d'attesa che non riescono a entrare. Diciamo che perdiamo circa milleduecento euro al mese tra le quattro sedi.
+Yo|Milleduecento al mese. Non è poco.
+Francesca|No. E guardi che è una stima prudente. Un reformer vuoto è un posto che ho pagato due volte: la macchina e l'istruttore che è lì comunque.
+Yo|Questa è un'altra frase che mi segno. E avete provato a mettere una penale per chi non si presenta?
+Francesca|Ci abbiamo provato. Fitbook ha un'opzione per la cancellazione tardiva, ma è tutto o niente: o scali la lezione dal carnet, o non fai niente. E le clienti affezionate si offendono se gli scali la lezione perché il figlio aveva la febbre.
+Yo|Quindi le servirebbe qualcosa di più flessibile.
+Francesca|Mi servirebbe una regola chiara, tipo: puoi cancellare gratis fino a sei ore prima, dopo perdi la lezione, ma io come titolare posso fare un'eccezione con un clic. Senza dover chiamare l'assistenza di Fitbook, che risponde dopo tre giorni, in spagnolo o in un italiano tradotto con il traduttore.
+Yo|Sei ore prima. Ok. Avete già una regola del genere scritta da qualche parte?
+Francesca|Sul sito c'è scritto dodici ore, ma onestamente nessuno la rispetta e noi non la facciamo rispettare. Sei ore mi sembra più realistica, la gente cancella la mattina per la sera.
+Yo|Chiaro. Sei ore, quindi.
+Francesca|Ah, scusi, mi è appena arrivato un messaggio dalla Giulia. Dice che si collega tra cinque minuti, perché la caldaia della Bolognina fa di nuovo i capricci.
+Yo|Non si preoccupi. Ma è un problema frequente la caldaia?
+Francesca|Ah, quella caldaia è la mia croce. È un palazzo degli anni sessanta, e il condominio non vuole cambiarla. Ogni inverno c'è almeno una settimana in cui fanno lezione con la felpa. L'anno scorso abbiamo comprato delle stufette elettriche, ma poi saltava la corrente se accendevi anche il phon negli spogliatoi.
+Yo|Che storia. E il proprietario cosa dice?
+Francesca|Il proprietario ha novant'anni e vive a Rimini, quindi... comunque, lasciamo stare la caldaia, che non c'entra niente con la sua app, purtroppo.
+Yo|Purtroppo no, le caldaie ancora non le prenotiamo. Torniamo ai pagamenti un momento. Lei diceva che la riconciliazione la fa a mano su Excel. Quante ore le porta via?
+Francesca|Io direi tre o quattro ore al mese. Ma non è il tempo, è che mi viene il nervoso. Perché non torna mai. Mancano sempre cinquanta, cento euro, e non so mai se è un errore di battitura o se qualcuno non ha pagato.
+Yo|E avete bisogno anche delle ricevute o delle fatture per i clienti?
+Francesca|Sì, molti chiedono la ricevuta per detrarre, soprattutto per le lezioni con la fisioterapista o per i corsi pre-parto. Oggi le fa il commercialista partendo dal mio foglio Excel. Se l'app le facesse in automatico sarebbe un sogno, ma lo so che è complicato con la fatturazione elettronica.
+Yo|È complicato, ma è una delle cose che stiamo valutando. Non le prometto niente su questo.
+Francesca|Ecco, brava, non mi prometta niente. Ne ho già sentite abbastanza di promesse.
+Giulia|Pronto? Buongiorno! Mi sentite?
+Yo|Buongiorno Giulia! Sì, ti sento. Possiamo darci del tu?
+Giulia|Sì, sì, certo. Scusate il ritardo, la caldaia... ma Francesca vi ha raccontato, immagino.
+Francesca|Le ho raccontato tutto, anche dello stufetta-gate.
+Giulia|Oddio. Va bene. Allora, sono qui, ditemi pure.
+Yo|Grazie, Giulia. Stavamo parlando di come funzionano le prenotazioni e i pagamenti. Francesca diceva che pagate centonovanta euro al mese a Fitbook, giusto?
+Giulia|No, aspetta, Francesca, da settembre sono duecentoquaranta. Hanno aumentato il prezzo quando abbiamo aggiunto San Lazzaro, perché il piano per tre sedi non bastava più e siamo passati al piano superiore.
+Francesca|Ah, è vero, hai ragione. Duecentoquaranta. Vedi che lei sa tutto meglio di me?
+Yo|Ok, allora mi correggo: duecentoquaranta euro al mese, più il due per cento sui pagamenti con carta.
+Giulia|Esatto. E paghiamo anche a parte il modulo per i messaggi SMS, ma quello lo abbiamo disattivato a ottobre perché costava troppo.
+Yo|Va bene. Giulia, mi interessa molto la tua giornata tipo. Puoi raccontarmi cosa fai, per esempio, da quando apri lo studio?
+Giulia|Allora, la prima cosa che faccio, ancora prima di arrivare, sul tram, è aprire Instagram e WhatsApp. Ci sono sempre messaggi della notte: "non riesco a venire domani", "posso spostarmi alle diciotto", "quanto costa il pacchetto da dieci". Poi arrivo, apro Fitbook sul computer della reception e comincio a sistemare.
+Yo|Quanti messaggi ricevi al giorno, più o meno?
+Giulia|Non li ho mai contati davvero. Tanti. Tra Instagram e WhatsApp direi più di sessanta al giorno, nei giorni pieni anche cento.
+Yo|E quanto tempo ci passi?
+Giulia|Io ho provato a calcolarlo una volta: solo per rispondere ai messaggi passo circa dodici ore a settimana. È quasi un terzo del mio lavoro. E sono ore in cui non sto alla reception ad accogliere le persone, che invece è la parte che mi piace.
+Yo|Dodici ore a settimana solo di messaggi.
+Giulia|Sì. E poi il problema è che non finisce mai. Io rispondo ai messaggi anche alle undici di sera, dal divano, perché se non rispondo la cliente si prende la lezione da un'altra parte, magari da quelli di via Castiglione.
+Francesca|E io le dico sempre di spegnere il telefono, ma poi sono la prima a scriverle alle dieci di sera.
+Giulia|Questo è vero.
+Yo|E perché le clienti scrivono a te invece di fare tutto dall'app?
+Giulia|Un po' perché l'app di Fitbook è complicata. Per spostare una prenotazione devi cancellare e prenotare di nuovo, e se nel frattempo il posto lo prende un'altra, hai perso la lezione. Quindi preferiscono scrivere a me e chiedermi di farlo io, così sono sicure.
+Yo|Quindi tu fai da intermediaria tra la cliente e l'app.
+Giulia|Esatto. E poi ci sono le clienti più grandi, quelle sopra i sessanta, che proprio l'app non la vogliono scaricare. Loro chiamano al fisso o vengono di persona. E le segno io.
+Yo|Che percentuale sono, più o meno?
+Giulia|Non tantissime, forse una su dieci. Ma sono le più fedeli, vengono da anni, alcune dalla prima apertura in via Saragozza. Non le possiamo perdere.
+Yo|Assolutamente. Senti Giulia, Francesca mi parlava del gruppo WhatsApp per la lista d'attesa. Quante persone ci sono dentro?
+Giulia|Adesso sono centottanta persone. Lo abbiamo fatto unico per tutte le sedi, ed è un casino, perché scrivo "posto libero alla Murri" e mi rispondono quelle di San Lazzaro che non c'entrano niente.
+Yo|E non avete pensato di fare un gruppo per sede?
+Giulia|Ci abbiamo pensato, ma sarebbero quattro gruppi da gestire. Io impazzisco già con uno.
+Yo|Comprensibile. Mi interessa anche un'altra cosa: avete clienti che vanno in più sedi?
+Giulia|Tantissime. Per esempio, una che lavora in centro fa la pausa pranzo in via Murri e il sabato va a San Lazzaro perché abita lì. E qui c'è un altro problema: su Fitbook ogni sede è come un'attività separata, quindi l'abbonamento della Murri non vale a San Lazzaro.
+Francesca|Questo per me è fondamentale. Io voglio che l'abbonamento valga in tutte le sedi, con lo stesso account. Oggi dobbiamo fare dei trucchi, tipo creare un carnet in una sede e poi scalare a mano le lezioni dall'altra.
+Yo|E questi trucchi chi li fa?
+Giulia|Io, ovviamente.
+Francesca|Ovviamente.
+Yo|Va bene, mi sembra un bisogno molto chiaro: un unico abbonamento valido in tutte le sedi. Francesca, se dovesse mettere in ordine le cose che le servono, cosa metterebbe al primo posto?
+Francesca|Al primo posto, ridurre i no-show e riempire i posti vuoti. Quindi una lista d'attesa automatica che funzioni davvero, che dia il posto alla prima in lista e non a chi è più veloce col dito. Al secondo posto, l'abbonamento unico per tutte le sedi. Al terzo, che i pagamenti in reception e quelli online finiscano nello stesso posto, così a fine mese i conti tornano.
+Yo|E la regola delle sei ore per la cancellazione dove la mette?
+Francesca|Va insieme alla prima. Lista d'attesa e cancellazioni sono la stessa cosa per me, è tutto per non avere il reformer vuoto.
+Yo|Prima di andare avanti, torno un attimo indietro sulle clienti nuove. Francesca diceva che arrivano quasi tutte da Instagram. Dopo il primo messaggio, cosa succede esattamente?
+Giulia|Allora, io rispondo con un messaggio che ho salvato nelle note del telefono, con i prezzi e il link per la lezione di prova. La lezione di prova costa quindici euro, ed è solo per il matwork o per il reformer base.
+Yo|E la lezione di prova si prenota dall'app?
+Giulia|In teoria sì, ma devi prima creare l'account, inserire la carta, accettare tre pagine di condizioni... e a quel punto metà delle persone si perde. Allora molte mi scrivono "me la prenoti tu?", e io la segno a mano.
+Yo|Quindi c'è un abbandono forte proprio nella registrazione.
+Giulia|Fortissimo. Io direi che una persona su due si perde tra il messaggio su Instagram e la prima lezione.
+Francesca|E di quelle che fanno la prova, quante si iscrivono, Giulia? Il quaranta per cento, no?
+Giulia|Sì, più o meno il quaranta per cento compra un carnet o un abbonamento dopo la prova. Quindi se ne perdiamo metà prima ancora di arrivare, è un peccato.
+Yo|Assolutamente. E avete un modo per richiamare chi ha fatto la prova e non si è iscritto?
+Giulia|No. Cioè, io a volte mi ricordo e scrivo "ciao, ti è piaciuta la lezione?", ma solo se me lo ricordo. Non c'è niente di automatico.
+Yo|Va bene. Scusa, una domanda di chiarimento: quando dici "abbonamento", intendi il mensile illimitato?
+Giulia|Sì, il mensile. Abbiamo il mensile da due lezioni a settimana e quello illimitato. Il carnet invece è da dieci ingressi e dura quattro mesi.
+Yo|Quattro mesi, ok. E se scade il carnet con delle lezioni non usate?
+Giulia|Ecco, altro tema. Fitbook lo fa scadere in automatico e la cliente perde le lezioni. Poi mi scrive arrabbiata, e io devo chiedere a Francesca se possiamo prorogarlo, e poi lo devo ricreare a mano.
+Francesca|E io dico sempre di sì, perché non voglio litigare con le clienti per due lezioni. Quindi in pratica la scadenza non esiste, ma la Giulia deve fare il lavoro lo stesso.
+Yo|Quindi servirebbe poter prorogare un carnet con un clic.
+Giulia|Con un clic, sì. Anche da telefono, magari.
+Yo|Chiarissimo. Adesso una domanda un po' diversa. Avete mai provato a cambiare app, prima o dopo Fitbook?
+Francesca|Prima di Fitbook abbiamo provato per un mese un'app italiana, si chiamava PrenotaFacile, ma era pensata per i parrucchieri. Non gestiva le lezioni di gruppo, solo appuntamenti singoli. L'abbiamo mollata dopo tre settimane.
+Giulia|E io ho dovuto reinserire tutte le clienti a mano su Fitbook. Trecento schede, me lo ricordo ancora.
+Yo|Quindi la migrazione dei dati è una paura concreta.
+Giulia|Una paura? È un trauma. Se cambiamo di nuovo, io voglio che qualcuno mi importi tutto in automatico: clienti, carnet, lezioni residue. Altrimenti mi licenzio.
+Francesca|Non si licenzia, non si preoccupi.
+Giulia|Per ora.
+Yo|Ok, mi segno: importazione automatica dei dati da Fitbook come condizione per cambiare. E cosa vi trattiene oggi dal cambiare, a parte la migrazione?
+Francesca|Il contratto, prima di tutto. Abbiamo un contratto annuale e non ricordo bene quando scade, credo a febbraio, e c'è un preavviso. Poi le clienti: si sono abituate all'app, anche se la odiano un po'. Cambiare app vuol dire spiegarlo a seicentocinquanta persone.
+Yo|Sul contratto, sarebbe utile capire la data esatta e il preavviso.
+Francesca|Sì, lo devo controllare io, me lo segno. Entro la fine del mese controllo il contratto di Fitbook e le dico la scadenza e quanti mesi di preavviso servono.
+Yo|Perfetto, grazie. E se oggi le proponessi un'alternativa, quanto sarebbe disposta a spendere al mese?
+Francesca|Guardi, le dico la verità. Il problema non è il canone, è la commissione. Se mi togli il due per cento sui pagamenti, io potrei pagare anche trecento euro al mese per tutte e quattro le sedi. Perché la commissione cresce con noi, il canone no.
+Yo|Trecento al mese senza commissione. È un'informazione molto utile.
+Francesca|Ma deve funzionare, eh. Non voglio un'app più bella, voglio un'app che mi faccia dormire la notte.
+Yo|Questa la metto in cima alle mie note.
+Giulia|Posso aggiungere una cosa sull'app? Le clienti mi chiedono sempre di poter vedere quale istruttore fa la lezione. Su Fitbook c'è solo il nome della lezione, tipo "Reformer intermedio", e loro vogliono sapere se c'è la Chiara o il Matteo, perché hanno i loro preferiti.
+Yo|Interessante. Quindi la scelta dell'istruttore è importante per le clienti.
+Giulia|Importantissima. Se cambiamo l'istruttore all'ultimo momento, metà della classe cancella. E indovina chi deve avvisare tutte una per una?
+Yo|Immagino tu.
+Giulia|Esatto.
+Francesca|A proposito di istruttori, anche loro vorrebbero vedere il loro calendario sul telefono. Oggi gli mandiamo uno screenshot della settimana su WhatsApp ogni domenica.
+Yo|Uno screenshot ogni domenica. Ok. Ma gli istruttori come vengono pagati? Anche questo passa da qualche parte?
+Francesca|A lezione, con la partita IVA. E il conteggio delle lezioni lo faccio io a fine mese, sempre sullo stesso Excel. Ma questo, onestamente, è un problema mio, non so se c'entra con l'app.
+Yo|C'entra, c'entra, almeno per capire il quadro. Senti, mi è venuta un'idea. Vorrei organizzare una sessione di test con un prototipo, insieme a voi e magari a un paio di istruttori. Una cosa di un'ora, qui da voi.
+Francesca|Volentieri. Quando?
+Yo|Io pensavo giovedì diciannove novembre, nel pomeriggio, qui in via Saragozza.
+Giulia|Giovedì diciannove però la Chiara è a Milano per la formazione, e se vuoi gli istruttori lei è quella che ha più esperienza con le private.
+Francesca|È vero. Allora facciamo martedì ventiquattro, alle quattordici, che è il momento più tranquillo della settimana.
+Yo|Va benissimo, allora martedì ventiquattro novembre alle quattordici. Organizzo io la sessione di test e vi mando l'invito con il programma.
+Francesca|Perfetto. E ci porti anche il caffè, che quello della macchinetta qui è imbevibile.
+Yo|Il caffè lo porto io, promesso. E prima della sessione vi mando un prototipo, così ci date un'occhiata. Ve lo mando entro venerdì tredici, con le prime schermate della lista d'attesa e dell'abbonamento unico.
+Giulia|Mandalo anche a me, mi raccomando, non solo a Francesca, perché lei le mail le legge una settimana dopo.
+Francesca|Ecco, ricominciamo.
+Yo|Lo mando a tutte e due. Giulia, ti chiederei anche un'altra cosa, se hai tempo. Ti andrebbe di tenere una specie di diario per due settimane, segnando ogni messaggio che ricevi su Instagram e WhatsApp e di cosa parla? Non serve niente di complicato, basta una riga per messaggio.
+Giulia|Tipo "spostamento", "prezzo", "cancellazione"?
+Yo|Esatto, così. Così capiamo quali sono le richieste più frequenti e quali potremmo automatizzare.
+Giulia|Va bene, lo faccio. Comincio da domani e lo tengo due settimane, fino al ventiquattro, così te lo porto alla sessione.
+Yo|Fantastico, grazie. E Francesca, ultima cosa per i dati: sarebbe possibile avere un export anonimo dei clienti e delle prenotazioni da Fitbook? Mi serve per capire quante prenotazioni avete davvero e per provare l'importazione.
+Francesca|Sì, credo che Fitbook lo permetta. Faccio l'export io la settimana prossima e glielo mando, togliendo nomi e telefoni.
+Giulia|Lo faccio io, Francesca, tu non sai dove sta il pulsante.
+Francesca|Va bene, va bene, lo fa la Giulia. Giulia fa l'export dei clienti da Fitbook la settimana prossima.
+Yo|Perfetto. Ultima domanda prima di chiudere, perché so che avete la lezione delle undici. Se doveste descrivere in una frase com'è oggi la gestione delle prenotazioni, cosa direste?
+Giulia|Io direi: è come fare la reception con quattro telefoni in mano e uno solo funziona.
+Francesca|E io direi quello che le ho detto prima: il mio vero gestionale è il telefono di Giulia. Ed è un problema, perché Giulia prima o poi va in ferie.
+Giulia|A dicembre. Dal ventidue, ve lo ricordo.
+Francesca|Appunto.
+Yo|Ricevuto. Allora, giusto per non dimenticarci niente, riassumo solo le due cose più vicine: io vi mando il prototipo entro venerdì tredici, e martedì ventiquattro alle quattordici facciamo la sessione di test in via Saragozza.
+Francesca|Perfetto. E il resto ce lo siamo segnato.
+Yo|Ah, e un'ultima cosa: se vi va, dopo la sessione di test vi preparo anche una proposta per un pilota di tre mesi su una sola sede, magari San Lazzaro, che è la più piccola. Ve la mando entro inizio dicembre.
+Francesca|Sì, mi interessa. San Lazzaro va bene, lì abbiamo solo due sale e meno clienti, se qualcosa va storto non muore nessuno.
+Giulia|E lì ci sono le clienti più giovani, quindi l'app nuova la scaricano senza problemi.
+Yo|Ottimo. Allora grazie davvero a tutte e due, è stata una chiacchierata utilissima. Ci sentiamo per mail.
+Francesca|Grazie a lei. E buona fortuna con l'app, ne abbiamo bisogno.
+Giulia|Ciao! E ricordati il caffè!
+Yo|Non me lo dimentico. Buona giornata!

@@ -3,9 +3,12 @@
 //! ```text
 //! cargo run --release -p juanola-enhance --example eval_enhance -- \
 //!   <segments.json> <facts.json> [notas.txt] [--runs N] [--variant nombre=itn|noitn[+detail<seg>|+nodetail][+gbnf][:prompt.md]]...
-//!   [--template 1on1|standup|semanal|entrevista|ventas|plantilla.json] [--title «Título de la reunión»]
+//!   [--template 1on1|standup|semanal|entrevista|ventas|plantilla.json] [--title «Título de la reunión»] [--lang inglés] [--check]
 //! ```
 //! `segments.json` sale del STT o, sin audio, de `tools/script_to_segments.py`.
+//! El idioma del resumen (y de los títulos de la plantilla) es el que detecta la
+//! app en la transcripción; `--lang` lo fuerza. Los apartados de `section` en
+//! los hechos van en ese idioma.
 //! Las notas admiten `# título`, `- elemento`, `- [ ] tarea`, `- [x] hecha` y
 //! `**negrita**`; cada línea suelta es un párrafo.
 //! Métricas por ejecución:
@@ -65,16 +68,24 @@ struct Fact {
     section: HashMap<String, Vec<String>>,
 }
 
+/// El ITN solo se aplica en español, como en el enhance.
+static SPANISH: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+
 fn norm(s: &str) -> String {
-    let s = normalize_numbers(s).to_lowercase();
+    let s = if *SPANISH.get().unwrap_or(&true) { normalize_numbers(s) } else { s.to_owned() };
+    let s = s.to_lowercase();
     let s: String = s
         .chars()
         .map(|c| match c {
-            'á' => 'a',
-            'é' => 'e',
-            'í' => 'i',
-            'ó' => 'o',
-            'ú' | 'ü' => 'u',
+            'á' | 'à' | 'â' | 'ä' | 'ã' | 'å' => 'a',
+            'é' | 'è' | 'ê' | 'ë' => 'e',
+            'í' | 'ì' | 'î' | 'ï' => 'i',
+            'ó' | 'ò' | 'ô' | 'ö' | 'õ' => 'o',
+            'ú' | 'ù' | 'û' | 'ü' => 'u',
+            'ç' => 'c',
+            'ß' => 's',
+            // Apóstrofos tipográficos (l’équipe) como el recto.
+            '’' | '‘' => '\'',
             c => c,
         })
         .collect();
@@ -263,9 +274,9 @@ fn notes_doc(text: &str) -> serde_json::Value {
 }
 
 /// Métricas que solo tienen sentido con plantilla.
-fn template_score(sc: &mut Score, notes: &EnhancedNotes, facts: &Facts, tkey: Option<&str>, user_notes: usize) {
+fn template_score(sc: &mut Score, notes: &EnhancedNotes, facts: &Facts, tkey: Option<&str>, user_notes: usize, lang: &str) {
     let Some(k) = tkey else { return };
-    let other = juanola_enhance::language::localize_heading("Otros temas", "español");
+    let other = juanola_enhance::language::localize_heading("Otros temas", lang);
     sc.other_bullets = notes.sections.iter().filter(|s| s.heading == other).map(|s| s.bullets.iter().filter(|b| !b.is_user_text).count()).sum();
     let user: Vec<(&str, &str)> =
         notes.sections.iter().flat_map(|s| s.bullets.iter().filter(|b| b.is_user_text).map(move |b| (s.heading.as_str(), b.text.as_str()))).collect();
@@ -275,7 +286,7 @@ fn template_score(sc: &mut Score, notes: &EnhancedNotes, facts: &Facts, tkey: Op
         sc.user_expected += 1;
         sc.user_placed += usize::from(user.iter().any(|(h, t)| t == text && expected.iter().any(|e| e == h)));
     }
-    let not_discussed = juanola_enhance::language::not_discussed("español");
+    let not_discussed = juanola_enhance::language::not_discussed(lang);
     for h in facts.empty.get(k).into_iter().flatten() {
         let filled = notes.sections.iter().any(|s| &s.heading == h && s.bullets.iter().any(|b| b.text != not_discussed));
         if filled {
@@ -313,7 +324,9 @@ async fn main() -> anyhow::Result<()> {
     let facts: Facts = serde_json::from_str(&std::fs::read_to_string(&a[1])?)?;
     let notes_path = a.get(2).filter(|p| !p.starts_with("--"));
     let mut runs = 1u32;
-    let mut template: Option<(String, Template)> = None;
+    let mut template_spec: Option<String> = None;
+    let mut lang_override: Option<String> = None;
+    let mut check = false;
     let mut title = "Reunión semanal de producto".to_owned();
     let mut variants: Vec<(String, EnhanceOptions)> = Vec::new();
     let mut i = 2;
@@ -328,21 +341,12 @@ async fn main() -> anyhow::Result<()> {
                 i += 1;
             }
             "--template" => {
-                let spec = &a[i + 1];
-                let id = match spec.as_str() {
-                    "1on1" => Some(templates::ONE_ON_ONE),
-                    "standup" => Some(templates::STAND_UP),
-                    "semanal" => Some(templates::WEEKLY_TEAM),
-                    "entrevista" => Some(templates::CUSTOMER_INTERVIEW),
-                    "ventas" => Some(templates::SALES_CALL),
-                    _ => None,
-                };
-                let t = match id {
-                    Some(id) => templates::builtin_template(id, "español").unwrap(),
-                    None => serde_json::from_str(&std::fs::read_to_string(spec)?)?,
-                };
-                let key = std::path::Path::new(spec).file_stem().unwrap().to_string_lossy().into_owned();
-                template = Some((key, t));
+                template_spec = Some(a[i + 1].clone());
+                i += 1;
+            }
+            "--check" => check = true,
+            "--lang" => {
+                lang_override = Some(a[i + 1].clone());
                 i += 1;
             }
             "--variant" => {
@@ -382,12 +386,65 @@ async fn main() -> anyhow::Result<()> {
             is_final: true,
         })
         .collect();
+    // Idioma del resumen: el que detecta la app, salvo `--lang español|inglés|…`.
+    let detected = juanola_enhance::language::summary_language(&segments);
+    let lang: &str = match &lang_override {
+        Some(l) => juanola_enhance::language::LANGUAGE_NAMES.iter().find(|n| **n == l.as_str()).copied().unwrap_or_else(|| panic!("idioma desconocido: {l}")),
+        None => detected,
+    };
+    println!("idioma: {lang} (detectado: {detected})");
+    SPANISH.set(lang == juanola_enhance::language::LANGUAGE_NAMES[0]).ok();
+    let template: Option<(String, Template)> = match &template_spec {
+        None => None,
+        Some(spec) => {
+            let id = match spec.as_str() {
+                "1on1" => Some(templates::ONE_ON_ONE),
+                "standup" => Some(templates::STAND_UP),
+                "semanal" => Some(templates::WEEKLY_TEAM),
+                "entrevista" => Some(templates::CUSTOMER_INTERVIEW),
+                "ventas" => Some(templates::SALES_CALL),
+                _ => None,
+            };
+            let t = match id {
+                Some(id) => templates::builtin_template(id, lang).unwrap(),
+                None => serde_json::from_str(&std::fs::read_to_string(spec)?)?,
+            };
+            let key = std::path::Path::new(spec).file_stem().unwrap().to_string_lossy().into_owned();
+            Some((key, t))
+        }
+    };
     let seg_norm: Vec<String> = segments.iter().map(|s| norm(&s.text)).collect();
     let mut ngrams = HashSet::new();
     for s in &seg_norm {
         for g in words(s).windows(8) {
             ngrams.insert(g.to_vec());
         }
+    }
+    if check {
+        // Sin modelo: qué hechos no aparecen en ninguna ventana de 4 segmentos
+        // (con la misma normalización que la evaluación) y duración.
+        let dur = segments.last().map_or(0.0, |s| s.end) / 60.0;
+        println!("{} segmentos, {dur:.1} min, {} hechos ({} tareas)", segments.len(), facts.facts.len(), facts.facts.iter().filter(|f| f.task).count());
+        let mut bad = 0;
+        for f in &facts.facts {
+            if !(0..seg_norm.len()).any(|i| matches(f, &seg_norm[i..(i + 4).min(seg_norm.len())].join(" "))) {
+                println!("  inalcanzable: {} {:?}", f.id, f.all);
+                bad += 1;
+            }
+        }
+        if let Some((k, t)) = &template {
+            let heads: Vec<&str> = t.structure.iter().map(|s| s.heading.as_str()).collect();
+            for f in &facts.facts {
+                for h in f.section.get(k).into_iter().flatten() {
+                    if !heads.contains(&h.as_str()) {
+                        println!("  apartado desconocido en {}: «{h}» (la plantilla tiene {heads:?})", f.id);
+                        bad += 1;
+                    }
+                }
+            }
+        }
+        println!("{}", if bad == 0 { "OK".to_owned() } else { format!("{bad} problemas") });
+        return Ok(());
     }
     let notes_txt = notes_path.map(std::fs::read_to_string).transpose()?.unwrap_or_default();
     let raw_doc = notes_doc(&notes_txt);
@@ -411,7 +468,7 @@ async fn main() -> anyhow::Result<()> {
     };
     let tkey = template.as_ref().map(|(k, _)| k.as_str());
     let input =
-        EnhanceInput { note: &note, segments: &segments, template: template.as_ref().map(|(_, t)| t), summary_language: "español", user_profile: "" };
+        EnhanceInput { note: &note, segments: &segments, template: template.as_ref().map(|(_, t)| t), summary_language: lang, user_profile: "" };
     if let Some((k, t)) = &template {
         println!("plantilla: {} ({k})", t.name);
     }
@@ -429,7 +486,7 @@ async fn main() -> anyhow::Result<()> {
             let t = Instant::now();
             let (notes, report) = enhance_with(&llm, &input, &opts).await?;
             let mut sc = score(&notes, &segments, &facts.facts, &seg_norm, &ngrams, tkey);
-            template_score(&mut sc, &notes, &facts, tkey, user_notes);
+            template_score(&mut sc, &notes, &facts, tkey, user_notes, lang);
             sc.secs = t.elapsed().as_secs_f64();
             let pct = |a: usize, b: usize| if b == 0 { 0.0 } else { 100.0 * a as f64 / b as f64 };
             println!(

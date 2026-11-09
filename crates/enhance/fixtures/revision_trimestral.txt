@@ -1,0 +1,391 @@
+# Revisión del tercer trimestre fiscal y planificación del cuarto (~60 min) en una empresa de software de logística para restaurantes. Formato: Hablante|texto.
+# «Yo» es la jefa de producto, que conduce la reunión. Álvaro es el jefe técnico, Nuria lleva atención al cliente y cuentas, Inés lleva datos, Raúl es el diseñador y Tomás desarrolla la app de repartidores (llega tarde).
+# Se corrige a mitad de reunión la fecha de lanzamiento de la previsión de compras: primero el quince de diciembre, al final el doce de enero.
+Yo|Buenos días a todos. ¿Me oís bien? Es que he cambiado de cascos y no sé si se me oye raro.
+Álvaro|Se te oye perfecto. Un poco bajito, pero bien.
+Nuria|Yo te oigo bien. Buenos días.
+Inés|Hola, hola. Perdonad, que estoy terminando el café. La máquina de la cocina vuelve a estar rota, así que he tenido que bajar al bar de abajo.
+Raúl|¿Otra vez? Si la arreglaron hace dos semanas.
+Inés|Pues ya ves. Dice el de mantenimiento que es la bomba de agua. Yo creo que es que nadie la descalcifica nunca.
+Nuria|Oye, Raúl, ¿al final fuiste a la boda de tu primo en Asturias?
+Raúl|Fui, fui. Llovió los tres días, pero muy bien. Comimos tanto que todavía no me he recuperado. Y el viaje de vuelta fueron siete horas de coche porque había obras en la autovía.
+Álvaro|Siete horas desde Asturias. Qué paliza.
+Raúl|Una paliza, sí. Pero mereció la pena. Os he traído unas pastas de allí, están en la mesa de la entrada. Bueno, para los que venís a la oficina, que los de casa os las perdéis.
+Inés|Pues yo me pido las de chocolate antes de que llegue nadie más. Y luego la gente que trabaja desde casa dice que no se entera de nada.
+Nuria|Es que no se enteran de nada. Sobre todo de las pastas.
+Yo|Bueno, eso lo dejamos para la reunión de oficina, que si no nos pasamos la hora hablando de la cafetera. ¿Falta alguien? Tomás no está todavía, ¿no?
+Raúl|Me ha escrito hace un rato. Dice que la línea seis del metro va parada y que llega en quince o veinte minutos.
+Yo|Vale, pues empezamos sin él y luego le ponemos al día con la parte de la app. Os cuento cómo lo tengo pensado. Tenemos una hora. La primera parte es repasar cómo ha ido el tercer trimestre, o sea, agosto, septiembre y octubre: métricas, la incidencia de octubre y cómo van los proyectos. Luego hablamos de Tierramar, que es lo más urgente, y después de las prioridades del cuarto trimestre, del presupuesto y de la contratación. ¿Os parece?
+Álvaro|Perfecto. Aunque yo pondría lo de Tierramar lo primero, que es lo que nos quita el sueño.
+Yo|Lo entiendo, pero prefiero que tengamos las cifras delante antes de hablar de Tierramar, porque parte de la conversación depende de ellas. Inés, ¿empiezas tú con las métricas?
+Inés|Sí, claro. Os comparto pantalla. ¿Se ve?
+Nuria|Se ve, sí.
+Inés|Vale. Empiezo por lo gordo. Hemos cerrado el trimestre con dos mil trescientos diez restaurantes activos. Al empezar el trimestre teníamos dos mil veintiséis, así que hemos crecido un catorce por ciento en restaurantes. Es el mejor trimestre del año en altas.
+Raúl|Eso está muy bien, ¿no?
+Inés|Está bien, sí. Lo que pasa es que muchas de esas altas son restaurantes pequeños, de uno o dos locales, que pagan el plan básico. Por eso los ingresos han crecido menos que los restaurantes.
+Yo|¿Cuánto hemos cerrado de ingresos recurrentes?
+Inés|Ciento ochenta y seis mil euros de ingresos recurrentes mensuales al final de octubre. El objetivo que nos pusimos para el trimestre era de ciento noventa mil, así que nos hemos quedado a cuatro mil del objetivo.
+Álvaro|Hombre, cuatro mil tampoco es una tragedia.
+Inés|No, no es una tragedia, pero es la primera vez en el año que no llegamos. Y dentro de esos ciento ochenta y seis mil, Tierramar son veintiún mil. Ahora lo vemos.
+Yo|Vale. ¿Y las bajas?
+Inés|La tasa de bajas mensual se ha quedado en el 1,8 por ciento. El trimestre anterior estábamos en el 1,5, así que ha subido un poco. Casi todo es por restaurantes que han cerrado, no por gente que se va a la competencia. Bueno, salvo cuatro o cinco que sí se han ido a Logimenú.
+Nuria|Eso te lo confirmo yo. De los que se han ido a Logimenú, todos dicen lo mismo: que es más barato. Ofrecen como un veinte por ciento menos que nosotros en el plan medio.
+Yo|Ya. Seguimos, Inés.
+Yo|Una pregunta, Inés. De esas bajas que dices que son por cierre, ¿cuántos restaurantes son?
+Inés|Treinta y ocho restaurantes cerrados en el trimestre. Es bastante normal para la época, después del verano cierran muchos de playa y de temporada. Lo que me preocupa más son los que se van por precio, que son pocos pero van a más.
+Raúl|¿Y por ciudades cómo estamos? Que lo preguntaron en la reunión general y nadie supo contestar.
+Inés|Madrid sigue siendo lo más grande, con un cuarenta y uno por ciento de los restaurantes. Luego Barcelona, Valencia y el País Vasco, que ha crecido mucho por Tierramar y por los que vienen recomendados por ellos.
+Nuria|Eso también es importante. Tierramar nos ha traído por recomendación por lo menos a diez o doce restaurantes del norte.
+Yo|Lo tendremos en cuenta. Sigue.
+Inés|Pedidos a proveedores. Este trimestre se han tramitado por la plataforma un millón doscientos mil pedidos. Es un récord. Y la puntualidad de las rutas de reparto, es decir, entregas que llegan dentro de la franja prometida, ha estado en el noventa y tres por ciento.
+Álvaro|¿Noventa y tres? En el anterior estábamos en el noventa y uno, ¿no?
+Inés|Noventa y uno coma algo, sí. Ha mejorado gracias al nuevo cálculo de rutas que sacasteis en agosto.
+Álvaro|Me alegro. Costó lo suyo.
+Inés|Y luego el NPS. Hemos pasado a cuarenta y cuatro... no, perdón, perdón, que estoy leyendo la columna de julio. Cuarenta y siete. El NPS del trimestre es cuarenta y siete.
+Yo|Cuarenta y siete. Vale. Eso es bueno, ¿no? Estábamos en cuarenta y uno a principios de año.
+Inés|Sí, ha subido bastante. Aunque ojo, que la encuesta se mandó antes de la caída de octubre. Si la mandamos ahora igual sale peor.
+Nuria|Seguro que sale peor. La semana de la caída fue un infierno.
+Yo|Ahora vamos con eso. Antes, Nuria, ¿los datos de soporte los tienes tú o los tiene Inés?
+Nuria|Los tengo yo. Este trimestre hemos tenido seiscientos cuarenta tickets de soporte. Casi un tercio son de la integración con el TPV Lince, la sincronización del inventario. El tiempo medio de primera respuesta está en dos horas y media, que está dentro de lo que prometemos en el contrato, que son cuatro.
+Raúl|¿Un tercio de Lince? Qué barbaridad.
+Nuria|Sí. Cuando el inventario del TPV no cuadra con el nuestro, el restaurante pide de más o de menos, y claro, se enfadan. Con razón.
+Álvaro|Lo de Lince es un problema de ellos en parte. Su interfaz devuelve los movimientos desordenados cuando hay muchas ventas a la vez. Pero bueno, eso lo tenemos que resolver nosotros porque el cliente no distingue.
+Yo|Exacto. El cliente no distingue. Lo apunto para cuando llegue Tomás, porque la sincronización la lleva él.
+Inés|Me falta una cosa de la app de repartidores. La valoración media en las tiendas está en cuatro coma tres, y el setenta y uno por ciento de los repartidores de nuestros clientes ya usan la app en lugar del albarán en papel.
+Yo|El setenta y uno. ¿Y el objetivo era el ochenta?
+Inés|El ochenta, sí. No llegamos. El problema principal son las zonas sin cobertura: sótanos, cámaras frigoríficas, polígonos. La app se queda colgada y el repartidor vuelve al papel.
+Yo|Eso enlaza con el modo sin conexión, que también es cosa de Tomás. Vale. ¿Algo más de métricas?
+Inés|No, eso es lo principal. Os dejo el informe completo en la carpeta compartida.
+Yo|Genial, gracias, Inés. Muy claro. Pasamos a la incidencia. Álvaro, ¿nos cuentas lo del tres de octubre? Sé que ya lo hemos hablado por el canal, pero quiero que quede recogido aquí y que veamos qué hacemos para que no se repita.
+Álvaro|Sí. El tres de octubre, que era viernes, tuvimos la plataforma caída casi cuatro horas, desde las once de la mañana hasta las tres menos cuarto. Justo en la hora de los pedidos para el fin de semana, que es lo peor que podía pasar.
+Raúl|Lo peor, sí. Me acuerdo de que no había manera de entrar ni al panel.
+Álvaro|La causa fue un certificado caducado en el balanceador de carga. Lo teníamos que renovar a mano porque es un certificado antiguo que no estaba en la renovación automática, y a nadie le saltó el aviso porque el aviso iba a un correo de una persona que ya no está en la empresa.
+Inés|Madre mía.
+Álvaro|Ya. Es de esas cosas que dan vergüenza. Afectó a trescientos ochenta restaurantes que intentaron hacer pedidos en esas horas, que son los que tenemos registrados con errores.
+Nuria|Y de esos trescientos ochenta, unos cincuenta me llamaron directamente. Algunos muy enfadados, con razón, porque tuvieron que llamar a los proveedores uno por uno.
+Yo|¿Qué les dijimos en su momento?
+Nuria|Les dijimos que íbamos a compensarles, pero sin concretar. Lo que propuse por el canal fue un diez por ciento de descuento en la factura de noviembre para los afectados.
+Yo|Yo eso lo veo bien. ¿Álvaro, Inés, alguna objeción?
+Inés|Ninguna. He hecho la cuenta rápida y son unos dos mil y pico euros en total. Es asumible.
+Álvaro|Por mí bien.
+Yo|Pues decidido: diez por ciento de descuento en la factura de noviembre para los trescientos ochenta restaurantes afectados. Nuria, ¿te encargas de mandarles el correo explicándolo? Que salga esta semana, antes del viernes.
+Nuria|Sí, lo mando antes del viernes. Le paso el texto a Raúl para que me ayude con el tono, que yo cuando escribo disculpas parezco un notario.
+Raúl|Ja, ja. Vale, pásamelo.
+Yo|Álvaro, ¿y el informe de la incidencia? El postmortem, digo.
+Álvaro|Está a medias. Lo termino y lo comparto el jueves. Y aparte, ya he metido todos los certificados en la renovación automática, pero quiero revisar que no queda ninguno suelto, sobre todo en los entornos antiguos. Eso me lo apunto también para esta semana.
+Yo|Perfecto. Y que los avisos vayan a una lista del equipo, no a una persona.
+Álvaro|Eso ya está hecho. Van a la lista de guardias.
+Tomás|Hola, hola, perdonad. Ya estoy. Vaya mañana. Hemos estado veinte minutos parados entre dos estaciones a oscuras.
+Yo|No te preocupes, Tomás. Bienvenido. Vamos por la incidencia de octubre, ya casi la hemos terminado. Te resumo: Inés ha contado las métricas, y lo que te toca a ti es que un tercio de los tickets de soporte son de la sincronización con Lince y que la app de repartidores se ha quedado en el setenta y uno por ciento de uso, cuando queríamos el ochenta.
+Tomás|Vale. Lo del setenta y uno me lo esperaba. Lo de Lince también, la verdad.
+Yo|Ahora volvemos a eso. Raúl, antes de pasar a los proyectos, ¿querías decir algo de la incidencia?
+Raúl|Solo una cosa pequeña. El día de la caída no teníamos ninguna página de estado. La gente entraba, veía un error genérico y llamaba a soporte. Si hubiéramos tenido una página que dijera «estamos caídos, volvemos en tanto», Nuria habría recibido la mitad de llamadas.
+Nuria|Totalmente de acuerdo. La mitad o menos.
+Álvaro|Eso es fácil de montar. Hay servicios que te lo dan hecho por cuatro duros.
+Yo|Vale, apuntado como idea. No lo hacemos tarea todavía, pero lo meto en la lista de candidatos del cuarto trimestre. Vamos con los proyectos. Tomás, ya que estás, empieza tú: ¿cómo va lo de Lince?
+Tomás|A ver. Lo de Lince tiene dos partes. Una es que, como decía Álvaro, su interfaz nos manda los movimientos de inventario desordenados cuando hay mucho volumen, por ejemplo un sábado por la noche. Y la otra es que nosotros, cuando recibimos un movimiento repetido, lo contamos dos veces. Eso es fallo nuestro.
+Álvaro|Eso no lo sabía. ¿Lo contamos dos veces?
+Tomás|En algunos casos sí. Cuando falla la conexión y Lince reintenta el envío. Ya lo tengo localizado. Creo que en dos semanas lo tengo arreglado y probado con los cinco restaurantes que más se quejan.
+Yo|¿Dos semanas desde hoy? Eso nos lleva al veintitrés de noviembre más o menos.
+Tomás|Sí, digamos que para el veintitrés de noviembre está en producción.
+Yo|Vale, apuntado: Tomás arregla el fallo de sincronización con Lince para el veintitrés de noviembre. Nuria, cuando esté, ¿avisas a esos cinco restaurantes?
+Nuria|Sí, claro. Tengo la lista.
+Yo|¿Y el modo sin conexión de la app?
+Tomás|El modo sin conexión es más grande. La idea es que el repartidor pueda firmar la entrega, hacer la foto del albarán y marcar las incidencias aunque no tenga cobertura, y que se sincronice cuando vuelva a tenerla. Técnicamente es viable, pero hay que tocar bastante. Yo diría que son unas seis semanas de trabajo, pero no os lo quiero asegurar sin mirarlo bien.
+Yo|Prefiero una estimación de verdad. ¿Me la puedes tener para el viernes de la semana que viene?
+Tomás|Sí, para el viernes que viene te paso la estimación del modo sin conexión por escrito.
+Inés|Tomás, una cosa que te quería preguntar. En las valoraciones de la app, las de una estrella son casi todas de lo mismo: que la app gasta mucha batería. ¿Eso lo sabías?
+Tomás|Sí, lo sé. Es por la localización. La pedimos cada pocos segundos para seguir la ruta, y en móviles viejos se nota mucho. Hay una forma de pedirla con menos frecuencia cuando el repartidor está parado, y eso lo puedo meter junto con el modo sin conexión.
+Yo|¿Eso afecta al seguimiento que ven los restaurantes?
+Tomás|Un poco, pero casi nada. Si el repartidor está parado descargando, no hace falta saber dónde está cada tres segundos. Con cada minuto basta.
+Nuria|Los restaurantes lo que quieren es saber cuándo llega el pedido, no ver el puntito moverse.
+Tomás|Exacto. Lo meto en la estimación como una parte aparte, así decidimos si lo hacemos o no.
+Yo|Perfecto.
+Yo|Gracias. Raúl, ¿el rediseño del panel?
+Raúl|Bien. El nuevo panel de pedidos lo estamos probando con doce restaurantes desde mediados de octubre. La respuesta es buena en general. Lo que más gusta es la vista por proveedor, y lo que menos, que el botón de repetir pedido se ha ido a otro sitio y la gente no lo encuentra.
+Inés|Eso se ve en los datos, por cierto. El uso de repetir pedido ha bajado casi a la mitad en esos doce.
+Raúl|Ya, ya lo sé. Lo vuelvo a poner arriba esta semana. Por lo demás, si todo va bien, la idea es abrir el panel nuevo a todos en diciembre.
+Yo|Vale. ¿Y lo de Portugal? Inés, tú tenías los datos del piloto.
+Inés|El piloto de Oporto. Tenemos tres restaurantes usándolo desde septiembre. Funcionan, pero todo está en español, claro, y los proveedores portugueses no tienen los mismos formatos de factura. Los tres restaurantes nos dicen que les gusta, pero que sin la aplicación en portugués no lo pueden extender a sus empleados.
+Raúl|Traducir la interfaz no es tanto. Lo que lleva tiempo es lo de las facturas.
+Yo|Ya. Lo de Portugal lo dejamos para cuando hablemos de prioridades, porque es justo una de las cosas que tenemos que decidir si entra o no.
+Álvaro|Una pregunta, por cierto, que no tiene nada que ver. ¿Alguien sabe si al final se hace la cena de Navidad este año o no? Que mi pareja me lo pregunta para organizar las fechas.
+Nuria|Yo oí que no había presupuesto para la de toda la empresa.
+Yo|Eso no lo sé, la verdad. Lo pregunto, pero no nos liemos. Al final, si eso, la hacemos nosotros por nuestra cuenta. Bueno, vamos a lo importante: Tierramar. Nuria, cuéntales lo que me contaste el jueves.
+Nuria|Vale. Para los que no lo tengáis tan presente: Tierramar es el grupo de restaurantes de Bilbao y Santander, el de las arrocerías y las tabernas. Tienen sesenta y cuatro locales y son nuestro cliente más grande con diferencia. Nos pagan veintiún mil euros al mes.
+Tomás|Veintiún mil al mes. Madre mía, no sabía que era tanto.
+Inés|Es más del once por ciento de todos los ingresos recurrentes. Si se van, perdemos más que todo lo que hemos crecido este trimestre.
+Nuria|Exacto. El jueves me llamó su director de operaciones, Marcos Ledesma, y me dijo, así, sin rodeos, que están valorando irse a Logimenú cuando les venza el contrato.
+Yo|¿Te dijo cuánto les ofrecen?
+Nuria|Me dio una cifra, pero luego la vemos con el precio. Antes os cuento un poco la historia, que no todos la conocéis. Tierramar entró con nosotros hace casi tres años, con veinte locales. Fueron creciendo y nos fueron metiendo los locales nuevos a medida que abrían. Hasta hace un año eran el cliente más contento que teníamos. Marcos incluso vino a grabar un vídeo para la web.
+Raúl|Es verdad, el vídeo de las arrocerías. Lo grabé yo.
+Nuria|Ese. Y el cambio vino este año, cuando empezaron a abrir locales más grandes y a centralizar las compras en una cocina central en Barakaldo. Ahí es donde empezaron a echar de menos la previsión y los informes por local.
+Álvaro|O sea, que no es que hayamos empeorado, es que ellos han cambiado y nosotros no.
+Nuria|Un poco las dos cosas. Lo de la caída sí que es que hemos empeorado.
+Yo|¿Y cuándo les vence?
+Nuria|El treinta y uno de enero. Así que tenemos menos de tres meses.
+Álvaro|¿Y por qué se quieren ir? ¿Por precio?
+Nuria|El precio es parte, porque Logimenú les ha ofrecido un descuento muy agresivo. Pero no es lo principal. Lo principal son tres cosas. La primera, la caída del tres de octubre: les pilló de lleno, con sesenta y cuatro locales intentando pedir a la vez. La segunda, que no tenemos previsión de compras. Ellos quieren que el sistema les sugiera qué pedir según lo que han vendido las últimas semanas, y Logimenú dice que lo tiene. Y la tercera, que los informes no les sirven, porque los quieren por local y por zona, y nosotros solo les damos el total del grupo.
+Inés|Lo de los informes por local es bastante sencillo. Los datos ya los tenemos, solo hay que agruparlos de otra forma.
+Nuria|Pues eso ya sería un gesto. Marcos se quejó mucho de eso.
+Yo|¿Logimenú de verdad tiene previsión de compras?
+Raúl|Yo he visto su demo. Tiene algo, pero es muy básico. Te saca la media de las últimas cuatro semanas y ya. No tiene en cuenta festivos ni nada.
+Tomás|Pero eso en una demo queda muy bien.
+Raúl|Ya, ya. Queda muy bien.
+Yo|Bueno. Mi propuesta es esta y la discutimos. Uno, la previsión de compras ya la teníamos en la lista para el cuarto trimestre; la subimos a prioridad número uno y la lanzamos el quince de diciembre, para poder enseñársela a Tierramar antes de que tomen la decisión. Dos, informes por local y por zona lo antes posible, porque es fácil y es un gesto. Y tres, en la negociación, algo de precio, pero sin entrar en una guerra con Logimenú.
+Álvaro|Lo del quince de diciembre me parece muy justo, te lo digo ya.
+Yo|Lo sé, pero lo necesitamos antes de las vacaciones. Lo hablamos ahora en las prioridades.
+Nuria|Marcos me propuso vernos en persona. Él viene a Madrid el dieciocho de noviembre por otra cosa y podría pasarse por la oficina por la tarde.
+Yo|Perfecto. Pues la reunión con Tierramar es el dieciocho de noviembre aquí. Nuria, confírmaselo tú, y me gustaría ir yo también, y que venga Inés con los datos de uso.
+Inés|Vale. Para eso necesitaría hacer un análisis de cómo usan la plataforma por local, cuáles usan qué, dónde tienen más incidencias. ¿Para cuándo lo quieres?
+Yo|Para el viernes catorce, así tenemos el fin de semana y el lunes para prepararlo.
+Inés|Vale, el análisis de uso de Tierramar por local para el viernes catorce.
+Yo|Y sobre el precio, Nuria, ¿qué margen crees que necesitamos?
+Nuria|Lo que les ofrece Logimenú, según Marcos, es un veinticinco por ciento menos de lo que pagan ahora. Eso no lo podemos igualar.
+Inés|No, ni de broma. Un veinticinco por ciento de veintiún mil son más de cinco mil euros al mes.
+Nuria|Yo no creo que haga falta igualarlo. Si les resolvemos lo de la previsión y lo de los informes, con un descuento pequeño y un contrato más largo creo que se quedan. Marcos no quiere cambiar de sistema en sesenta y cuatro locales, eso es un lío enorme para ellos. Formar a todos los encargados otra vez, migrar los proveedores…
+Álvaro|Eso es verdad. Una migración así es un dolor de muelas.
+Yo|¿Qué te parece un ocho por ciento de descuento a cambio de un contrato de dos años?
+Nuria|Me parece razonable. Es lo que yo habría propuesto.
+Inés|Un ocho por ciento son unos mil setecientos euros al mes. Duele, pero mucho menos que perder veintiún mil.
+Yo|Pues esa es la propuesta: ocho por ciento de descuento con contrato de dos años. Lo tengo que validar con dirección, porque cualquier descuento por encima del cinco lo tienen que aprobar ellos, pero no creo que haya problema. Lo hablo con ellos esta semana.
+Raúl|¿Y si piden más?
+Yo|Si piden más, lo vemos. Pero el ocho es nuestro techo de entrada. No vamos a ir a la reunión con números distintos cada uno. Nuria, eso es importante: si te llama Marcos antes del dieciocho, no le das cifras.
+Nuria|Entendido. No le doy cifras hasta la reunión.
+Tomás|Una cosa sobre Tierramar. ¿Sus repartidores usan nuestra app?
+Nuria|Algunos. Ellos tienen su propia flota para mover género entre locales, y creo que la mitad usa la app y la otra mitad papel.
+Tomás|Es que si les preocupa la fiabilidad, el modo sin conexión les vendría muy bien. Muchas de sus tabernas tienen el almacén en el sótano.
+Yo|Buen punto. Lo meto en el argumentario. Vale, prioridades del cuarto trimestre. Os he mandado esta mañana la lista que tenía en borrador, pero la voy repasando. La número uno, como hemos dicho, la previsión de compras. Álvaro, ¿quién la lleva?
+Álvaro|La llevaría yo con Inés para la parte del modelo. La parte de interfaz, Raúl.
+Raúl|Sí. Yo puedo tener un prototipo de la pantalla de previsión para el veinticinco de noviembre, para enseñarlo internamente y ajustarlo antes de que se ponga nadie a programarla.
+Yo|Perfecto. Prototipo de la previsión para el veinticinco de noviembre. Inés, ¿qué datos necesitas para el modelo?
+Inés|Tenemos dos años de historial de pedidos de la mayoría de los restaurantes. Con eso basta para una primera versión. Lo que me preocupa son los festivos y los eventos, porque un restaurante al lado de un estadio no vende lo mismo un día de partido.
+Tomás|Hablando de partidos, ¿visteis el del domingo? El penalti del final…
+Álvaro|No me hables, que soy del otro equipo.
+Inés|Yo no lo vi, ni me interesa. Sigo. Para la primera versión metería el calendario de festivos nacionales y autonómicos y dejaría lo de los eventos para más adelante.
+Yo|Me parece bien. Primera versión con festivos y sin eventos. ¿Segunda prioridad?
+Álvaro|La fiabilidad. Después de lo de octubre, yo lo pondría arriba del todo, a la par que la previsión. Y no solo los certificados. Tenemos mucha deuda técnica acumulada. Yo pediría que el veinte por ciento del tiempo del equipo vaya a deuda técnica durante el trimestre.
+Yo|¿Un veinte por ciento con todo lo que tenemos encima?
+Álvaro|Sí. Si no lo hacemos ahora, la próxima caída va a ser peor. Y Tierramar nos ha dicho literalmente que la caída es uno de sus motivos.
+Inés|Yo le apoyo. Tiene sentido.
+Yo|Vale, me habéis convencido. Veinte por ciento del tiempo a deuda técnica en el cuarto trimestre. Tercera prioridad: la sincronización con Lince, que ya está en marcha, y el modo sin conexión, que dependerá de la estimación de Tomás.
+Tomás|Correcto.
+Yo|Cuarta: informes por local y por zona. Inés, ¿cuánto te lleva?
+Inés|Una semana de trabajo, más o menos. Lo puedo tener antes de la reunión del dieciocho si lo empiezo ya.
+Yo|Pues adelante, y así lo enseñamos en la reunión. Y luego lo que no entra. Portugal. Mi propuesta es aplazar la versión en portugués al primer trimestre del año que viene. Los tres restaurantes de Oporto siguen en el piloto, les damos soporte, pero no traducimos ni hacemos lo de las facturas portuguesas hasta enero.
+Raúl|Es una pena, pero lo entiendo.
+Inés|Yo estoy de acuerdo. Con lo de Tierramar no podemos abrir otro frente.
+Nuria|Lo único, que alguien les explique a los de Oporto que no nos hemos olvidado de ellos. Que si no, se van.
+Yo|Les escribo yo personalmente. Bueno, eso no lo apuntes como tarea, que es un correo de dos líneas. Decidido: Portugal se aplaza al primer trimestre. Y la página de estado de la que hablaba Raúl, ¿Álvaro, cuánto es?
+Álvaro|Un par de días, como mucho. Lo meto dentro del veinte por ciento de fiabilidad.
+Yo|Perfecto, entra dentro de fiabilidad. Vale. Pasamos al presupuesto. Esto os lo cuento yo porque lo he estado mirando con finanzas. Para el cuarto trimestre tenemos aprobados ciento cuarenta y cinco mil euros para el equipo, sin contar los sueldos actuales. Eso incluye la infraestructura, las herramientas, la contratación y los eventos.
+Tomás|¿Ciento cuarenta y cinco mil para todo?
+Yo|Para todo lo que no es nómina actual, sí. Y el problema más gordo es la infraestructura. Álvaro, cuéntalo tú, que lo sabes mejor.
+Álvaro|La factura de la nube se nos ha ido a nueve mil ochocientos euros al mes. Hace un año estábamos en siete mil y pico. Ha subido un treinta por ciento en el año. Parte es normal, porque tenemos más restaurantes y más pedidos, pero parte es que tenemos máquinas encendidas que nadie usa, entornos de pruebas que se quedaron abiertos y bases de datos sobredimensionadas.
+Inés|Culpa mía, en parte. Hay dos bases de datos de análisis que monté para un estudio en verano y que siguen encendidas.
+Álvaro|Ja, ja. No pasa nada, Inés, hay de todo. Mi objetivo es bajarla a ocho mil al mes sin tocar nada de producción. Para eso necesito una semana revisando instancias y apagando lo que sobra.
+Yo|Ocho mil al mes sería un ahorro de casi cinco mil cuatrocientos en el trimestre. Hazlo. ¿Para cuándo?
+Álvaro|Para final de mes. Para el treinta de noviembre tengo hecha la limpieza de la nube.
+Yo|Apuntado. Luego está la feria. Nos han ofrecido un stand en el Salón Gastro de Madrid en febrero. El stand pequeño cuesta seis mil quinientos euros, más los viajes y el material.
+Nuria|Yo creo que merece la pena. El año pasado fuimos solo de visitantes y sacamos como quince contactos buenos.
+Raúl|Un stand de seis mil quinientos euros más todo lo demás se nos va a ocho o nueve mil fácil.
+Inés|Y en febrero estamos en otro trimestre, ¿no? ¿Eso no sale del presupuesto del primero?
+Yo|Se paga ahora, la reserva hay que hacerla en diciembre. Por eso sale del cuarto. Mi opinión: este año no. Con lo de Tierramar y la contratación, prefiero no comprometer ese dinero. Vamos de visitantes, como el año pasado, Nuria y yo, y con los contactos que saquemos ya veremos si el año que viene vamos con stand.
+Nuria|Vale. Me da pena, pero vale.
+Yo|Decidido entonces: al Salón Gastro vamos de visitantes, sin stand.
+Inés|Una pregunta sobre el presupuesto antes de pasar a otra cosa. ¿Cómo se reparten los ciento cuarenta y cinco mil? Porque si la nube ya se lleva casi treinta mil en el trimestre…
+Yo|Te lo digo de memoria, más o menos. La infraestructura son unos treinta mil en el trimestre, contando con que Álvaro consiga bajarla a partir de diciembre. Herramientas y licencias, unos doce mil. Contratación, que incluye el primer sueldo de la persona nueva y la becaria si la hay, unos sesenta mil. Eventos y viajes, unos ocho mil, ahora que no vamos con stand. Y el resto, unos treinta y cinco mil, lo dejo de reserva para lo de Tierramar o para cualquier imprevisto.
+Álvaro|¿Una reserva de treinta y cinco mil? Eso es mucho.
+Yo|Es mucho, pero prefiero tenerlo. Si Tierramar nos pide algo a medida, por ejemplo una integración con su sistema de contabilidad, tengo que poder decir que sí sin ir a pedir dinero a nadie.
+Nuria|Lo de la contabilidad lo mencionaron, por cierto. Usan un programa propio. No sé si lo van a pedir, pero puede salir.
+Álvaro|Ay, madre. Integraciones a medida no, por favor.
+Yo|Tranquilo, que no prometo nada sin hablarlo contigo. Pero quiero tener el colchón. Si no se usa, en enero lo devolvemos o lo pasamos al primer trimestre.
+Yo|Siguiente tema: contratación. Esto lo llevo arrastrando desde el verano. Teníamos aprobadas dos plazas: un ingeniero o ingeniera de backend sénior y un diseñador júnior. Con el presupuesto que tenemos, las dos a la vez no caben este trimestre.
+Raúl|Ya me lo imaginaba.
+Yo|Lo siento, Raúl. Sé que tú vas muy cargado.
+Raúl|Voy cargado, pero con la previsión y el panel puedo tirar hasta enero. Si me prometéis que el diseñador entra en el primer trimestre, lo acepto.
+Yo|No te lo puedo prometer al cien por cien, pero lo voy a pelear. Entonces, la propuesta es: este trimestre contratamos la plaza de backend sénior y la de diseño júnior la aplazamos al primer trimestre. ¿Alguien en contra?
+Álvaro|Para nada. El backend lo necesito como el comer. Con la previsión, la deuda técnica y las guardias, no damos abasto.
+Tomás|De acuerdo también.
+Yo|Vale. Decidido. Álvaro, ¿qué banda salarial ponemos?
+Álvaro|Para un sénior de verdad, en Madrid y con posibilidad de teletrabajo, yo diría que entre cuarenta y ocho y cincuenta y cinco mil euros brutos al año. Por debajo de cuarenta y ocho no nos va a llegar nadie bueno.
+Inés|¿Cincuenta y cinco mil cabe en el presupuesto?
+Yo|Cabe. Este trimestre solo pagaríamos uno o dos meses, dependiendo de cuándo entre, y la agencia, si la usamos. Ponemos hasta cincuenta y cinco mil como techo.
+Nuria|¿Vamos a usar agencia otra vez? La última vez nos cobró una barbaridad.
+Yo|Prefiero que no. La última vez fue un dieciocho por ciento del salario del primer año. Primero probamos con la oferta publicada y con recomendaciones del equipo. Si en tres semanas no tenemos candidatos buenos, hablamos de la agencia.
+Álvaro|Por cierto, de recomendaciones, tengo una. Lucía Prieto, que trabajó conmigo en mi anterior empresa. Ahora está en una empresa de reparto a domicilio, así que conoce el sector. Me dijo hace un mes que estaba pensando en cambiar.
+Yo|Eso suena muy bien. ¿Le puedes escribir esta semana para ver si le interesa?
+Álvaro|Sí, le escribo hoy mismo. Lucía es muy buena, de verdad. Y conoce bien Postgres, que es justo lo que necesitamos para la previsión.
+Yo|Genial. Y yo publico la oferta de backend sénior el lunes que viene, con la banda que hemos dicho. Álvaro, mándame la descripción técnica antes del viernes, que la última vez la saqué yo y me dijisteis que parecía escrita por alguien de recursos humanos.
+Álvaro|Ja, ja, es que lo parecía. Te la mando antes del viernes.
+Inés|Una cosa más de contratación. Yo pedí hace tiempo una persona en prácticas para datos. Es barato, son unos seiscientos euros al mes, y me liberaría de los informes del día a día para centrarme en el modelo de previsión.
+Yo|¿Seiscientos al mes durante cuánto?
+Inés|Seis meses. Con la universidad Carlos Tercero tenemos convenio, y la última vez el proceso fue rapidísimo.
+Yo|Seis meses a seiscientos son tres mil seiscientos euros. Eso sí cabe, y tiene mucho sentido si te libera para la previsión. Adelante. Inés, ¿puedes contactar tú con la universidad?
+Inés|Sí, esta semana escribo a la oficina de prácticas de la universidad.
+Yo|Perfecto. Becaria o becario de datos, seis meses, aprobado. Vale. Y ahora quiero volver un momento a la previsión de compras, porque Álvaro antes ha dicho que el quince de diciembre era muy justo y lo hemos dejado ahí. Álvaro, Tomás, ¿qué pensáis de verdad?
+Álvaro|Te soy sincero. El quince de diciembre no es buena idea, y no solo por el trabajo. Del diecinueve de diciembre al siete de enero tenemos la congelación de despliegues, porque es cuando los restaurantes están a tope y no tocamos nada en producción. Si lanzamos el quince y sale algún fallo, lo tenemos que arreglar en plena congelación o dejarlo roto tres semanas.
+Inés|Y además, con dos años de datos, diciembre es justo el peor mes para estrenar un modelo. Las cenas de empresa, Nochebuena, Nochevieja… Todo es raro. La previsión va a fallar seguro, y la primera impresión es la que queda.
+Tomás|Yo estoy de acuerdo con ellos. Y yo voy a estar con el modo sin conexión, así que no podría ayudar a Álvaro.
+Yo|Vale. Entonces, ¿qué fecha proponéis?
+Álvaro|Después de la congelación. Lanzarla el doce de enero, que es lunes. Nos da margen para probarla bien con unos cuantos restaurantes en diciembre, sin abrirla a todos.
+Yo|El problema es Tierramar. Les vence el contrato el treinta y uno de enero.
+Nuria|Pero si se lo enseñamos funcionando en una prueba en diciembre y lo lanzamos el doce de enero, les da tiempo a verlo antes de decidir. Marcos me dijo que la decisión la toman en la segunda quincena de enero.
+Yo|Vale. Pues me convencéis. Corregimos lo de antes: la previsión de compras no sale el quince de diciembre, sale el doce de enero. En diciembre hacemos una prueba cerrada con unos pocos restaurantes, y Tierramar puede ser uno de ellos si quieren. Que quede claro en las notas: la fecha buena es el doce de enero.
+Álvaro|Gracias. Me quitas un peso de encima.
+Raúl|Entonces mi prototipo del veinticinco de noviembre sigue igual, ¿no?
+Yo|Sigue igual. Lo necesitamos para la prueba de diciembre y para enseñarlo en la reunión del dieciocho, aunque sea en borrador.
+Raúl|Ah, para el dieciocho igual no me da tiempo a tenerlo entero. Puedo llevar unas pantallas estáticas.
+Yo|Con eso es suficiente. Unas pantallas estáticas para el dieciocho y el prototipo completo el veinticinco.
+Tomás|Y Nuria, para la prueba cerrada de diciembre, ¿qué restaurantes elegimos?
+Nuria|Yo propondría unos diez, mezclando pequeños y grandes. Y alguno de Tierramar, claro, si quieren. Te hago una lista.
+Yo|Muy bien. Nuria, ¿para cuándo la lista?
+Nuria|Para finales de mes. La semana del treinta, digamos.
+Yo|Vale. Siguiente cosa: objetivos del cuarto trimestre, para que tengamos números a los que mirar. Inés, ¿has pensado algo?
+Inés|Sí. Os propongo cuatro. Uno, ingresos recurrentes: llegar a ciento noventa y siete mil euros al mes a final de enero. Eso es crecer unos once mil sobre lo que tenemos, contando con que Tierramar se queda con el descuento.
+Álvaro|¿Y si Tierramar se va?
+Inés|Si se va, no llegamos ni de lejos. Por eso lo pongo así, que quede claro que el objetivo depende de Tierramar.
+Yo|Me parece honesto. ¿Los otros?
+Inés|Dos, bajar la tasa de bajas del 1,8 al 1,5. Tres, la app de repartidores al ochenta por ciento de uso, que es lo que no conseguimos este trimestre. Y cuatro, cero caídas de más de treinta minutos.
+Tomás|Lo del ochenta por ciento sin el modo sin conexión no lo veo.
+Inés|Por eso, si el modo sin conexión no entra, lo bajamos al setenta y cinco.
+Yo|Vale. Lo dejamos así: ochenta si entra el modo sin conexión, setenta y cinco si no. Lo cerramos cuando Tomás tenga la estimación. ¿El resto os parece bien?
+Álvaro|Lo de cero caídas de más de treinta minutos me da un poco de vértigo, pero sí, es lo que tenemos que pedirnos.
+Yo|Apuntados los cuatro objetivos. Inés, ¿los metes en el panel de seguimiento?
+Inés|Sí, ya lo tenía pensado.
+Raúl|Perdonad, una cosa de los objetivos. ¿No deberíamos tener uno de satisfacción? Un NPS, por ejemplo. Lo hemos subido a cuarenta y siete y me daría pena que se quedara fuera.
+Inés|Lo pensé, pero el NPS lo medimos una vez por trimestre y con la caída va a salir raro. No sé si es buena idea fijarnos un número.
+Yo|Yo lo pondría como seguimiento, no como objetivo. Lo miramos, lo comentamos, pero no nos lo ponemos como meta este trimestre. ¿Os parece?
+Raúl|Vale, me parece bien.
+Nuria|Y sobre las bajas, una idea que llevo tiempo pensando. Muchos de los restaurantes pequeños que se van lo hacen en los primeros tres meses, porque no terminan de configurarlo bien. Si les hiciéramos una llamada de bienvenida en la primera semana, igual se quedaban más.
+Inés|Eso lo puedo mirar en los datos. Si se confirma que la mayoría de las bajas son en los primeros noventa días, lo de la llamada tendría mucho sentido.
+Yo|Mira, eso me gusta, porque es barato. Inés, cuando tengas un hueco, que ya sé que este mes no, mira lo de las bajas en los primeros noventa días. Y si se confirma, lo probamos en enero.
+Nuria|Pero las llamadas las haría Carla, que ya va a tope.
+Yo|Ya. Por eso lo probamos en enero, cuando tengamos claro lo de soporte. No lo empezamos ahora.
+Nuria|Antes de seguir, ¿puedo sacar un tema que no está en la lista? Es sobre soporte.
+Yo|Claro, dime.
+Nuria|Somos dos personas en soporte, Carla y yo, y yo además llevo las cuentas grandes. Con seiscientos cuarenta tickets en el trimestre y lo de Tierramar, no llego. Carla está haciendo horas de más casi todas las semanas, y eso no puede seguir así.
+Yo|Lo sé. ¿Qué propones?
+Nuria|Dos cosas. La primera, a corto plazo: una base de conocimiento con respuestas a las preguntas más repetidas, para que los restaurantes se resuelvan solos lo fácil. Yo calculo que un veinte o un treinta por ciento de los tickets son siempre las mismas preguntas: cómo cambiar un proveedor, cómo repetir un pedido, cómo dar de alta a un repartidor. Y la segunda, a medio plazo, otra persona en soporte.
+Raúl|Lo de la base de conocimiento te lo puedo ayudar a maquetar. No es mucho.
+Tomás|Y si arreglamos lo de Lince, ya se os va un tercio de los tickets, ¿no?
+Nuria|Ojalá. No todos los de Lince son del fallo que has encontrado, pero muchos sí.
+Yo|Vale. La base de conocimiento, adelante, Nuria y Raúl, sin fecha cerrada pero dentro del trimestre. Lo de otra persona en soporte no cabe en el presupuesto de este trimestre, te lo digo ya. Lo que sí hago es meterlo en la petición del primer trimestre junto con el diseñador. Y mientras tanto, si lo de Tierramar te come mucho tiempo, que alguien te cubra las horas de soporte. Tomás, ¿te importaría hacer una tarde a la semana de soporte técnico de segundo nivel hasta enero?
+Tomás|Hmm, no me importa, pero… ¿Me oís? Se me está cortando…
+Yo|Te oímos a ratos, Tomás. ¿Tomás?
+Álvaro|Se le ha congelado la imagen.
+Inés|Se ha ido.
+Yo|Bueno, ahora vuelve. Mientras, Nuria, ¿qué tal está Carla? Más allá de las horas.
+Nuria|Está bien, pero cansada. Le iría muy bien que alguien le diga que lo que hace se valora, la verdad.
+Yo|Se lo digo yo esta semana, gracias por decírmelo.
+Tomás|Ya estoy. Perdón, se me ha caído el wifi de casa. ¿Qué me he perdido?
+Yo|Nada importante. Te preguntaba si te importaría hacer una tarde a la semana de soporte de segundo nivel hasta enero, para descargar a Nuria y a Carla.
+Tomás|Ah, sí, sin problema. Los jueves por la tarde, por ejemplo. Así además veo de primera mano lo que se quejan de la app.
+Yo|Perfecto, los jueves por la tarde. Gracias, Tomás. Otra cosa del presupuesto que se me había olvidado: herramientas. Estamos pagando dos herramientas de analítica de producto que hacen más o menos lo mismo. Inés, ¿cuál usas tú?
+Inés|Yo uso la de eventos, la de Pulsar. La otra, la de grabaciones de sesiones, la contratamos para el rediseño del panel, pero ya casi no la usa nadie.
+Raúl|Yo la uso de vez en cuando para ver dónde se atasca la gente, pero podría vivir sin ella.
+Yo|¿Cuánto nos cuesta?
+Inés|Unos cuatrocientos euros al mes. Al año son casi cinco mil.
+Yo|Pues la damos de baja cuando termine el rediseño. ¿Raúl, eso cuándo sería?
+Raúl|En diciembre, cuando abramos el panel nuevo a todos. Hasta entonces me viene bien.
+Yo|Vale. Decidido: damos de baja la herramienta de grabaciones de sesiones en diciembre, cuando termine el rediseño del panel. Bueno, ¿cómo vamos de tiempo? Llevamos unos cuarenta minutos. Quiero volver a Tierramar para preparar bien la reunión del dieciocho y luego cerramos con un par de cosas de equipo.
+Álvaro|Vamos bien.
+Yo|Vale. Para la reunión con Tierramar, lo que llevaríamos es: uno, el análisis de uso por local que prepara Inés. Dos, los informes por local y por zona funcionando, aunque sea en una versión preliminar. Tres, las pantallas de la previsión de Raúl. Cuatro, el postmortem de la caída, explicando qué pasó y qué hemos cambiado. Y cinco, la propuesta económica, si dirección me la aprueba.
+Nuria|Yo añadiría una cosa: que Álvaro venga también, aunque sea media hora. A Marcos le dio mucha rabia que en la llamada de la caída nadie técnico le explicara nada. Si le explica Álvaro lo del certificado y lo que hemos cambiado, eso pesa.
+Álvaro|Por mí bien. ¿A qué hora es?
+Nuria|Por la tarde, sobre las cinco. Te lo confirmo cuando hable con él.
+Álvaro|Vale, me lo reservo.
+Inés|¿Y qué les decimos de la previsión? ¿Que sale el doce de enero?
+Yo|Sí, el doce de enero, y que pueden entrar en la prueba cerrada de diciembre. No les prometemos nada que no podamos cumplir. Eso es lo que nos ha pasado con la caída: les dijimos que nunca volvería a pasar algo así y pasó.
+Raúl|Ya. Mejor prometer menos.
+Yo|Exacto. Y Nuria, a Marcos le das la fecha de la reunión, pero sin cifras, como hemos dicho.
+Nuria|Que sí, que sí. Confirmo con Marcos la reunión del dieciocho hoy mismo y no le digo ni una cifra.
+Yo|Ja, ja, perdona, que me repito. Otra cosa, Inés: lo que les pagan los restaurantes pequeños. Antes has dicho que muchas altas son del plan básico. ¿Cuánto es el plan básico ahora?
+Inés|Cuarenta y nueve euros al mes. El medio, ciento diecinueve, y el de grupos se negocia.
+Nuria|Y es justo en el plan medio donde nos come Logimenú.
+Yo|Ya. Eso es un tema más grande que no vamos a resolver hoy. Mi idea es revisar la política de precios en el primer trimestre, con datos de verdad. Inés, no te lo pongo como tarea todavía, pero ve pensándolo.
+Inés|Vale.
+Tomás|Una pregunta sobre la congelación de despliegues de Navidad. ¿Quién está de guardia esas semanas? Porque el año pasado me tocó a mí Nochevieja.
+Álvaro|Este año voy a hacer el cuadrante de guardias a principios de diciembre. Prometo que a ti no te toca Nochevieja.
+Tomás|Te tomo la palabra.
+Nuria|Yo me voy del veintidós de diciembre al dos de enero, por cierto. Lo digo para que lo tengáis en cuenta con Tierramar.
+Yo|Bien que lo digas. Si Tierramar necesita algo esos días, lo llevo yo. Vale, cosas de equipo. Lo de la cena de Navidad que preguntaba Álvaro: lo he mirado en el chat mientras hablábamos y no, este año no hay cena de toda la empresa. Así que propongo que hagamos la nuestra.
+Raúl|¡Sí! Y que no sea en un restaurante cliente, que siempre acabamos hablando de trabajo.
+Inés|Ja, ja, eso va a ser difícil, que tenemos dos mil trescientos.
+Raúl|Pues uno que no sea cliente. Seguro que queda alguno.
+Yo|¿Qué día os viene bien? Yo propongo el viernes diecinueve de diciembre, justo cuando empieza la congelación.
+Álvaro|El diecinueve me viene bien.
+Tomás|A mí también.
+Nuria|Perfecto, que me voy el veintidós.
+Yo|Pues cena de equipo el diecinueve de diciembre. Raúl, ya que tienes tanto interés, ¿te encargas de reservar?
+Raúl|Ja, ja, me lo he buscado. Sí, reservo yo. Para seis, ¿no? ¿O invitamos a Carla?
+Yo|Invitamos a Carla, claro. Siete.
+Raúl|Siete. Reservo esta semana, que en diciembre se llena todo.
+Inés|Por cierto, el otro día fui a un sitio de cocina vasca en Lavapiés que estaba muy bien. Os paso el nombre, Raúl.
+Raúl|Pásamelo. Aunque igual es cliente nuestro.
+Inés|Pues igual. Ni idea, no le pregunté al camarero qué software de pedidos usan.
+Yo|Bueno, volvemos, que nos dispersamos. Me quedan tres cosas antes de cerrar. La primera es Lince otra vez. Tomás, has dicho que una parte del fallo es nuestra y la otra suya. ¿Hemos hablado con ellos?
+Tomás|Yo no. Álvaro, ¿tú tienes contacto?
+Álvaro|Tengo el de su responsable técnico, un tal Sergio Ortega. Hablé con él en primavera por otra cosa. Es majo, pero tardan mucho en mover nada.
+Yo|Creo que merece la pena intentarlo. Si ellos ordenan los movimientos antes de mandárnoslos, nos quitamos un problema de raíz. Y no somos los únicos que se quejan, seguro.
+Álvaro|Seguro que no. Vale, le escribo y le propongo una llamada con Tomás y conmigo. Lo de ellos es lento, así que no contemos con ello este trimestre, pero lo dejamos pedido.
+Nuria|¿Y qué les digo a los restaurantes que se quejan de Lince mientras tanto?
+Tomás|Diles que el veintitrés de noviembre sale un arreglo que resuelve la mayoría de los casos. Lo de los movimientos desordenados lo mitigamos nosotros reordenando por la hora, que no es perfecto, pero ayuda.
+Nuria|Vale, eso les puedo decir.
+Yo|Bien. Segunda cosa: la presentación a dirección. El dos de diciembre tengo el comité trimestral con dirección y tengo que presentar el plan del cuarto trimestre. Con todo lo que hemos hablado hoy, más o menos lo tengo. Os mandaré el borrador el jueves veintisiete para que lo reviséis antes, sobre todo las cifras.
+Inés|Las cifras las reviso yo, que si no luego sale el cuarenta y cuatro en vez del cuarenta y siete.
+Yo|Ja, ja, eso. Te lo agradezco. Y aprovecho el comité para pedir la persona de soporte y el diseñador del primer trimestre.
+Raúl|Gracias.
+Yo|Tercera cosa, y esta me la dijo Nuria ayer por la tarde. Tierramar nos ha mandado un cuestionario de seguridad. Por lo visto lo piden a todos sus proveedores de software cada año y, con lo de la caída, este año lo quieren antes de renovar.
+Nuria|Sí. Son unas sesenta preguntas. Copias de seguridad, cifrado, quién tiene acceso a los datos, dónde están alojados los servidores, protección de datos… Muchas las puedo contestar yo, pero las técnicas no.
+Álvaro|Eso me lo paso yo. Lo hemos rellenado otras veces para otros clientes, así que tengo casi todas las respuestas guardadas. ¿Para cuándo lo quieren?
+Nuria|Para antes de la reunión, si puede ser. Dicen que les gustaría tenerlo para el dieciocho.
+Álvaro|Vale. El cuestionario de seguridad de Tierramar lo tengo para el lunes diecisiete.
+Yo|Gracias, Álvaro. Estás hasta arriba, lo sé. Si ves que no llegas a algo, dímelo y lo movemos.
+Álvaro|Lo de la nube lo puedo mover un poco si hace falta. El resto, lo saco.
+Yo|Vale. Antes de cerrar, Raúl, tú querías comentar algo de las entrevistas con clientes, ¿no?
+Raúl|Sí, rápido. En octubre hice ocho entrevistas con encargados de cocina para el rediseño del panel. Aparte de lo del panel, salió una cosa que creo que nos interesa para la previsión: casi todos hacen el pedido el domingo por la noche, desde el móvil, cansados, después del servicio. O sea, que la previsión tiene que funcionar bien en el móvil. No vale con que funcione en el ordenador de la oficina.
+Inés|Eso es muy interesante. ¿Lo tienes por escrito?
+Raúl|Está en el informe de las entrevistas, en la carpeta de investigación. Os lo vuelvo a mandar.
+Tomás|Eso cambia un poco el planteamiento. Si es en el móvil, igual hay que pensar la pantalla de otra manera.
+Raúl|Exacto. Por eso el prototipo lo voy a hacer primero para móvil y luego para escritorio.
+Yo|Me parece muy bien. Primero móvil. Eso que quede como criterio para la previsión de compras. Y otra cosa que me ha venido a la cabeza con esto: ¿hacemos una demo interna cada dos semanas, para enseñar lo que vamos haciendo? Así no nos enteramos de las cosas por el canal.
+Álvaro|Cada dos semanas, sí. Cada semana sería demasiado.
+Inés|Los viernes a última hora, que nadie hace nada útil a esa hora.
+Nuria|Ja, ja. Habla por ti.
+Yo|Venga, demos internas cada dos semanas, los viernes a las cuatro y media. La primera, el viernes veintiuno. Lo pongo yo en el calendario. Tomás, ¿tienes alguna duda de lo que te toca? Que has llegado tarde.
+Tomás|No, creo que lo tengo claro. Lince para el veintitrés de noviembre, la estimación del modo sin conexión el viernes que viene, y los jueves por la tarde con soporte.
+Yo|Eso es. Y los objetivos del cuarto trimestre dependen en parte de tu estimación, así que mírala bien.
+Tomás|Sí, sí. Una pregunta: si la estimación sale de seis semanas, ¿entra este trimestre o no?
+Yo|Si sale de seis semanas, empezaríamos a finales de noviembre y acabaríamos a mediados de enero, con la congelación por en medio. Creo que sí entraría, pero no quiero decidirlo hoy sin el número. Lo decidimos cuando tengamos la estimación.
+Álvaro|Y si entra, ¿quién cubre a Tomás en Lince si aparece otro fallo?
+Yo|Buena pregunta. Por eso necesitamos al backend sénior cuanto antes. Si Lucía se interesa, eso lo cambia todo.
+Álvaro|Le escribo esta tarde, de verdad.
+Nuria|Una duda que me ha surgido con lo de Lucía. Si entra alguien nuevo en diciembre, con la congelación y las vacaciones, ¿quién le hace la acogida? Porque la última persona que entró en agosto estuvo dos semanas perdida.
+Álvaro|Eso es verdad, y fue culpa mía. Esta vez lo hago mejor. Tengo a medias un documento de bienvenida con cómo montar el entorno, la arquitectura y a quién preguntar cada cosa.
+Yo|¿Lo terminas antes de que entre nadie?
+Álvaro|Sí, si entra en diciembre lo tengo. Y si entra en enero, mejor todavía.
+Inés|Y que el primer día no le pongamos de guardia, por favor. Que a mí me pasó.
+Álvaro|Ja, ja, prometido.
+Yo|Otra cosa del calendario, para que lo tengáis. La próxima revisión trimestral la haremos el lunes nueve de febrero, cuando ya sepamos qué ha pasado con Tierramar y tengamos los datos de enero. Y la idea es que esa reunión sea más corta que esta, porque iremos haciendo seguimiento con las demos de cada dos semanas.
+Tomás|Más corta, por favor. Que llevo una hora sin ver la luz del sol.
+Raúl|Si has llegado tarde, Tomás. Llevas cuarenta minutos.
+Tomás|Cuarenta minutos que parecen dos horas.
+Yo|Ja, ja, ya casi estamos. Y lo último del presupuesto que no he dicho: formación. Dentro de herramientas y licencias he dejado unos dos mil euros para cursos o conferencias. No es mucho, así que si alguien tiene algo concreto en mente, que me lo diga antes de final de mes y lo repartimos.
+Inés|Yo tenía en mente un curso de previsión de series temporales. Creo que costaba unos seiscientos euros.
+Yo|Mándame el enlace. Si es para la previsión de compras, tiene toda la prioridad.
+Raúl|Yo no necesito nada ahora mismo. Igual en primavera.
+Yo|Vale. Pues lo que no se use, se queda en la reserva.
+Yo|Vale. Hago un repaso rápido de las tres cosas que más me preocupan, no de todas, que el resto lo pondré en las notas. Uno, Nuria confirma con Marcos la reunión del dieciocho. Dos, Inés tiene el análisis de uso de Tierramar el viernes catorce. Y tres, yo hablo con dirección esta semana para que me aprueben el ocho por ciento de descuento. Si eso sale, el resto lo vamos sacando.
+Nuria|De acuerdo.
+Inés|Clarísimo.
+Yo|¿Alguien tiene algo más? ¿Algo que no hayamos hablado y que os preocupe?
+Inés|Yo solo una cosa. Con la previsión, el análisis de Tierramar, los informes por local y la becaria, voy muy justa. No me pongáis nada más este mes, por favor.
+Yo|Entendido. Nada más para Inés este mes. Si llega algo, lo hablamos antes.
+Raúl|Yo bien.
+Álvaro|Yo bien también. Solo que alguien llame a mantenimiento por la cafetera, por favor, que si no Inés no sobrevive a diciembre.
+Inés|Ja, ja. Gracias, Álvaro. Muy considerado.
+Yo|Lo apunto, aunque no es oficial. Bueno, pues muchas gracias a todos. Ha sido larga, pero creo que ha merecido la pena. Os mando las notas esta tarde. Y ánimo con Tierramar, que lo vamos a sacar.
+Nuria|Gracias, hasta luego.
+Tomás|Hasta luego. Y perdón otra vez por el retraso.
+Raúl|Chao.

@@ -28,6 +28,7 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 | Notas del usuario separadas por bloque (`user_blocks`) | Auto no empeora (89 % de cobertura, igual que antes) | ✅ | 8 nov | plantillas §6.4 (A frente a B) |
 | Resumen y pasadas de detalle a la vez, en un lote multi-secuencia de llama.cpp (`complete_many`) | Mismas métricas en todas las semillas (las salidas no cambian) y 35-55 % menos tiempo: semanal en Auto 67 → 31 s, con plantilla 72 → 40 s; 1:1 en Auto 20 → 13 s. Con Q8_0 queda por debajo de lo que tardaba Q4_K_M una a una | ✅ | 9 nov | «Generación en lote», abajo |
 | Q8_0 (1,85 GB) frente a Q4_K_M, las 4 reuniones, Auto y plantilla | Reunión larga (17 min) mejor en todo: Auto con cobertura del 86 % al 96 %, tareas de 3/7 a 5/7 y cifras fieles del 91 % al 98 %; con plantilla, colocación del 83 % al 88 % y tareas de 3/7 a 4/7. Reuniones cortas mixtas: en el 1:1 empeora (colocación del 100 % al 77 %, «Feedback» relleno 3 de 3, tareas en Auto de 4/5 a 1/5); el stand-up y ventas, dentro del ruido. Tarda 1,35-2 × | ✅ adoptado (9 nov) | 9 nov | «Q8_0 frente a Q4_K_M», abajo |
+| Cerrar cada cita al llegar a 6 referencias, en el bucle de llama.cpp (`GenOptions::max_refs`), Auto y plantilla | Ninguna cita de más de 6 (antes hasta 410); topes de 3000 tokens de 6 tandas a 1 (otra causa); algo más de tareas y de colocación a los 60 min | ✅ | 9 nov | «Límite de citas» |
 | QAD-Q4_0, Q6_K o un modelo mayor solo para las tareas | — | ⏳ | | HANDOFF, punto 3 |
 | Mostrar el resumen a los ~20 s y añadir los detalles después | — | ⏳ | | HANDOFF, punto 3 |
 
@@ -92,6 +93,68 @@ Desglose antes del cambio (semanal en Auto, Q8_0, con la GPU compartida con otro
 | Semanal · plantilla / Auto | 72 / 67 s | 40 / 31 s |
 
 Medido con la máquina cargada (OrbStack y otros procesos usando CPU y GPU): los tiempos absolutos varían, pero la comparación alternando los dos modos daba 63 → 37 s.
+
+## Reuniones largas y en seis idiomas (9 nov)
+
+Siete guiones nuevos en `crates/enhance/fixtures/` (con `.facts.json` y `.notas.txt`), escritos para parecer reuniones reales: charla, interrupciones, digresiones, una decisión que se corrige a mitad y tareas repartidas sin repaso final completo.
+
+| Guion | Idioma | Min | Hechos (tareas) | Plantilla |
+|---|---|---|---|---|
+| `revision_trimestral` | español | 62 | 58 (14) | semanal |
+| `weekly_planning` | inglés | 64 | 60 (14) | semanal |
+| `entrevista_cliente` | español (México) | 31 | 35 (8) | entrevista |
+| `chamada_vendas` | portugués | 32 | 35 (8) | ventas |
+| `point_individuel` | francés | 31 | 37 (8) | 1on1 (con feedback) |
+| `team_meeting` | alemán | 32 | 35 (8) | semanal |
+| `intervista_cliente` | italiano | 31 | 35 (8) | entrevista |
+
+El evaluador detecta el idioma como la app (o `--lang`), pone los títulos de la plantilla en ese idioma, normaliza los diacríticos de los seis idiomas y tiene `--check` (sin modelo: hechos inalcanzables, apartados desconocidos y duración).
+
+Resultados (Q8_0 en lote, 3 semillas, GPU compartida con otros procesos: los tiempos están inflados):
+
+| Guion | Plantilla: cobertura · tareas · colocación | Auto: cobertura · tareas | Tiempo (plantilla / Auto) |
+|---|---|---|---|
+| revision_trimestral (es, 60) | 55-86 % · 1-4 de 14 · 71-84 % | 70-84 % · 4-6 de 14 | 170-196 / 131-183 s |
+| weekly_planning (en, 60) | 46-72 % · 2-6 de 14 · 62-88 % | 41-65 % · 2 de 14 | 140-227 / 105-132 s |
+| entrevista_cliente (es, 30) | 67-70 % · 2-5 de 8 · 67-84 % | 74-89 % · 1 de 8 | 70-83 / 73-84 s |
+| chamada_vendas (pt, 30) | 81-96 % · 3-6 de 8 · 82-92 % | 85-89 % · 1 de 8 | 63-69 / 82-93 s |
+| point_individuel (fr, 30) | 55-76 % · 3-4 de 8 · 88-100 % | 62-76 % · 1-5 de 8 | 84-102 / 54-128 s |
+| team_meeting (de, 30) | 74-81 % · 2-5 de 8 · 50-86 % | 85-100 % · 2-6 de 8 | 66-126 / 61-67 s |
+| intervista_cliente (it, 30) | 63-74 % · 3-5 de 8 · 70-82 % | 44-48 % · 2 de 8 | 67-77 / 55-58 s |
+
+Hallazgos:
+
+- **Fallos encontrados y corregidos:**
+  - Panic en el ITN con un carácter de varios bytes antes de «mil» o «millones» (`≈180 mil`, también `€112 mil` en español). En la app tumbaba el enhance, porque el ITN se usa también al colocar viñetas en cualquier idioma. Hay test.
+  - El ITN (solo sabe español) se aplicaba en todos los idiomas: en portugués «vinte e cinco» → «vinte e 5». Ahora solo se aplica si el resumen es en español.
+- **Citas desbocadas:** el modelo escribe listas larguísimas de líneas (`[96, 97, 98, …, 113]`). 7 de 42 resúmenes llegaron al tope de 3000 tokens, incluidos dos de 30 min en alemán, y los apartados del final (las tareas) se pierden. Es la causa más probable de las pocas tareas en las reuniones de 60 min.
+- **Tareas:** el punto más débil, sobre todo en Auto (1 de 8 en tres de las reuniones de 30 min) y a los 60 min (1-6 de 14).
+- **Tiempo a los 60 min (130-230 s):** el prefill del resumen tarda ~26 s (18K tokens) y los de las 15 pasadas de detalle otros ~27 s, uno tras otro antes de decodificar. Escribir el resumen tarda 50-110 s.
+- **Cifras fieles** sale 0-23 % fuera del español, pero es un artefacto de la métrica: sin ITN la transcripción tiene los números con letras y las viñetas, en cifras.
+- **ITN:** no convierte «uno coma ocho» (el «uno» delante de «coma» no cuenta como número).
+
+Siguientes experimentos, por orden: ~~limitar las citas~~ (hecho, ver «Límite de citas»); arreglar la métrica de cifras fuera del español; procesar las pasadas de detalle y el prefill del resumen durante la reunión; extraer tareas también en las pasadas de detalle.
+
+## Límite de citas (9 nov) ✅
+
+El modelo enumeraba líneas seguidas dentro de una cita (`[109, 110, …, 130]`, hasta 410 números) y gastaba así el tope de tokens. Ahora, si una cita abierta ya tiene 6 referencias y el siguiente token trae una coma, el backend de llama.cpp mete `]\n` en su lugar: cierra la cita y la línea (si solo cerrara el corchete, el modelo seguiría con «, 120, 121…» fuera). No cuesta tiempo, a diferencia de una gramática (+9 s con la de Markdown). Se aplica al resumen y a las pasadas de detalle (`MAX_REFS = 6` en el enhance).
+
+Medido en las cuatro reuniones que tenían citas largas, 3 semillas, antes → después (GPU compartida: los tiempos son ruidosos):
+
+| Guion · modo | Cobertura | Tareas por semilla | Colocación | Tiempo | Tandas en el tope |
+|---|---|---|---|---|---|
+| point_individuel (fr) · plantilla | 55-76 → 62-72 % | 3/3/4 → 4/3/4 de 8 | 88-100 → 90-100 % | 84-102 → 64-70 s | 0 → 0 |
+| point_individuel (fr) · Auto | 62-76 → 62-76 % | 1/1/5 → 1/1/5 | — | 54-128 → 58-69 s | 0 → 0 |
+| team_meeting (de) · plantilla | 74-81 → 70-89 % | 3/2/5 → 7/2/5 de 8 | 50-86 → 47-83 % | 66-127 → 69-144 s | 1 → 1 |
+| team_meeting (de) · Auto | 85-93 → 78-96 % | 6/6/2 → 6/7/2 | — | 61-67 → 84-137 s | 0 → 0 |
+| revision_trimestral (es) · plantilla | 55-86 → 55-91 % | 1/4/1 → 1/5/4 de 14 | 71-84 → 68-87 % | 170-196 → 143-162 s | 1 → 0 |
+| revision_trimestral (es) · Auto | 70-84 → 64-70 % | 6/4/4 → 6/5/5 | — | 131-183 → 135-147 s | 1 → 0 |
+| weekly_planning (en) · plantilla | 46-72 → 65-85 % | 2/2/6 → 3/4/8 de 14 | 62-88 → 88-93 % | 140-227 → 127-149 s | 1 → 0 |
+| weekly_planning (en) · Auto | 41-65 → 54-74 % | 2/2/2 → 2/2/2 | — | 105-132 → 127-138 s | 1 → 0 |
+
+- **Guiones Unicode en los rangos:** el modelo escribe a veces `[162‑166, 167, …` (U+2011). Ni el corte ni `split_refs` lo tomaban por cita (la weekly con plantilla seguía llegando al tope). Ahora aceptan ‐ ‑ ‒ – —; la fila de la weekly es la de después de ese arreglo.
+- **El tope que queda** (team_meeting, plantilla) no son citas: con «elftausendfünfhundert» el modelo se pone a razonar en inglés dentro de las notas («Actually line 251 says…», «Let's re-read») hasta agotar el presupuesto. Pendiente.
+- **Tareas en Auto** no mejoran (weekly 2/14 en las tres semillas): ahí no se pierden por falta de tokens. Siguen siendo lo más flojo.
 
 ## Otras áreas (descartes medidos)
 

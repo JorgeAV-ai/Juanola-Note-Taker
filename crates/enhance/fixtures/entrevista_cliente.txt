@@ -1,0 +1,179 @@
+# Entrevista de descubrimiento ficticia para evaluar plantillas (~30 min). Formato: Hablante|texto.
+# «Yo» es investigador de producto en Inventa, una startup de software de gestión de inventario (canal del micrófono).
+# Marisol Garza es jefa de compras de Ferretera del Norte (14 ferreterías, Monterrey); Andrés, diseñador de Inventa, llega tarde.
+Yo|Hola, Marisol, buenos días. ¿Me escuchas bien?
+Marisol|Buenos días. Sí, te escucho perfecto. Perdón por la tardanza, estaba saliendo de una junta con un proveedor y se alargó más de la cuenta.
+Yo|No te preocupes, para nada. Yo acabo de entrar también. ¿Qué tal todo por allá? ¿Sigue haciendo calor en Monterrey?
+Marisol|Ay, ni me digas. Ya estamos en noviembre y ayer estuvimos a treinta y dos grados. Aquí el invierno dura como tres días y luego otra vez el calor. ¿Y tú desde dónde me hablas?
+Yo|Yo estoy en la Ciudad de México, en la oficina. Aquí ya refrescó, en la mañana hace frío de verdad. Oye, antes de empezar, te cuento rápido la dinámica. Esto no es una llamada de ventas, ¿eh? Soy investigador de producto en Inventa y lo que hacemos en estas entrevistas es entender cómo trabajan hoy las empresas con su inventario y sus compras. No te voy a enseñar nada ni a venderte nada. Solo quiero escucharte.
+Marisol|Ah, órale, qué bueno, porque ya me han hablado tantos vendedores este año que ya no les contesto.
+Yo|Me imagino. Otra cosa: un compañero, Andrés, que es diseñador, se va a conectar en unos minutos. Él también escucha estas entrevistas. Y si te parece bien, voy tomando notas mientras platicamos. Todo lo que me digas es confidencial y solo lo usamos internamente.
+Marisol|Sí, claro, sin problema.
+Yo|Perfecto. Pues para empezar, cuéntame un poco de ti y de la empresa. ¿Quién eres, qué haces?
+Marisol|Bueno, me llamo Marisol Garza, soy la jefa de compras de Ferretera del Norte. Somos una cadena de catorce ferreterías, todas en el área metropolitana de Monterrey, menos dos que están en Saltillo. La empresa la fundó mi suegro, don Rogelio, en 1987, con una sola tienda en la colonia Mitras. Y de ahí fue creciendo poco a poco.
+Yo|¿Y tú cuánto tiempo llevas ahí?
+Marisol|En compras llevo nueve años. Antes estuve en la parte de administración, pero cuando se jubiló el señor que llevaba las compras, me pasaron a mí. Y desde entonces me quedé.
+Yo|¿Y cómo es tu equipo? ¿Cuántas personas tienes contigo?
+Marisol|Tengo cuatro compradores. Cada uno lleva unas familias de producto. Uno lleva todo lo eléctrico, otra lleva plomería y pinturas, otro herramienta y tornillería, y la cuarta lleva lo de jardín, temporada y materiales. Y yo coordino todo y veo los proveedores grandes directamente.
+Yo|Muy bien. ¿Y de tamaño, para darme una idea, cuánto venden al año, más o menos?
+Marisol|El año pasado vendimos como trescientos diez millones de pesos entre todas las sucursales. Este año vamos un poquito arriba, como un seis por ciento más, pero con la inflación, pues, en realidad estamos parejos.
+Yo|Entendido. ¿Y cuántos productos distintos manejan? ¿Cuántos códigos?
+Marisol|Uf. Eso sí no te sé decir exacto. Yo creo que andamos como en dieciocho mil códigos. Pero déjame checarlo luego, porque siempre se nos olvida dar de baja los que ya no se venden.
+Yo|Va, no pasa nada, luego lo vemos. Y las sucursales, ¿son todas del mismo tamaño?
+Marisol|No, para nada. Tenemos tres grandes, que son como tipo home center chiquito, con estacionamiento y todo, y el resto son ferreterías de barrio, de mostrador. Y luego tenemos el CEDIS, el centro de distribución, que está en Apodaca. Ahí llega casi todo lo de los proveedores grandes y de ahí lo repartimos a las tiendas.
+Yo|¿Casi todo? ¿Qué no pasa por el CEDIS?
+Marisol|Pues hay proveedores locales que entregan directo en la sucursal. Por ejemplo, el de cemento, el de varilla, el de algunos plásticos. Esos van directo porque es más barato para todos.
+Andrés|Hola, buenos días, perdón, ¿ya se escucha?
+Yo|Hola, Andrés. Sí, te escuchamos. Marisol, él es Andrés, el diseñador que te comentaba.
+Andrés|Mucho gusto, Marisol. Perdón por llegar tarde, se me trabó la computadora con una actualización.
+Marisol|Mucho gusto, Andrés. No te preocupes, a todos nos pasa.
+Yo|Andrés, te resumo rápido: Marisol es jefa de compras de Ferretera del Norte, catorce sucursales, un CEDIS en Apodaca y cuatro compradores. Ahorita íbamos a entrar en cómo trabajan día a día.
+Andrés|Perfecto, gracias.
+Yo|Marisol, cuéntame cómo es un día normal para ti. Por ejemplo, ayer. ¿Qué hiciste desde que llegaste?
+Marisol|Ayer, a ver. Llegué a las ocho. Lo primero que hago siempre es abrir el WhatsApp, porque en la noche los gerentes de sucursal me mandan lo que les falta. Tengo un grupo con los catorce gerentes y ahí me escriben: «oye, se me acabó el cable del doce», «ya no tengo brochas de cuatro pulgadas», ese tipo de cosas. Y luego tengo otros grupos con proveedores, con los vendedores de cada marca.
+Yo|¿Cuántos mensajes te llegan, más o menos, en un día?
+Marisol|Ay, no sé, muchos. Yo creo que unos doscientos mensajes al día, fácil. Hay días que más. Lo peor es que se pierden. Alguien te pide algo a las once de la noche y si no lo apuntas, ya se te fue.
+Yo|¿Y qué haces con esos mensajes? ¿Dónde lo apuntas?
+Marisol|En el Excel. Tenemos un Excel enorme que se llama, literal, «pedidos maestro». Ahí cada comprador tiene su pestaña, y vamos apuntando lo que hay que pedir. Y luego, aparte, está el sistema, que es Aspel SAE, que tenemos desde hace como quince años. Ahí se dan de alta las órdenes de compra y las entradas al almacén.
+Yo|O sea que la información de lo que hay que pedir vive en el Excel y la orden de compra vive en Aspel.
+Marisol|Exacto. Y la existencia, lo que hay en cada tienda, también vive en Aspel, pero no te fíes mucho. Aspel te dice que tienes diez martillos y llegas y hay tres. O al revés.
+Yo|¿Por qué crees que pasa eso?
+Marisol|Pues por muchas cosas. En las tiendas de mostrador a veces el vendedor vende y no lo registra bien, o le pone el código de otro producto parecido porque no encuentra el bueno. Y los traspasos entre sucursales, esos son lo peor.
+Andrés|¿Cómo funcionan los traspasos?
+Marisol|Mira, si a la sucursal de Cumbres se le acaba algo y la de San Nicolás tiene de sobra, el gerente le habla al otro gerente por WhatsApp y se lo manda con el chofer. Y a veces lo registran en el sistema y a veces no. Entonces el inventario de las dos queda mal.
+Yo|¿Tienes idea de cuántos traspasos hacen?
+Marisol|Unos cuarenta por semana, más o menos. Y yo diría que la mitad no queda registrada. No es mala fe, ¿eh? Es que el gerente está atendiendo clientes y el chofer ya se va.
+Yo|Entiendo. Y entonces, cuando haces el pedido al proveedor, ¿cómo decides cuánto pedir?
+Marisol|Pues, sinceramente, mucho a ojo. Cada comprador ve lo que se vendió el mes pasado en Aspel, ve lo que piden los gerentes en el WhatsApp, y con su experiencia decide. El de eléctrico, por ejemplo, lleva veinte años con nosotros y se sabe todo de memoria. Pero eso es un riesgo, porque si se va, se va todo con él.
+Yo|¿Cuánto tiempo les lleva a los compradores armar los pedidos?
+Marisol|Mucho. Cada comprador se pasa unas seis horas a la semana nada más consolidando el Excel, cruzando lo que dice Aspel con lo que piden las tiendas. Seis horas de cada uno, y son cuatro. Haz la cuenta.
+Yo|Veinticuatro horas a la semana, casi una persona de medio tiempo.
+Marisol|Exacto. Y eso sin contar lo que me toma a mí revisarlo.
+Yo|¿Y tú cuánto le dedicas?
+Marisol|Yo los lunes en la mañana, toda la mañana, reviso los pedidos grandes antes de mandarlos. Es lo que más odio de la semana, honestamente. Mira, te lo digo así: el Excel es el que manda aquí, y el Excel no avisa. Si algo se está acabando, nadie te avisa. Te enteras cuando el cliente ya está en el mostrador y no hay.
+Yo|Esa frase me la voy a apuntar. ¿Me puedes contar alguna vez reciente en la que pasó eso, que se acabó algo importante?
+Marisol|Uy, sí. En junio, con los impermeabilizantes. Empezaron las lluvias antes de lo normal y nos quedamos sin impermeabilizante en nueve de las catorce tiendas durante casi dos semanas. El proveedor no tenía, nosotros no habíamos pedido suficiente a tiempo, y la gente se fue a Home Depot.
+Andrés|¿Y tienen idea de cuánto perdieron ahí?
+Marisol|Calculamos como un millón ochocientos mil pesos en ventas perdidas, solo de impermeabilizante. Y lo peor es que la gente que se va a Home Depot por el impermeabilizante también compra ahí la brocha, el rodillo, el sellador. Esos clientes a veces ya no regresan.
+Yo|¿Y eso es algo que pasa seguido o fue un caso aislado?
+Marisol|Con esa magnitud, no tan seguido. Pero quiebres de stock chiquitos, todos los días. Nosotros estimamos que perdemos como un tres por ciento de las ventas por no tener el producto en el anaquel cuando el cliente lo pide.
+Yo|Tres por ciento de trescientos diez millones son como nueve millones de pesos al año.
+Marisol|Sí, más o menos. Cuando se lo dije así a don Rogelio, casi se cae de la silla.
+Yo|Me imagino. ¿Cómo calculan ese tres por ciento?
+Marisol|Ah, buena pregunta. Hace un año pusimos en tres sucursales una libreta en el mostrador para que el vendedor apuntara cada vez que alguien pedía algo que no había. La tuvimos dos meses. Y de ahí sacamos el promedio. No es muy científico, pero es lo que tenemos.
+Andrés|Oye, qué interesante lo de la libreta. ¿Y por qué la quitaron?
+Marisol|Porque los vendedores se cansaron de apuntar. Al principio apuntaban todo y luego ya no. Ya sabes cómo es.
+Andrés|¿Todavía tienes alguna de esas libretas? Me encantaría ver cómo apuntaban.
+Marisol|Creo que sí, la de Cumbres la guardé en mi escritorio. Te tomo fotos de la libreta y te las mando mañana por correo.
+Andrés|Súper, gracias.
+Yo|Claro. Y del otro lado, ¿también les pasa lo contrario? ¿Que tengan producto de más?
+Marisol|Uf, sí, y eso casi me duele más. Tenemos mucho producto que no se mueve. En el último inventario sacamos que hay como cuatro millones de pesos en mercancía que no se ha vendido en más de un año. Tenemos el dinero dormido en los anaqueles. Así le digo yo. Dinero dormido.
+Yo|¿Qué tipo de producto es ese?
+Marisol|De todo. Herramienta que compramos por un descuento por volumen, colores de pintura que se pusieron de moda y ya no, piezas de plomería de modelos viejos. Y cosas de temporada que sobraron, como luces de Navidad del año antepasado.
+Yo|Mencionaste el inventario. ¿Cómo hacen el inventario físico?
+Marisol|Dos veces al año, en enero y en julio. Cerramos cada tienda dos días para contar todo. Dos días sin vender, imagínate. Y aun así salen diferencias enormes.
+Yo|¿Cerrar dos días cuánto les cuesta?
+Marisol|Pues la tienda grande de Cumbres vende como cien mil pesos al día, entonces ahí son doscientos mil que no se venden. Las chiquitas, menos. Pero súmale lo que les pagas a los que vienen a contar el fin de semana.
+Yo|Va. Oye, regresando un momento a los códigos, ¿pudiste checar cuántos son?
+Marisol|Ah, sí, justo le escribí a mi compradora mientras hablábamos. Me equivoqué. No son dieciocho mil, son veintidós mil cuatrocientos códigos activos en Aspel. Y de esos, ella cree que unos cinco mil ya no se venden.
+Yo|Veintidós mil cuatrocientos, perfecto, lo corrijo. Gracias.
+Andrés|Marisol, me gustaría entender mejor la relación con los proveedores. ¿Con cuántos trabajan?
+Marisol|Con unos ciento treinta proveedores activos. Pero el ochenta por ciento de lo que compramos se lo compramos a unos veinte. Truper, por ejemplo, es el más grande. Con ellos tenemos pedido cada semana.
+Andrés|¿Y cómo les hacen el pedido? ¿Por el sistema?
+Marisol|No, qué va. La orden la damos de alta en Aspel, pero al proveedor se la mandamos en PDF por correo o por WhatsApp. Y muchas veces el vendedor de la marca me contesta por WhatsApp: «esto no lo tengo, esto te llega el martes, esto viene en back order». Y eso no queda en ningún lado. Te lo digo así: mis proveedores me contestan antes por WhatsApp que mi propio ERP.
+Yo|¿Y alguno de los proveedores tiene portal, algo donde puedan ver existencias o mandar pedidos?
+Marisol|Truper tiene un portal, sí, pero es lento y no se conecta con nada nuestro. Entonces el comprador tiene que capturar todo dos veces. Lo usamos poco. Además, Truper tiene pedido mínimo de quince mil pesos por sucursal si quieres que te lo entreguen directo, entonces casi todo lo mandamos al CEDIS.
+Yo|Ya veo. ¿Y algún proveedor les manda reportes o les sugiere qué pedir?
+Marisol|Algunos vendedores sí, nos dicen «oye, se te va a acabar esto», pero lo hacen porque quieren vender, no porque sepan cuánto tenemos. Entonces no confío mucho.
+Yo|¿Y las condiciones de pago con los proveedores influyen en cuánto pides?
+Marisol|Muchísimo. Con la mayoría tenemos crédito a sesenta días. Entonces, si compro de más, no lo siento hasta dos meses después, y para entonces ya está en el anaquel. Y al revés, cuando estamos cortos de flujo, como en diciembre por los aguinaldos, pedimos menos de lo que deberíamos y ahí vienen los quiebres.
+Yo|Interesante. O sea que el flujo de caja también decide el pedido, no solo la demanda.
+Marisol|Sí, así es. Y nadie lo ve junto. La contadora ve el flujo, yo veo los pedidos, y cada quien en su Excel.
+Andrés|¿Y hay temporadas que les compliquen especialmente?
+Marisol|Sí, varias. La de lluvias, que ya les conté. Diciembre, por las luces y los regalos de herramienta. Y el Buen Fin, que es la próxima semana, ¿verdad? Para el Buen Fin preparamos ofertas en herramienta eléctrica y siempre nos pasa lo mismo: en unas tiendas se agota el primer día y en otras sobra.
+Yo|¿Cómo reparten la mercancía de las ofertas entre tiendas?
+Marisol|Pues por tamaño de tienda, más o menos. Las tres grandes se llevan la mitad y el resto se reparte parejo entre las otras once. Pero eso no tiene nada que ver con lo que realmente se vende en cada una. La de García, por ejemplo, que es chiquita, vende muchísimo taladro porque hay mucha obra alrededor.
+Yo|¿Y el año pasado cómo les fue en el Buen Fin?
+Marisol|Vendimos bien, como catorce millones de pesos ese fin de semana entre todas las tiendas. Pero me quedé con la espina de que pudimos vender más. En Cumbres se acabaron los taladros el viernes a mediodía, y en Saltillo nos sobraron como ochenta piezas que tardamos hasta marzo en vender.
+Andrés|Y en ese caso, ¿no se podían mover de Saltillo a Cumbres?
+Marisol|En teoría sí, pero son casi noventa kilómetros, y en pleno Buen Fin los choferes no se dan abasto. Y además, para cuando te enteras, ya pasó el fin de semana. Por eso te digo que lo que necesito es enterarme antes, no después.
+Yo|Me queda clarísimo. Y esos taladros que sobraron, ¿los tuvieron que rematar?
+Marisol|Algunos sí, con descuento. Otros los vendimos a precio normal, pero ya muy tarde, cuando ya nos habían costado el crédito con el proveedor.
+Yo|Tiene sentido. Oye, cambiando un poco, ¿alguna vez intentaron cambiar de sistema? ¿Probar otra cosa además de Aspel?
+Marisol|Sí, y fue un desastre. Hace dos años contratamos una implementación de Odoo. Nos costó como cuatrocientos cincuenta mil pesos entre licencias y consultoría. Duró ocho meses y nunca quedó. Al final regresamos a Aspel.
+Yo|¿Qué fue lo que falló?
+Marisol|Muchas cosas. El consultor no entendía el negocio de ferretería. Nos quería hacer cambiar la forma de trabajar de las tiendas, y los gerentes no lo usaban. Y cada cambio que pedíamos era una cotización nueva. Mira, yo ya aprendí: no quiero otro sistema que me dé trabajo, quiero uno que me lo quite.
+Andrés|Esa también me la apunto.
+Marisol|Jaja, apúntala, porque es en serio. Si me traen algo donde mis gerentes tengan que capturar más cosas, no lo van a usar. Ya lo vi.
+Yo|Clarísimo. ¿Y en las tiendas qué tienen? ¿Computadoras, terminales?
+Marisol|Cada tienda tiene una o dos computadoras con Aspel en el mostrador, y la terminal para cobrar con tarjeta. Pero ojo, en tres sucursales el internet es malísimo. La de García, la de Santa Catarina y una de las de Saltillo. Se cae varias veces al día. Entonces cualquier cosa que dependa de estar conectado todo el tiempo, ahí no funciona.
+Yo|¿Y cómo resuelven ahorita cuando se cae el internet?
+Marisol|Venden en papel y luego lo capturan. Por eso también hay diferencias de inventario en esas tres.
+Andrés|Una pregunta, Marisol, ¿los gerentes usan el celular para el trabajo? Aparte del WhatsApp.
+Marisol|Todos tienen celular, pero de la empresa no. Es su celular personal. Lo usan para el WhatsApp y para tomar fotos de lo que llega dañado. Nada más.
+Yo|Oye, por cierto, perdón que me desvíe, ¿viste el partido del sábado? Me dijo Andrés que tú le vas a Rayados.
+Marisol|Ay, no me hables de eso. Sí lo vi, pero mejor ni lo comento. Mi esposo es de Tigres y ya me lo restregó todo el domingo en la comida familiar.
+Andrés|Yo soy del Cruz Azul, así que ya sabes, sufrimiento garantizado.
+Marisol|Jaja, pues estamos igual. Bueno, ¿en qué íbamos?
+Yo|Sí, perdón, regresando. Me decías del internet en las tiendas. Quería preguntarte por los reportes. ¿Qué reportes ves tú cada semana o cada mes?
+Marisol|Mira, el principal es uno que me hace la contadora a fin de mes, con las ventas por sucursal y el margen. Pero llega el día diez del mes siguiente. Para cuando lo veo, ya pasó todo. Y luego, el inventario por sucursal, que lo saco yo de Aspel, pero tarda como veinte minutos en generarse y a veces se traba.
+Yo|Si pudieras tener un solo número cada lunes en la mañana, ¿cuál sería?
+Marisol|Uy, qué buena pregunta. Yo creo que... qué productos importantes se me van a acabar esta semana, y en qué sucursal. Eso. Si yo supiera eso el lunes, me cambia la vida.
+Andrés|¿Y lo de los cuatro millones parados?
+Marisol|Eso también, pero eso lo puedo ver una vez al mes. Lo urgente es lo que se acaba. Lo otro duele, pero es más lento.
+Yo|Entonces, si lo resumo, la necesidad número uno sería algo como alertas de reorden por sucursal, que te diga qué pedir antes de que se acabe.
+Marisol|Exacto, alertas de reorden. Pero que tome en cuenta la temporada, ¿eh? Porque no es lo mismo el impermeabilizante en febrero que en junio. Y que me deje ver si otra sucursal tiene de sobra, para hacer un traspaso en lugar de comprar.
+Yo|Muy bien. ¿Y qué más?
+Marisol|Pues lo de los traspasos, que quede registrado sin que el gerente tenga que hacer mucho. Con que tome una foto o escanee algo, ya. Y que yo pueda ver lo que me confirman los proveedores en un solo lugar, no en cuarenta chats.
+Yo|Perfecto. Marisol, ¿me escuchas? Creo que se te cortó un poco.
+Marisol|¿Hola? ¿Ahora sí? Perdón, se me fue el internet un segundo. Aquí en la oficina también pasa, jaja.
+Yo|Sí, ya te escucho. Me decías lo de los proveedores en un solo lugar.
+Marisol|Ah, sí. Eso, que no tenga que buscar en el WhatsApp qué me dijo el de Truper hace tres semanas.
+Yo|Muy claro. Ahora quisiera entender cómo deciden en la empresa cuando quieren comprar algo como un software. Tú, por ejemplo, ¿podrías decidir sola?
+Marisol|No, no. Yo puedo proponer, pero el que firma es don Rogelio. Él sigue siendo el director general, aunque ya tiene setenta y un años. Y mi cuñado, Héctor, que es el director de operaciones, también opina mucho. Después de lo de Odoo, don Rogelio quedó muy desconfiado. Me dijo: «la próxima vez, primero me lo prueban en una tienda».
+Yo|Eso tiene mucho sentido. ¿Y quién lleva la parte técnica, los sistemas?
+Marisol|Tenemos a Ernesto, que es el de sistemas. Es una sola persona para todo, para las computadoras, las impresoras, la red y Aspel. Él sabe cómo están las bases de datos de Aspel. Si algo se tiene que conectar con Aspel, tiene que estar Ernesto, porque si no se nos cae todo.
+Yo|Perfecto. Me gustaría platicar con Ernesto sobre cómo está montado Aspel. ¿Crees que sea posible?
+Marisol|Sí, claro, yo le digo. Es muy buena onda, nada más que anda siempre corriendo.
+Yo|Entonces yo le escribo a Ernesto esta semana para agendar una llamada sobre la integración con Aspel, si me pasas su correo.
+Marisol|Ahorita te lo mando por WhatsApp, jaja. Por WhatsApp, ¿ves? No hay manera de escaparse.
+Yo|Jaja, ni modo. Oye, y de presupuesto, sin compromiso, ¿tienen una idea de lo que estarían dispuestos a pagar por algo que resuelva lo que me contaste?
+Marisol|Mira, después de lo de Odoo, no queremos un pago grande al principio. Preferimos algo mensual. Yo creo que si funciona, don Rogelio aceptaría hasta unos veinticinco mil pesos al mes por las catorce tiendas. Más de eso, me va a costar mucho trabajo convencerlo.
+Andrés|¿Y eso cómo lo comparas con lo que pagan hoy?
+Marisol|Aspel nos cuesta como sesenta mil pesos al año entre licencias y soporte. Pero claro, Aspel no hace lo que te dije. Si me resuelves aunque sea la mitad de los quiebres, se paga solo.
+Yo|Claro. Y, por curiosidad, ¿han visto otras herramientas? ¿Algo que les hayan ofrecido?
+Marisol|Nos ofrecieron un módulo de Contpaqi, pero era básicamente lo mismo que Aspel. Y un vendedor de una empresa española que hacía previsión de demanda, pero era carísimo, en euros, y pensado para supermercados. No le entendí nada a la presentación.
+Yo|Entendido. Marisol, quería pedirte algo que nos ayudaría muchísimo. ¿Sería posible que nos compartieras una exportación de las compras y las ventas de los últimos doce meses? Aunque sea en Excel. Así podemos ver cómo son los patrones reales.
+Marisol|Sí, yo creo que sí. Tendría que pedirle permiso a don Rogelio, pero no creo que haya problema si firmamos algo de confidencialidad. Le pido a mi compradora que saque la exportación de Aspel. ¿Te parece si te la mando antes del viernes veintiuno?
+Yo|Perfecto. Yo te mando hoy mismo el acuerdo de confidencialidad para que lo revise don Rogelio.
+Marisol|Va. Y de paso le platico a don Rogelio de esto, de que estamos viendo opciones, para que no le caiga de sorpresa. Se lo comento en la junta del lunes.
+Andrés|Marisol, una cosa que nos ayudaría mucho como equipo de diseño es ver cómo trabajan físicamente. El CEDIS, una tienda de mostrador. ¿Crees que podríamos ir a visitarlos?
+Marisol|Claro que sí, con mucho gusto. Vénganse. ¿Cuándo podrían?
+Yo|Nosotros podríamos ir a Monterrey la próxima semana. ¿Te funciona el martes dieciocho de noviembre?
+Marisol|El martes dieciocho... déjame ver mi calendario. Sí, el martes en la mañana puedo. Los llevo al CEDIS de Apodaca y luego a la tienda de Mitras, que es la original, la de mostrador.
+Yo|Excelente. Andrés, mientras tanto, ¿crees que podrías preparar algo para enseñarle a Marisol en la visita?
+Andrés|Sí, con lo que platicamos hoy puedo armar un prototipo de las alertas de reorden por sucursal, algo muy sencillo, en papel o en pantallas, para ver si le hace sentido. Lo tendría listo para la visita.
+Marisol|Ay, qué padre. Pero acuérdense de lo que les dije: nada de capturar cosas de más.
+Andrés|Anotado. Cero captura extra.
+Yo|Marisol, también me gustaría hablar con alguno de tus compradores, para entender su día. ¿Habría alguien que tenga tiempo?
+Marisol|Sí, Lupita, la que lleva plomería y pinturas. Es la más organizada del equipo, y la que más sufre con el Excel. Le voy a preguntar si puede hacer una entrevista con ustedes. Te paso su contacto esta semana.
+Yo|Muy bien, gracias. Oye, perdón, otra pregunta sobre el inventario muerto. Los cuatro millones que mencionaste, ¿han intentado hacer algo con eso?
+Marisol|Sí, hicimos una venta de liquidación en septiembre, en las tres tiendas grandes. Sacamos como trescientos mil pesos, con descuentos del cuarenta por ciento. Pero es una gota en el mar. Y lo que más quisiera es no volver a comprar de más, más que liquidar lo que ya tengo.
+Yo|Claro. Prevenir antes que curar.
+Marisol|Exacto. Así es.
+Andrés|Marisol, ¿y los gerentes de sucursal qué opinan de todo esto? ¿Ellos también lo ven como un problema?
+Marisol|Los gerentes lo que sienten es que nunca les llega lo que piden a tiempo. Para ellos el problema es compras, o sea, yo, jaja. No ven todo lo que hay detrás. Por eso también me interesa que tengan algo donde vean el estado de su pedido sin tener que preguntarme por WhatsApp.
+Yo|Eso es muy interesante, porque es otra persona que usaría la herramienta. Lo apunto.
+Marisol|Ah, oye, perdón, ahorita que me acuerdo. Lo del martes dieciocho no va a poder ser. Me acaba de llegar un mensaje: ese día tenemos la visita de auditoría del banco en el CEDIS y no los voy a poder atender bien. ¿Les funciona mejor el jueves veinte de noviembre?
+Yo|Sí, sin problema. Entonces cambiamos la visita al CEDIS de Apodaca al jueves veinte de noviembre, en la mañana.
+Andrés|Por mí perfecto, así tengo dos días más para el prototipo.
+Marisol|Jaja, ya ves, todo sale bien. Jueves veinte, a las nueve, en el CEDIS. Yo les mando la ubicación.
+Yo|Excelente. Bueno, Marisol, ya casi terminamos. Una última pregunta: si tuvieras una varita mágica y pudieras cambiar una sola cosa de cómo trabajan hoy, ¿cuál sería?
+Marisol|Una sola... Que el sistema me diga la verdad. Que cuando diga que tengo diez martillos, haya diez martillos. Con eso yo ya hago lo demás. Hoy trabajo con un inventario que es casi de ficción.
+Yo|Muy buena. Muchas gracias, de verdad, Marisol. Ha sido una plática muy valiosa.
+Marisol|No, al contrario, gracias a ustedes. Me hizo bien desahogarme un poco, jaja.
+Yo|Te resumo lo que quedamos, nada más lo principal: tú nos mandas la exportación de Aspel antes del viernes veintiuno, nos vemos en el CEDIS el jueves veinte, y yo hoy te mando el acuerdo de confidencialidad junto con un resumen de esta entrevista.
+Marisol|Perfecto. Y no se les olvide que le voy a preguntar a Lupita lo de la entrevista.
+Yo|Claro. Que tengas muy buen día, Marisol.
+Andrés|Gracias, Marisol, nos vemos el jueves veinte.
+Marisol|Igualmente. Hasta luego.

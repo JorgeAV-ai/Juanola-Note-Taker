@@ -1,0 +1,579 @@
+{
+ "_doc": "Hechos de chamada_vendas.txt (llamada comercial en portugués de Brasil, ~30 min). Mismo formato que reunion_producto.facts.json. El precio por moto se corrige de 32 a 29 reales y el inicio del piloto del 16 al 23 de noviembre: los hechos recogen la versión final.",
+ "facts": [
+  {
+   "id": "vai_rapido",
+   "all": [
+    [
+     "vai rapido"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Situação do cliente"
+    ]
+   }
+  },
+  {
+   "id": "motos_300",
+   "all": [
+    [
+     "300",
+     "trezentas"
+    ],
+    [
+     "moto"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Situação do cliente"
+    ]
+   }
+  },
+  {
+   "id": "entregadores_340",
+   "all": [
+    [
+     "340",
+     "trezentos e quarenta"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Situação do cliente"
+    ]
+   }
+  },
+  {
+   "id": "pegasus",
+   "all": [
+    [
+     "pegasus"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Situação do cliente",
+     "Dúvidas e objeções"
+    ]
+   }
+  },
+  {
+   "id": "whatsapp_planilha",
+   "all": [
+    [
+     "whatsapp"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Situação do cliente"
+    ]
+   }
+  },
+  {
+   "id": "atrasos_18",
+   "all": [
+    [
+     "18",
+     "dezoito"
+    ],
+    [
+     "atras"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Situação do cliente"
+    ]
+   }
+  },
+  {
+   "id": "combustivel_180k",
+   "all": [
+    [
+     "180000",
+     "180 mil",
+     "cento e oitenta mil"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Situação do cliente"
+    ]
+   }
+  },
+  {
+   "id": "motos_paradas_25",
+   "all": [
+    [
+     "25",
+     "vinte e cinco",
+     "vinte e 5"
+    ],
+    [
+     "parad"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Situação do cliente"
+    ]
+   }
+  },
+  {
+   "id": "meta_atraso_8",
+   "all": [
+    [
+     "8%",
+     "8 %",
+     "8 por cento",
+     "oito por cento"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Situação do cliente"
+    ]
+   }
+  },
+  {
+   "id": "meta_combustivel_12",
+   "all": [
+    [
+     "12%",
+     "12 %",
+     "12 por cento",
+     "doze por cento"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Situação do cliente",
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "webhook",
+   "all": [
+    [
+     "webhook",
+     "api rest"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Dúvidas e objeções"
+    ]
+   }
+  },
+  {
+   "id": "t_api_felipe",
+   "task": true,
+   "all": [
+    [
+     "felipe"
+    ],
+    [
+     "document",
+     "sandbox",
+     "acesso"
+    ]
+   ]
+  },
+  {
+   "id": "lgpd",
+   "all": [
+    [
+     "lgpd"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Dúvidas e objeções"
+    ]
+   }
+  },
+  {
+   "id": "rastreio_turno",
+   "all": [
+    [
+     "turno",
+     "expediente"
+    ],
+    [
+     "rastre",
+     "localiza"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Dúvidas e objeções"
+    ]
+   }
+  },
+  {
+   "id": "dados_brasil",
+   "all": [
+    [
+     "brasil"
+    ],
+    [
+     "servidor",
+     "dados",
+     "armazen",
+     "nuvem"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Dúvidas e objeções"
+    ]
+   }
+  },
+  {
+   "id": "t_doc_tratamento_dados",
+   "task": true,
+   "all": [
+    [
+     "tratamento de dados",
+     "relatorio de impacto",
+     "dpa"
+    ]
+   ]
+  },
+  {
+   "id": "entregadores_resistencia",
+   "all": [
+    [
+     "entregador"
+    ],
+    [
+     "resist",
+     "reclam",
+     "desconfi",
+     "medo",
+     "vigi"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Dúvidas e objeções"
+    ]
+   }
+  },
+  {
+   "id": "bateria",
+   "all": [
+    [
+     "bateria"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Dúvidas e objeções"
+    ]
+   }
+  },
+  {
+   "id": "mototrack_19",
+   "all": [
+    [
+     "19",
+     "dezenove"
+    ],
+    [
+     "mototrack",
+     "moto track",
+     "concorr"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Dúvidas e objeções",
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "implantacao_15k",
+   "all": [
+    [
+     "15000",
+     "15 mil",
+     "quinze mil"
+    ],
+    [
+     "implant",
+     "instala"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "orcamento_120k",
+   "all": [
+    [
+     "120000",
+     "120 mil",
+     "cento e vinte mil"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "contrato_12_meses",
+   "all": [
+    [
+     "12 meses",
+     "doze meses"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "piloto_30_motos",
+   "all": [
+    [
+     "30 motos",
+     "trinta motos"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "piloto_3_semanas",
+   "all": [
+    [
+     "3 semanas",
+     "tres semanas"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "preco_29",
+   "all": [
+    [
+     "29",
+     "vinte e nove"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "desconto_50",
+   "all": [
+    [
+     "50%",
+     "50 %",
+     "50 por cento",
+     "cinquenta por cento",
+     "metade"
+    ],
+    [
+     "implant",
+     "desconto"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "piloto_23_nov",
+   "all": [
+    [
+     "23 de novembro",
+     "vinte e tres de novembro",
+     "23/11"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "t_juliana_planilha",
+   "task": true,
+   "all": [
+    [
+     "juliana"
+    ],
+    [
+     "planilha",
+     "custo"
+    ]
+   ]
+  },
+  {
+   "id": "decide_marcelo",
+   "all": [
+    [
+     "marcelo"
+    ],
+    [
+     "assina",
+     "decid",
+     "aprova"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "diretoria_14_dez",
+   "all": [
+    [
+     "14 de dezembro",
+     "catorze de dezembro",
+     "quatorze de dezembro",
+     "14/12"
+    ]
+   ],
+   "section": {
+    "ventas": [
+     "Orçamento e prazos"
+    ]
+   }
+  },
+  {
+   "id": "t_demo_marcelo",
+   "task": true,
+   "all": [
+    [
+     "marcelo"
+    ],
+    [
+     "demo"
+    ]
+   ]
+  },
+  {
+   "id": "t_lista_piloto",
+   "task": true,
+   "all": [
+    [
+     "lista"
+    ],
+    [
+     "moto",
+     "placa",
+     "piloto"
+    ]
+   ]
+  },
+  {
+   "id": "t_treinamento",
+   "task": true,
+   "all": [
+    [
+     "treinamento",
+     "treinar"
+    ]
+   ]
+  },
+  {
+   "id": "t_proposta",
+   "task": true,
+   "all": [
+    [
+     "proposta"
+    ],
+    [
+     "sexta",
+     "13",
+     "treze"
+    ]
+   ]
+  },
+  {
+   "id": "t_juridico_camila",
+   "task": true,
+   "all": [
+    [
+     "camila",
+     "juridico"
+    ]
+   ]
+  }
+ ],
+ "user_notes": {
+  "Vai Rápido: 300 motos, atraso 18%": {
+   "ventas": [
+    "Situação do cliente"
+   ]
+  },
+  "integração c/ Pegasus (falar c/ Felipe)": {
+   "ventas": [
+    "Dúvidas e objeções"
+   ]
+  },
+  "LGPD: rastreio só no turno": {
+   "ventas": [
+    "Dúvidas e objeções"
+   ]
+  },
+  "MotoTrack R$ 19/moto": {
+   "ventas": [
+    "Dúvidas e objeções",
+    "Orçamento e prazos"
+   ]
+  },
+  "orçamento 120k/ano, decide Marcelo": {
+   "ventas": [
+    "Orçamento e prazos"
+   ]
+  },
+  "mandar proposta sexta": {
+   "ventas": [
+    "Próximos passos"
+   ]
+  },
+  "doc API p/ Felipe amanhã": {
+   "ventas": [
+    "Próximos passos"
+   ]
+  },
+  "piloto 30 motos, começa 23/11": {
+   "ventas": [
+    "Orçamento e prazos",
+    "Próximos passos"
+   ]
+  }
+ },
+ "empty": {}
+}
