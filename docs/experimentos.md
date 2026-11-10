@@ -33,7 +33,8 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 | Cerrar cada cita al llegar a 6 referencias, en el bucle de llama.cpp (`GenOptions::max_refs`), Auto y plantilla | Ninguna cita de más de 6 (antes hasta 410); topes de 3000 tokens de 6 tandas a 1 (otra causa); algo más de tareas y de colocación a los 60 min | ✅ | 9 nov | «Límite de citas» |
 | Tope de Auto: base + 400, mínimo 800 (`summary_budget`); antes ~600 en reuniones de 4-5 min | Todos los resúmenes Auto cortos se cortaban antes de «Próximos pasos». Tareas en Auto: 1:1 1/5 → 4-5/5, ventas 1/4 → 2-4/4, stand-up 1/4 → 1-4/4, revisión trimestral 5-6 → 6-9/14 | ✅ | 9 nov | «Tareas en las pasadas de detalle» |
 | Tareas también en las pasadas de detalle (`## Tareas`), añadidas a «Próximos pasos» sin duplicados (`detail_tasks`) | 1-3 tareas acertadas más, pero escribe el doble (29-41 en una reunión de 14), muchas falsas o atribuidas a «Yo» | ⚗️ `detail_tasks` | 9 nov | «Tareas en las pasadas de detalle» |
-| QAD-Q4_0, Q6_K o un modelo mayor solo para las tareas | — | ⏳ | | HANDOFF, punto 3 |
+| Modelo mayor, cuantizado en GGUF: Qwen3.5-9B Q4_K_M (4 bits, 5,7 GB) y Qwen3.5-4B Q8_0 (8 bits, 4,5 GB), frente a LFM3-1.7B Q8_0; sin razonamiento, reuniones de 60 min | Mismas tareas acertadas (dentro del ruido), pero escribe la mitad (6-17 frente a 15-33). Cobertura: el 9B peor (54-82 %), el 4B igual o mejor en Auto (80-89 % frente a 70 % en la revisión). Tarda 2 × (4B, ~210 s) y 3-4 × (9B, 330-520 s; 2 min solo en leer el prompt de 20.000 tokens) | ❌ | 10 nov | «Techo con un modelo mayor» |
+| QAD-Q4_0 o Q6_K de LFM3 | — | ⏳ | | HANDOFF, punto 3 |
 | Mostrar el resumen a los ~20 s y añadir los detalles después | — | ⏳ | | HANDOFF, punto 3 |
 
 ## Enhance con plantilla
@@ -183,6 +184,32 @@ Tareas acertadas / escritas, 3 semillas, ambos con el tope nuevo (`+tasks` frent
 Cobertura y colocación, parecidas en los dos. Con el tope nuevo y sin tareas en detalle, frente a la mañana (tras el límite de citas): revisión trimestral con plantilla 1/5/4 → 5/5/7 de 14, Auto 6/5/5 → 6/9/7; weekly Auto 2/2/2 → 2/7/5; entrevista con plantilla 2-5 → 5-6 de 8. Las reuniones cortas se midieron con las tareas en detalle activadas, pero ahí añadían 0-2 por ejecución: la mejora es del tope.
 
 Decisión: el tope se queda; las tareas en detalle quedan desactivadas (`detail_tasks`, `--variant x=itn+tasks` en el evaluador). Para reactivarlas haría falta filtrar con el modelo (¿es un compromiso?, ¿de quién?) o que el resumen elija entre las candidatas. Las de la weekly con plantilla siguen siendo muchas (30-33) aun sin ellas: es el propio resumen en inglés.
+
+## Techo con un modelo mayor (10 nov) ❌
+
+Pregunta: ¿las tareas (5-9 de 14 en las reuniones de una hora) están limitadas por el tamaño del modelo? Mismo pipeline y prompts, sin `detail_tasks`, 3 semillas; Qwen con la plantilla ChatML y `<think>` vacío (se elige por `general.architecture`).
+
+Versiones, todas cuantizadas en GGUF:
+
+- **LFM3-1.7B Q8_0** (8 bits, 1,85 GB): el actual, la referencia.
+- **Qwen3.5-4B Q8_0** (8 bits, 4,5 GB), de `unsloth/Qwen3.5-4B-GGUF`.
+- **Qwen3.5-9B Q4_K_M** (4 bits, 5,7 GB), de `unsloth/Qwen3.5-9B-GGUF`. El 9B en Q8_0 (~9,5 GB) no se probó: el 4B en 8 bits ya cubre la comparación sin pérdida de cuantización.
+
+Tareas acertadas · escritas · cobertura · segundos:
+
+| Guion · modo | LFM3-1.7B Q8_0 | Qwen3.5-4B Q8_0 | Qwen3.5-9B Q4_K_M |
+|---|---|---|---|
+| revision_trimestral (es) · plantilla | 5/5/7 · 17-19 · 89-91 % · 122-137 | 10/6/5 · 7-9 · 75-86 % · 207-222 | 5/6/6 · 6-7 · 68-82 % · 362-418 |
+| revision_trimestral · Auto | 6/9/7 · 15-18 · 70 % · 99-115 | 6/5/3 · 4-7 · 80-89 % · 215-223 | 7/7/7 · 9-10 · 70-82 % · 359-521 |
+| weekly_planning (en) · plantilla | 3/8/9 · 30-33 · 70-87 % · 108-112 | 5/5/6 · 8 · 70-78 % · 206-213 | 5/6/4 · 12-15 · 72-76 % · 326-422 |
+| weekly_planning · Auto | 2/7/5 · 18-26 · 61-63 % · 90-103 | 5/6/2 · 2-8 · 59-85 % · 194-214 | 6/6/5 · 13-17 · 54-67 % · 332-339 |
+
+- **Tareas:** ninguno acierta claramente más. Los Qwen son más precisos (casi todo lo que escriben es una tarea real) y más estables entre semillas; LFM3 escribe el doble y acierta lo mismo.
+- **Cobertura:** el 9B resume más y lista menos datos; el 4B empata con plantilla y gana en Auto.
+- **Colocación:** igual (85-96 %). Cifras fieles igual (la weekly da ~0 % en todos los modelos: es cosa del guion).
+- **Tiempo:** el 4B tarda ~2 × lo de LFM3 y el 9B 3-4 ×; al 9B, leer el prompt del resumen (20.550 tokens) le cuesta 116-126 s.
+
+Decisión: se queda LFM3. El techo de las tareas no es el tamaño del modelo; está en cómo se piden o en cómo se puntúan (las «acertadas» exigen casar con el guion). El soporte de Qwen en llama.cpp (`qwen_prompt`) queda por si hace falta otro modelo.
 
 ## Otras áreas (descartes medidos)
 

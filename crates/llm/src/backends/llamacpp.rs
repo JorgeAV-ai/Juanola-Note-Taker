@@ -17,7 +17,7 @@ use llama_cpp_2::model::params::LlamaModelParams;
 use llama_cpp_2::model::LlamaModel;
 use llama_cpp_2::sampling::LlamaSampler;
 
-use crate::chat_format::{lfm3_prompt, strip_thinking};
+use crate::chat_format::{lfm3_prompt, qwen_prompt, strip_thinking};
 use crate::{GenOptions, LlmError, Message};
 
 const TEMPERATURE: f32 = 0.1;
@@ -59,6 +59,8 @@ pub struct LlamaCpp {
     n_ubatch: u32,
     /// `None` = automático (lo decide llama.cpp).
     flash_attention: Option<bool>,
+    /// Formato de chat, según la arquitectura del GGUF.
+    qwen: bool,
 }
 
 impl LlamaCpp {
@@ -67,7 +69,10 @@ impl LlamaCpp {
     pub fn load(path: &Path, n_ctx: u32) -> Result<Self, LlmError> {
         let params = LlamaModelParams::default().with_n_gpu_layers(u32::MAX);
         let model = LlamaModel::load_from_file(backend()?, path, &params).map_err(err)?;
-        Ok(Self { model, n_ctx, n_ubatch: 512, flash_attention: None })
+        // LFM3 es el modelo de la app; Qwen se admite para comparar (ver
+        // `docs/experimentos.md`). Cualquier otra arquitectura usa el de LFM3.
+        let qwen = model.meta_val_str("general.architecture").is_ok_and(|a| a.starts_with("qwen"));
+        Ok(Self { model, n_ctx, n_ubatch: 512, flash_attention: None, qwen })
     }
 
     /// Tamaño de micro-lote del prefill.
@@ -105,8 +110,8 @@ impl LlamaCpp {
         let vocab = self.model.vocab();
         let mut prepared = Vec::with_capacity(reqs.len());
         for (msgs, opts) in reqs {
-            let prompt = lfm3_prompt(msgs);
-            // El prompt ya trae `<|startoftext|>`: no añadir otro BOS.
+            let prompt = if self.qwen { qwen_prompt(msgs) } else { lfm3_prompt(msgs) };
+            // El de LFM3 ya trae `<|startoftext|>`, y Qwen no usa BOS: no añadir otro.
             let tokens = vocab.tokenize(prompt.as_bytes(), false, true);
             let max_new = opts.max_tokens.unwrap_or(2048) as usize;
             if tokens.len() + max_new > self.n_ctx as usize {

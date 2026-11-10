@@ -43,6 +43,21 @@ pub fn lfm3_prompt(messages: &[Message]) -> String {
     out
 }
 
+/// Prompt ChatML de Qwen3/Qwen3.5 (su plantilla Jinja con
+/// `enable_thinking = false`): sin BOS y con el bloque de razonamiento vacío.
+pub fn qwen_prompt(messages: &[Message]) -> String {
+    let mut out = String::new();
+    for m in messages {
+        out.push_str("<|im_start|>");
+        out.push_str(&m.role);
+        out.push('\n');
+        out.push_str(m.content.rsplit("</think>").next().unwrap_or("").trim_start());
+        out.push_str("<|im_end|>\n");
+    }
+    out.push_str("<|im_start|>assistant\n<think>\n\n</think>\n\n");
+    out
+}
+
 /// Quita cualquier bloque `<think>…</think>` que el modelo emita pese a todo.
 pub fn strip_thinking(text: &str) -> &str {
     match text.rfind("</think>") {
@@ -54,6 +69,15 @@ pub fn strip_thinking(text: &str) -> &str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn qwen_without_thinking() {
+        let m = |r: &str, c: &str| Message { role: r.into(), content: c.into() };
+        assert_eq!(
+            qwen_prompt(&[m("user", "Hola")]),
+            "<|im_start|>user\nHola<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+        );
+    }
 
     fn m(role: &str, content: &str) -> Message {
         Message { role: role.into(), content: content.into() }
