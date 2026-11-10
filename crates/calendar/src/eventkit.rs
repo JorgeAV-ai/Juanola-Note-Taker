@@ -83,14 +83,11 @@ fn convert(e: &EKEvent) -> Option<CalendarEvent> {
         let end = to_utc(&e.endDate());
         let item_id = e.calendarItemIdentifier().to_string();
         let calendar_id = e.calendar().map(|c| c.calendarIdentifier().to_string()).unwrap_or_default();
-        let attendees: Vec<Attendee> =
-            e.attendees().map(|a| a.iter().map(|p| attendee(&p)).collect()).unwrap_or_default();
+        let attendees: Vec<Attendee> = e.attendees().map(|a| a.iter().map(|p| attendee(&p)).collect()).unwrap_or_default();
         let url = e.URL().and_then(|u| u.absoluteString()).map(|s| s.to_string());
         let location = e.location().map(|s| s.to_string());
         let notes = e.notes().map(|s| s.to_string());
-        let conference_url = find_conference_url(
-            [url.as_deref(), location.as_deref(), notes.as_deref()].into_iter().flatten(),
-        );
+        let conference_url = find_conference_url([url.as_deref(), location.as_deref(), notes.as_deref()].into_iter().flatten());
         // El identificador externo (el UID del servidor) sobrevive a las
         // resincronizaciones; `calendarItemIdentifier` puede cambiar.
         let uid = e.calendarItemExternalIdentifier().map(|s| s.to_string()).filter(|s| !s.is_empty()).unwrap_or(item_id);

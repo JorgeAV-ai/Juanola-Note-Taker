@@ -20,7 +20,8 @@ fn main() -> anyhow::Result<()> {
         })?;
         let WorkerEvent::Ready { .. } = w.events().recv_timeout(Duration::from_secs(60))? else { anyhow::bail!("worker") };
         let mut cap = CpalCapture::new();
-        let mut rx = cap.start(CaptureConfig { mic_device: None, capture_mic: true, capture_system_audio: true, echo_cancellation: false })?;
+        let mut rx =
+            cap.start(CaptureConfig { mic_device: None, capture_mic: true, capture_system_audio: true, echo_cancellation: false })?;
         let t = Instant::now();
         let (mut sent, mut finals) = (0usize, Vec::new());
         while t.elapsed() < Duration::from_secs(secs) {

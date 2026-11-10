@@ -32,12 +32,8 @@ impl AsrContext {
             lines.push(format!("Reunión: {title}"));
         }
         let mut seen = std::collections::HashSet::new();
-        let attendees: Vec<&str> = self
-            .attendees
-            .iter()
-            .map(|a| a.trim())
-            .filter(|a| !a.is_empty() && seen.insert(a.to_lowercase()))
-            .collect();
+        let attendees: Vec<&str> =
+            self.attendees.iter().map(|a| a.trim()).filter(|a| !a.is_empty() && seen.insert(a.to_lowercase())).collect();
         if !attendees.is_empty() {
             lines.push(format!("Asistentes: {}", attendees.join(", ")));
         }
@@ -50,13 +46,8 @@ impl AsrContext {
             lines.push(format!("Notas: {}", truncate(&notes, MAX_NOTES)));
         }
         let mut seen = std::collections::HashSet::new();
-        let terms: Vec<&str> = self
-            .glossary
-            .iter()
-            .map(|t| t.trim())
-            .filter(|t| !t.is_empty() && seen.insert(t.to_lowercase()))
-            .take(MAX_TERMS)
-            .collect();
+        let terms: Vec<&str> =
+            self.glossary.iter().map(|t| t.trim()).filter(|t| !t.is_empty() && seen.insert(t.to_lowercase())).take(MAX_TERMS).collect();
         if !terms.is_empty() {
             lines.push(format!("Términos: {}.", terms.join(", ")));
         }

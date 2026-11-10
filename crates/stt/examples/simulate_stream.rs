@@ -94,7 +94,13 @@ fn main() -> anyhow::Result<()> {
         }
         v.sort_by(f64::total_cmp);
         let p = |q: f64| v[((v.len() - 1) as f64 * q).round() as usize];
-        println!("retraso {name} vs. fin del tramo: mediana {:.2}s, p90 {:.2}s, máx {:.2}s ({} resultados)", p(0.5), p(0.9), p(1.0), v.len());
+        println!(
+            "retraso {name} vs. fin del tramo: mediana {:.2}s, p90 {:.2}s, máx {:.2}s ({} resultados)",
+            p(0.5),
+            p(0.9),
+            p(1.0),
+            v.len()
+        );
     }
     if let Some(m) = lags.decode.iter().max() {
         let mean = lags.decode.iter().sum::<u64>() as f64 / lags.decode.len() as f64;
@@ -114,7 +120,11 @@ fn report(ev: &WorkerEvent, started: Instant, lags: &mut Lags, quiet: bool) {
     match ev {
         WorkerEvent::Segment { id, start, end, text, is_final, decode_ms, .. } => {
             let lag = started.elapsed().as_secs_f64() - end;
-            if *is_final { lags.fin.push(lag) } else { lags.partial.push(lag) }
+            if *is_final {
+                lags.fin.push(lag)
+            } else {
+                lags.partial.push(lag)
+            }
             lags.decode.push(*decode_ms);
             if quiet {
                 return;

@@ -29,8 +29,7 @@ fn main() -> anyhow::Result<()> {
         Some(l) => Some(l.to_owned()),
         None => Some("Spanish".to_owned()),
     };
-    let models = PathBuf::from(std::env::var_os("HOME").unwrap_or_default())
-        .join("Library/Application Support/dev.juanola.desktop/models");
+    let models = PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join("Library/Application Support/dev.juanola.desktop/models");
     let program = std::env::current_exe()?.parent().and_then(|p| p.parent()).unwrap().join("juanola-stt-worker");
     let mut w = SttWorker::spawn(&WorkerConfig {
         program,

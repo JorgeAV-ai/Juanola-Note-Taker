@@ -53,7 +53,8 @@ fn row_to_note(r: &sqlx::sqlite::SqliteRow) -> Result<Note, DbError> {
     })
 }
 
-const COLS: &str = "id, workspace_id, title, raw_doc, enhanced_doc, template_id, status, calendar_event_id, created_at, updated_at, trashed_at";
+const COLS: &str =
+    "id, workspace_id, title, raw_doc, enhanced_doc, template_id, status, calendar_event_id, created_at, updated_at, trashed_at";
 
 pub async fn create(db: &Db, workspace_id: Id, title: &str) -> Result<Note, DbError> {
     let id = Id::new_v4();
@@ -67,10 +68,7 @@ pub async fn create(db: &Db, workspace_id: Id, title: &str) -> Result<Note, DbEr
 }
 
 pub async fn get(db: &Db, id: Id) -> Result<Option<Note>, DbError> {
-    let row = sqlx::query(&format!("SELECT {COLS} FROM notes WHERE id = ?"))
-        .bind(id.to_string())
-        .fetch_optional(db.pool())
-        .await?;
+    let row = sqlx::query(&format!("SELECT {COLS} FROM notes WHERE id = ?")).bind(id.to_string()).fetch_optional(db.pool()).await?;
     row.as_ref().map(row_to_note).transpose()
 }
 
@@ -94,15 +92,23 @@ async fn touch(db: &Db, sql: &str, id: Id, value: Option<String>) -> Result<(), 
 }
 
 pub async fn set_title(db: &Db, id: Id, title: &str) -> Result<(), DbError> {
-    touch(db, "UPDATE notes SET title = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?", id, Some(title.to_owned())).await
+    touch(db, "UPDATE notes SET title = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?", id, Some(title.to_owned()))
+        .await
 }
 
 pub async fn set_raw_doc(db: &Db, id: Id, doc: &serde_json::Value) -> Result<(), DbError> {
-    touch(db, "UPDATE notes SET raw_doc = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?", id, Some(doc.to_string())).await
+    touch(db, "UPDATE notes SET raw_doc = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?", id, Some(doc.to_string()))
+        .await
 }
 
 pub async fn set_enhanced_doc(db: &Db, id: Id, doc: Option<&serde_json::Value>) -> Result<(), DbError> {
-    touch(db, "UPDATE notes SET enhanced_doc = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?", id, doc.map(|d| d.to_string())).await
+    touch(
+        db,
+        "UPDATE notes SET enhanced_doc = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?",
+        id,
+        doc.map(|d| d.to_string()),
+    )
+    .await
 }
 
 pub async fn set_status(db: &Db, id: Id, status: NoteStatus) -> Result<(), DbError> {
@@ -149,10 +155,6 @@ pub async fn find_by_event(db: &Db, event_id: &str) -> Result<Option<Note>, DbEr
 }
 
 pub async fn set_calendar_event(db: &Db, id: Id, event_id: Option<&str>) -> Result<(), DbError> {
-    sqlx::query("UPDATE notes SET calendar_event_id = ? WHERE id = ?")
-        .bind(event_id)
-        .bind(id.to_string())
-        .execute(db.pool())
-        .await?;
+    sqlx::query("UPDATE notes SET calendar_event_id = ? WHERE id = ?").bind(event_id).bind(id.to_string()).execute(db.pool()).await?;
     Ok(())
 }

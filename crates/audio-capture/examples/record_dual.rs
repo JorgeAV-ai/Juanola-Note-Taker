@@ -33,12 +33,8 @@ async fn main() -> anyhow::Result<()> {
     let dir = PathBuf::from(args.get(1).cloned().unwrap_or_else(|| "recordings".into()));
     std::fs::create_dir_all(&dir)?;
 
-    let spec = hound::WavSpec {
-        channels: 1,
-        sample_rate: TARGET_SAMPLE_RATE,
-        bits_per_sample: 16,
-        sample_format: hound::SampleFormat::Int,
-    };
+    let spec =
+        hound::WavSpec { channels: 1, sample_rate: TARGET_SAMPLE_RATE, bits_per_sample: 16, sample_format: hound::SampleFormat::Int };
     let mut mic_wav = hound::WavWriter::create(dir.join("mic.wav"), spec)?;
     let mut sys_wav = hound::WavWriter::create(dir.join("system.wav"), spec)?;
 
@@ -86,12 +82,7 @@ async fn main() -> anyhow::Result<()> {
             },
         }
         if last_print.elapsed() >= Duration::from_millis(500) {
-            println!(
-                "{:>6.1}s  mic {:<20} system {:<20}",
-                started.elapsed().as_secs_f32(),
-                bar(rms(&mic_acc)),
-                bar(rms(&sys_acc)),
-            );
+            println!("{:>6.1}s  mic {:<20} system {:<20}", started.elapsed().as_secs_f32(), bar(rms(&mic_acc)), bar(rms(&sys_acc)),);
             mic_acc.clear();
             sys_acc.clear();
             // Reescribe la cabecera: el WAV queda legible aunque el proceso muera.
@@ -105,13 +96,7 @@ async fn main() -> anyhow::Result<()> {
     mic_wav.finalize()?;
     sys_wav.finalize()?;
     let secs = |n: usize| n as f32 / TARGET_SAMPLE_RATE as f32;
-    println!(
-        "Listo: mic.wav {:.1}s (pico {:.3}), system.wav {:.1}s (pico {:.3})",
-        secs(mic_total),
-        mic_peak,
-        secs(sys_total),
-        sys_peak
-    );
+    println!("Listo: mic.wav {:.1}s (pico {:.3}), system.wav {:.1}s (pico {:.3})", secs(mic_total), mic_peak, secs(sys_total), sys_peak);
     if mic_total > 0 && mic_peak == 0.0 {
         println!(
             "Aviso: mic.wav es cero absoluto, lo que suele indicar permiso denegado. Revisa \

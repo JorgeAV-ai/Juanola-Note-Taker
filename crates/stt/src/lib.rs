@@ -40,12 +40,7 @@ pub trait StreamingTranscriber: Send {
 /// Reconocedor batch sobre audio completo.
 #[async_trait::async_trait]
 pub trait BatchTranscriber: Send + Sync {
-    async fn transcribe(
-        &self,
-        samples: &[f32],
-        channel: Channel,
-        opts: &SttOptions,
-    ) -> Result<Vec<Transcript>, SttError>;
+    async fn transcribe(&self, samples: &[f32], channel: Channel, opts: &SttOptions) -> Result<Vec<Transcript>, SttError>;
 }
 
 /// Detector de actividad de voz por frame (Silero / TEN vía sherpa-onnx).

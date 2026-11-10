@@ -128,10 +128,7 @@ impl Detection {
     }
 
     pub fn settings(&self) -> DetectionSettings {
-        DetectionSettings {
-            meetings: self.meetings.load(Ordering::Relaxed),
-            calendar_reminders: self.reminders.load(Ordering::Relaxed),
-        }
+        DetectionSettings { meetings: self.meetings.load(Ordering::Relaxed), calendar_reminders: self.reminders.load(Ordering::Relaxed) }
     }
 
     pub fn set_settings(&self, s: DetectionSettings) {
@@ -294,8 +291,7 @@ pub fn show(app: &AppHandle, n: Notification) {
 /// aborta (visto al cerrar el aviso). Ver [`restore_class`].
 /// AppKit solo en el hilo principal.
 #[cfg(target_os = "macos")]
-static TAO_CLASS: std::sync::atomic::AtomicPtr<objc2::runtime::AnyClass> =
-    std::sync::atomic::AtomicPtr::new(std::ptr::null_mut());
+static TAO_CLASS: std::sync::atomic::AtomicPtr<objc2::runtime::AnyClass> = std::sync::atomic::AtomicPtr::new(std::ptr::null_mut());
 
 #[cfg(target_os = "macos")]
 fn float_over_fullscreen(w: &tauri::WebviewWindow) {
@@ -437,10 +433,7 @@ pub fn close_disabled(app: &AppHandle, s: DetectionSettings) {
 
 /// Arranca el hilo de sondeo. Vive lo que la app.
 pub fn spawn(app: AppHandle) {
-    std::thread::Builder::new()
-        .name("juanola-detect".into())
-        .spawn(move || run(app))
-        .expect("hilo de detección");
+    std::thread::Builder::new().name("juanola-detect".into()).spawn(move || run(app)).expect("hilo de detección");
 }
 
 fn run(app: AppHandle) {
@@ -478,9 +471,7 @@ fn run(app: AppHandle) {
                 }
                 DetectEvent::MicReleased { app: detected } => {
                     tracing::info!(app = %detected.name, "micrófono liberado");
-                    let showing = det
-                        .current()
-                        .is_some_and(|n| n.app.as_ref().is_some_and(|a| a.bundle_id == detected.bundle_id));
+                    let showing = det.current().is_some_and(|n| n.app.as_ref().is_some_and(|a| a.bundle_id == detected.bundle_id));
                     if showing {
                         close(&app);
                     }

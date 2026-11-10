@@ -73,10 +73,7 @@ mod tests {
     #[test]
     fn qwen_without_thinking() {
         let m = |r: &str, c: &str| Message { role: r.into(), content: c.into() };
-        assert_eq!(
-            qwen_prompt(&[m("user", "Hola")]),
-            "<|im_start|>user\nHola<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
-        );
+        assert_eq!(qwen_prompt(&[m("user", "Hola")]), "<|im_start|>user\nHola<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n");
     }
 
     fn m(role: &str, content: &str) -> Message {

@@ -24,14 +24,7 @@ pub struct AppState {
 impl AppState {
     pub fn new(db: juanola_db::Db, data_dir: PathBuf, detection: DetectionSettings) -> Self {
         let models = Arc::new(Models::new(&data_dir));
-        Self {
-            db,
-            data_dir,
-            recording: Mutex::new(None),
-            llm: tokio::sync::Mutex::new(None),
-            models,
-            detection: Detection::new(detection),
-        }
+        Self { db, data_dir, recording: Mutex::new(None), llm: tokio::sync::Mutex::new(None), models, detection: Detection::new(detection) }
     }
 
     /// Libera el modelo antes de salir. Si sigue cargado cuando el proceso

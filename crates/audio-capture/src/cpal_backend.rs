@@ -242,11 +242,7 @@ impl ChannelSlot {
     /// crear el tap del sistema mientras un auricular Bluetooth cambia de perfil
     /// (A2DP → HFP al abrir su micro) puede quedarse colgado para siempre, y
     /// sin el límite colgaba el arranque entero de la grabación.
-    fn open(
-        &mut self,
-        commands: &mpsc::Sender<Command>,
-        play: bool,
-    ) -> Result<(), CaptureError> {
+    fn open(&mut self, commands: &mpsc::Sender<Command>, play: bool) -> Result<(), CaptureError> {
         if self.opening.load(Ordering::Acquire) {
             return Err(CaptureError::Backend(format!("la apertura anterior de {} sigue colgada", label(self.channel))));
         }
@@ -285,11 +281,9 @@ impl ChannelSlot {
                 self.stream = Some(res?);
                 Ok(())
             }
-            Err(_) => Err(CaptureError::Backend(format!(
-                "abrir el stream de {} tardó más de {} s",
-                label(self.channel),
-                timeout.as_secs()
-            ))),
+            Err(_) => {
+                Err(CaptureError::Backend(format!("abrir el stream de {} tardó más de {} s", label(self.channel), timeout.as_secs())))
+            }
         }
     }
 }
@@ -426,21 +420,13 @@ fn owner_thread(
     }
 }
 
-fn command_loop(
-    slots: &mut [ChannelSlot],
-    commands_tx: &mpsc::Sender<Command>,
-    commands: &mpsc::Receiver<Command>,
-) {
+fn command_loop(slots: &mut [ChannelSlot], commands_tx: &mpsc::Sender<Command>, commands: &mpsc::Receiver<Command>) {
     let mut paused = false;
     // Canales pendientes de reconstruir y cuándo intentarlo.
     let mut pending: Vec<(Channel, Instant)> = Vec::new();
     loop {
-        let timeout = pending
-            .iter()
-            .map(|(_, at)| at.saturating_duration_since(Instant::now()))
-            .min()
-            .unwrap_or(WATCHDOG_TICK)
-            .min(WATCHDOG_TICK);
+        let timeout =
+            pending.iter().map(|(_, at)| at.saturating_duration_since(Instant::now())).min().unwrap_or(WATCHDOG_TICK).min(WATCHDOG_TICK);
         match commands.recv_timeout(timeout) {
             Ok(Command::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => return,
             Ok(Command::Pause) => {
@@ -468,11 +454,7 @@ fn command_loop(
         if !paused {
             for slot in slots.iter_mut() {
                 if !pending.iter().any(|(c, _)| *c == slot.channel) && slot.stalled() {
-                    tracing::warn!(
-                        channel = label(slot.channel),
-                        attempt = slot.stalls,
-                        "stream sin datos, se reconstruye"
-                    );
+                    tracing::warn!(channel = label(slot.channel), attempt = slot.stalls, "stream sin datos, se reconstruye");
                     pending.push((slot.channel, Instant::now()));
                 }
             }
@@ -576,10 +558,8 @@ where
             config,
             move |data: &[T], _: &cpal::InputCallbackInfo| {
                 // Downmix a mono en el callback para mover 1/n de datos.
-                let samples: Vec<f32> = data
-                    .chunks_exact(n)
-                    .map(|frame| frame.iter().map(|s| s.to_sample::<f32>()).sum::<f32>() / n as f32)
-                    .collect();
+                let samples: Vec<f32> =
+                    data.chunks_exact(n).map(|frame| frame.iter().map(|s| s.to_sample::<f32>()).sum::<f32>() / n as f32).collect();
                 // try_send: nunca bloquear el hilo de tiempo real.
                 last_activity.store(epoch.elapsed().as_millis() as u64, Ordering::Relaxed);
                 if tx.try_send(Block { rate, generation, samples }).is_err() {
@@ -590,9 +570,7 @@ where
                 tracing::warn!(channel = label(channel), "error de stream: {err}");
                 if matches!(
                     err.kind(),
-                    cpal::ErrorKind::StreamInvalidated
-                        | cpal::ErrorKind::DeviceChanged
-                        | cpal::ErrorKind::DeviceNotAvailable
+                    cpal::ErrorKind::StreamInvalidated | cpal::ErrorKind::DeviceChanged | cpal::ErrorKind::DeviceNotAvailable
                 ) {
                     let _ = commands.send(Command::Rebuild(channel));
                 }

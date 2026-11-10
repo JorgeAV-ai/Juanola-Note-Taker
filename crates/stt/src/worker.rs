@@ -55,8 +55,7 @@ pub fn read_frame(r: &mut impl Read) -> std::io::Result<Option<(Channel, Vec<f32
         Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(None),
         Err(e) => return Err(e),
     }
-    let channel = channel_from_byte(head[0])
-        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "canal desconocido"))?;
+    let channel = channel_from_byte(head[0]).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "canal desconocido"))?;
     let n = u32::from_le_bytes([head[1], head[2], head[3], head[4]]) as usize;
     let mut bytes = vec![0u8; n * 4];
     r.read_exact(&mut bytes)?;
@@ -141,9 +140,7 @@ impl SttWorker {
             cmd.arg("--context").arg(c);
         }
         cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::inherit());
-        let mut child = cmd
-            .spawn()
-            .map_err(|e| SttError::Backend(format!("no se pudo lanzar {}: {e}", cfg.program.display())))?;
+        let mut child = cmd.spawn().map_err(|e| SttError::Backend(format!("no se pudo lanzar {}: {e}", cfg.program.display())))?;
         let stdin = child.stdin.take().map(std::io::BufWriter::new);
         let stdout = child.stdout.take().ok_or_else(|| SttError::Backend("sin stdout".into()))?;
         let (tx, events) = mpsc::channel();
@@ -152,9 +149,8 @@ impl SttWorker {
             .spawn(move || {
                 for line in BufReader::new(stdout).lines() {
                     let Ok(line) = line else { break };
-                    let ev = serde_json::from_str::<WorkerEvent>(&line).unwrap_or_else(|e| WorkerEvent::Error {
-                        message: format!("línea no válida del worker ({e}): {line}"),
-                    });
+                    let ev = serde_json::from_str::<WorkerEvent>(&line)
+                        .unwrap_or_else(|e| WorkerEvent::Error { message: format!("línea no válida del worker ({e}): {line}") });
                     if tx.send(ev).is_err() {
                         break;
                     }
@@ -166,9 +162,7 @@ impl SttWorker {
 
     pub fn send(&mut self, channel: Channel, samples: &[f32]) -> Result<(), SttError> {
         let w = self.stdin.as_mut().ok_or_else(|| SttError::Backend("worker cerrado".into()))?;
-        write_frame(w, channel, samples)
-            .and_then(|_| w.flush())
-            .map_err(|e| SttError::Backend(format!("el worker no acepta audio: {e}")))
+        write_frame(w, channel, samples).and_then(|_| w.flush()).map_err(|e| SttError::Backend(format!("el worker no acepta audio: {e}")))
     }
 
     /// Estado de salida si el proceso ya terminó.

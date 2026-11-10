@@ -59,9 +59,7 @@ pub async fn list(db: &Db, note_id: Id) -> Result<Vec<Segment>, DbError> {
 
 /// Hora de fin del último segmento (para continuar una grabación tras Resume).
 pub async fn last_end(db: &Db, note_id: Id) -> Result<f64, DbError> {
-    let v: Option<f64> = sqlx::query_scalar("SELECT MAX(end_s) FROM segments WHERE note_id = ?")
-        .bind(note_id.to_string())
-        .fetch_one(db.pool())
-        .await?;
+    let v: Option<f64> =
+        sqlx::query_scalar("SELECT MAX(end_s) FROM segments WHERE note_id = ?").bind(note_id.to_string()).fetch_one(db.pool()).await?;
     Ok(v.unwrap_or(0.0))
 }

@@ -297,7 +297,10 @@ mod tests {
                     let mut buf = vec![0u8; 4096];
                     let n = sock.read(&mut buf).await.unwrap();
                     let req = String::from_utf8_lossy(&buf[..n]).to_lowercase();
-                    let from = req.lines().find_map(|l| l.strip_prefix("range: bytes=")).and_then(|r| r.trim_end_matches('-').parse::<usize>().ok());
+                    let from = req
+                        .lines()
+                        .find_map(|l| l.strip_prefix("range: bytes="))
+                        .and_then(|r| r.trim_end_matches('-').parse::<usize>().ok());
                     let (status, slice) = match from {
                         Some(f) => ("206 Partial Content", &body[f..]),
                         None => ("200 OK", &body[..]),

@@ -39,7 +39,11 @@ pub fn words_with(text: &str, numbers: bool) -> Vec<Word> {
             }
         }
     }
-    if numbers { join_numbers(raw) } else { raw }
+    if numbers {
+        join_numbers(raw)
+    } else {
+        raw
+    }
 }
 
 /// Valor de una palabra numérica en español; `None` si no lo es.
@@ -48,16 +52,40 @@ fn number_word(k: &str) -> Option<u64> {
         return k.parse().ok();
     }
     const UNITS: [&str; 30] = [
-        "cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce",
-        "trece", "catorce", "quince", "dieciseis", "diecisiete", "dieciocho", "diecinueve", "veinte", "veintiuno",
-        "veintidos", "veintitres", "veinticuatro", "veinticinco", "veintiseis", "veintisiete", "veintiocho",
+        "cero",
+        "uno",
+        "dos",
+        "tres",
+        "cuatro",
+        "cinco",
+        "seis",
+        "siete",
+        "ocho",
+        "nueve",
+        "diez",
+        "once",
+        "doce",
+        "trece",
+        "catorce",
+        "quince",
+        "dieciseis",
+        "diecisiete",
+        "dieciocho",
+        "diecinueve",
+        "veinte",
+        "veintiuno",
+        "veintidos",
+        "veintitres",
+        "veinticuatro",
+        "veinticinco",
+        "veintiseis",
+        "veintisiete",
+        "veintiocho",
         "veintinueve",
     ];
     const TENS: [&str; 7] = ["treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"];
-    const HUNDREDS: [&str; 9] = [
-        "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos",
-        "ochocientos", "novecientos",
-    ];
+    const HUNDREDS: [&str; 9] =
+        ["ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos"];
     let fem = |s: &str| s.replace("ientas", "ientos");
     if let Some(i) = UNITS.iter().position(|u| *u == k) {
         return Some(i as u64);
@@ -163,8 +191,8 @@ pub fn align(a: &[Word], b: &[Word]) -> Vec<Op> {
     for (i, row) in d.iter_mut().enumerate() {
         row[0] = i as u32;
     }
-    for j in 0..=m {
-        d[0][j] = j as u32;
+    for (j, cell) in d[0].iter_mut().enumerate() {
+        *cell = j as u32;
     }
     for i in 1..=n {
         for j in 1..=m {

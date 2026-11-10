@@ -60,12 +60,7 @@ pub enum Action {
 #[derive(Debug)]
 enum State {
     Idle,
-    Speech {
-        start: u64,
-        last_voice: u64,
-        last_partial: u64,
-        voiced: u64,
-    },
+    Speech { start: u64, last_voice: u64, last_partial: u64, voiced: u64 },
 }
 
 #[derive(Debug)]
@@ -100,12 +95,7 @@ impl Segmenter {
         match &mut self.state {
             State::Idle => {
                 if prob >= c.start_threshold {
-                    self.state = State::Speech {
-                        start: begin.saturating_sub(c.pre_roll),
-                        last_voice: end,
-                        last_partial: end,
-                        voiced: len,
-                    };
+                    self.state = State::Speech { start: begin.saturating_sub(c.pre_roll), last_voice: end, last_partial: end, voiced: len };
                 }
                 None
             }

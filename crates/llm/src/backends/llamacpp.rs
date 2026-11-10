@@ -331,11 +331,7 @@ impl crate::ChatModel for LlamaCpp {
         Ok(out.into_iter().map(|(text, _)| text).collect())
     }
 
-    fn stream<'a>(
-        &'a self,
-        msgs: &'a [Message],
-        opts: &'a GenOptions,
-    ) -> futures::stream::BoxStream<'a, Result<String, LlmError>> {
+    fn stream<'a>(&'a self, msgs: &'a [Message], opts: &'a GenOptions) -> futures::stream::BoxStream<'a, Result<String, LlmError>> {
         // Sin streaming token a token todavía: un único trozo con todo el texto.
         Box::pin(futures::stream::once(async move { crate::ChatModel::complete(self, msgs, opts).await }))
     }

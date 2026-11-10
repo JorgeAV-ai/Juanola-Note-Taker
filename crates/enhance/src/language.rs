@@ -8,12 +8,48 @@ use juanola_core_types::Segment;
 
 /// (nombre para el prompt, que está en español; palabras funcionales).
 const LANGUAGES: &[(&str, &[&str])] = &[
-    ("español", &["el", "la", "los", "las", "que", "de", "y", "en", "un", "una", "es", "por", "para", "con", "no", "lo", "se", "del", "pero", "muy", "está", "hay", "también"]),
-    ("inglés", &["the", "and", "is", "are", "to", "of", "that", "it", "we", "you", "this", "with", "for", "have", "be", "not", "was", "what", "will", "they"]),
-    ("portugués", &["o", "os", "as", "que", "de", "e", "em", "um", "uma", "é", "não", "do", "da", "para", "com", "isso", "também", "muito", "você", "está"]),
-    ("francés", &["le", "la", "les", "et", "est", "des", "une", "un", "que", "pas", "pour", "dans", "nous", "vous", "ce", "avec", "sur", "mais", "très", "il"]),
-    ("alemán", &["der", "die", "das", "und", "ist", "nicht", "ich", "wir", "sie", "ein", "eine", "zu", "mit", "auf", "den", "auch", "es", "für", "von", "haben"]),
-    ("italiano", &["il", "la", "che", "di", "e", "è", "un", "una", "per", "non", "sono", "con", "del", "della", "anche", "questo", "abbiamo", "gli", "molto", "noi"]),
+    (
+        "español",
+        &[
+            "el", "la", "los", "las", "que", "de", "y", "en", "un", "una", "es", "por", "para", "con", "no", "lo", "se", "del", "pero",
+            "muy", "está", "hay", "también",
+        ],
+    ),
+    (
+        "inglés",
+        &[
+            "the", "and", "is", "are", "to", "of", "that", "it", "we", "you", "this", "with", "for", "have", "be", "not", "was", "what",
+            "will", "they",
+        ],
+    ),
+    (
+        "portugués",
+        &[
+            "o", "os", "as", "que", "de", "e", "em", "um", "uma", "é", "não", "do", "da", "para", "com", "isso", "também", "muito", "você",
+            "está",
+        ],
+    ),
+    (
+        "francés",
+        &[
+            "le", "la", "les", "et", "est", "des", "une", "un", "que", "pas", "pour", "dans", "nous", "vous", "ce", "avec", "sur", "mais",
+            "très", "il",
+        ],
+    ),
+    (
+        "alemán",
+        &[
+            "der", "die", "das", "und", "ist", "nicht", "ich", "wir", "sie", "ein", "eine", "zu", "mit", "auf", "den", "auch", "es", "für",
+            "von", "haben",
+        ],
+    ),
+    (
+        "italiano",
+        &[
+            "il", "la", "che", "di", "e", "è", "un", "una", "per", "non", "sono", "con", "del", "della", "anche", "questo", "abbiamo",
+            "gli", "molto", "noi",
+        ],
+    ),
 ];
 
 /// Idioma en que escribir el resumen; español si la transcripción no da pistas.
@@ -79,7 +115,8 @@ const FIXED_HEADINGS: [[&str; 6]; 3] = [
 ];
 
 /// Viñeta de un apartado de la plantilla del que no se habló.
-const NOT_DISCUSSED: [&str; 6] = ["No se habló de esto", "Not discussed", "Não se falou disto", "Pas abordé", "Nicht besprochen", "Non se n'è parlato"];
+const NOT_DISCUSSED: [&str; 6] =
+    ["No se habló de esto", "Not discussed", "Não se falou disto", "Pas abordé", "Nicht besprochen", "Non se n'è parlato"];
 
 /// Títulos fijos del pipeline («Próximos pasos», «Tus notas», «Otros temas»)
 /// en el idioma del resumen. Los demás títulos se devuelven tal cual.
@@ -132,7 +169,9 @@ mod tests {
         assert_eq!(summary_language(&en), "inglés");
         let pt = segs(&["Nós vamos lançar a versão nova em novembro e o time está muito contente, isso é ótimo para você."]);
         assert_eq!(summary_language(&pt), "portugués");
-        let de = segs(&["Wir haben die Zahlen von Oktober und das ist nicht schlecht, die Präsentation ist für Freitag und wir sind auch bereit."]);
+        let de = segs(&[
+            "Wir haben die Zahlen von Oktober und das ist nicht schlecht, die Präsentation ist für Freitag und wir sind auch bereit.",
+        ]);
         assert_eq!(summary_language(&de), "alemán");
     }
 

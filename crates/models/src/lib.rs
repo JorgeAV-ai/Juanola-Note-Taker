@@ -118,13 +118,9 @@ impl Catalog {
             .filter(|m| m.name == name)
             .filter(|m| m.ready)
             .filter(|m| m.platforms.iter().any(|p| p == plat))
-            .filter(|m| m.min_ram_gb.map_or(true, |min| machine.ram_gb >= min))
+            .filter(|m| m.min_ram_gb.is_none_or(|min| machine.ram_gb >= min))
             .collect();
-        machine
-            .platform
-            .preferred_formats()
-            .iter()
-            .find_map(|fmt| candidates.iter().find(|m| m.format == *fmt).copied())
+        machine.platform.preferred_formats().iter().find_map(|fmt| candidates.iter().find(|m| m.format == *fmt).copied())
     }
 }
 

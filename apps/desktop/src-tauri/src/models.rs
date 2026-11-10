@@ -61,10 +61,7 @@ impl Models {
 
     /// Carpeta del modelo de un slot.
     pub fn dir(&self, slot: &str) -> PathBuf {
-        self.plan()
-            .ok()
-            .and_then(|p| p.into_iter().find(|p| p.slot == slot).map(|p| p.dir))
-            .unwrap_or_else(|| self.root.join(slot))
+        self.plan().ok().and_then(|p| p.into_iter().find(|p| p.slot == slot).map(|p| p.dir)).unwrap_or_else(|| self.root.join(slot))
     }
 
     /// El fichero principal del modelo de un slot (el GGUF del LLM).

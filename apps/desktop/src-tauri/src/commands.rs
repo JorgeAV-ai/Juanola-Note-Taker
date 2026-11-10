@@ -230,10 +230,7 @@ async fn llm(state: &AppState) -> Res<Arc<LlamaCpp>> {
         return Ok(m.clone());
     }
     let path = state.gguf();
-    let model = tauri::async_runtime::spawn_blocking(move || LlamaCpp::load(&path, 32_768).map(Arc::new))
-        .await
-        .map_err(e)?
-        .map_err(e)?;
+    let model = tauri::async_runtime::spawn_blocking(move || LlamaCpp::load(&path, 32_768).map(Arc::new)).await.map_err(e)?.map_err(e)?;
     *slot = Some(model.clone());
     Ok(model)
 }
@@ -291,9 +288,8 @@ pub fn list_audio_devices() -> Vec<juanola_audio_capture::AudioDevice> {
 #[tauri::command]
 pub async fn coming_up() -> Res<Vec<CalendarEvent>> {
     let now = chrono::Utc::now();
-    let events = tauri::async_runtime::spawn_blocking(move || detect::calendar_events(now, now + chrono::Duration::days(30)))
-        .await
-        .map_err(e)?;
+    let events =
+        tauri::async_runtime::spawn_blocking(move || detect::calendar_events(now, now + chrono::Duration::days(30))).await.map_err(e)?;
     Ok(juanola_calendar::coming_up(events, now))
 }
 

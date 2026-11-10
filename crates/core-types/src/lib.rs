@@ -269,14 +269,18 @@ mod template_tests {
     fn validate_rules() {
         assert!(tpl(&[("Temas", "", Topics), ("Próximos pasos", "", Tasks)]).validate().is_ok());
         assert_eq!(tpl(&[]).validate(), Err(TemplateError::SectionCount(0)));
-        let many: Vec<(&str, &str, SectionKind)> = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"].iter().map(|h| (*h, "", Topics)).collect();
+        let many: Vec<(&str, &str, SectionKind)> =
+            ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"].iter().map(|h| (*h, "", Topics)).collect();
         assert_eq!(tpl(&many).validate(), Err(TemplateError::SectionCount(11)));
         assert_eq!(tpl(&[("  ", "", Topics)]).validate(), Err(TemplateError::HeadingLength(1)));
         let long = "x".repeat(61);
         assert_eq!(tpl(&[(&long, "", Topics)]).validate(), Err(TemplateError::HeadingLength(1)));
         assert!(matches!(tpl(&[("## Temas", "", Topics)]).validate(), Err(TemplateError::HeadingChars(_))));
         assert!(matches!(tpl(&[("Te\nmas", "", Topics)]).validate(), Err(TemplateError::HeadingChars(_))));
-        assert!(matches!(tpl(&[("Decisiones", "", Topics), ("decisiónes", "", Topics)]).validate(), Err(TemplateError::DuplicateHeading(_))));
+        assert!(matches!(
+            tpl(&[("Decisiones", "", Topics), ("decisiónes", "", Topics)]).validate(),
+            Err(TemplateError::DuplicateHeading(_))
+        ));
         assert_eq!(tpl(&[("A", "", Tasks), ("B", "", Tasks)]).validate(), Err(TemplateError::TooManyTasks));
         let hint = "x".repeat(201);
         assert!(matches!(tpl(&[("A", &hint, Topics)]).validate(), Err(TemplateError::HintLength(_))));

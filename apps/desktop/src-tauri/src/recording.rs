@@ -97,7 +97,6 @@ pub struct Paths {
 }
 
 impl Paths {
-
     /// El worker es un sidecar de Tauri (`bundle.externalBin`): va junto al
     /// ejecutable, en `Contents/MacOS` dentro del .app y en `target/<perfil>`
     /// con `tauri dev`. Lo genera `apps/desktop/scripts/build-sidecar.sh`.
@@ -248,11 +247,8 @@ fn asr_context(db: &Db, note_id: Id) -> Option<String> {
             None => None,
         };
         let glossary: String = repo::settings::get(db, KEY_GLOSSARY).await.ok().flatten().unwrap_or_default();
-        let notes = juanola_enhance::pipelines::enhance::user_blocks(&note.raw_doc)
-            .into_iter()
-            .map(|b| b.text)
-            .collect::<Vec<_>>()
-            .join(". ");
+        let notes =
+            juanola_enhance::pipelines::enhance::user_blocks(&note.raw_doc).into_iter().map(|b| b.text).collect::<Vec<_>>().join(". ");
         Some(AsrContext {
             title: note.title,
             attendees: event
@@ -333,11 +329,9 @@ fn run(
     let mut frames = capture
         .start(CaptureConfig { mic_device: None, capture_mic, capture_system_audio: true, echo_cancellation: false })
         .map_err(|e| match e {
-            juanola_audio_capture::CaptureError::PermissionDenied(_) => {
-                Failure { message: MIC_DENIED.into(), action: Some("mic_settings") }
-            }
-            other => Failure::from(other.to_string()),
-        })?;
+        juanola_audio_capture::CaptureError::PermissionDenied(_) => Failure { message: MIC_DENIED.into(), action: Some("mic_settings") },
+        other => Failure::from(other.to_string()),
+    })?;
     emit_state(app, note_id, "recording", None);
 
     let (mut mic_acc, mut sys_acc) = (Vec::<f32>::new(), Vec::<f32>::new());

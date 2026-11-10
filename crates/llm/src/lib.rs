@@ -50,11 +50,7 @@ pub trait ChatModel: Send + Sync {
         }
         Ok(out)
     }
-    fn stream<'a>(
-        &'a self,
-        msgs: &'a [Message],
-        opts: &'a GenOptions,
-    ) -> BoxStream<'a, Result<String, LlmError>>;
+    fn stream<'a>(&'a self, msgs: &'a [Message], opts: &'a GenOptions) -> BoxStream<'a, Result<String, LlmError>>;
 }
 
 pub mod chat_format;

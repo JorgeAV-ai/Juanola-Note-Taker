@@ -16,12 +16,7 @@ pub mod eventkit;
 pub trait CalendarProvider: Send + Sync {
     fn id(&self) -> &'static str;
     async fn list_calendars(&self) -> anyhow::Result<Vec<(String, String)>>;
-    async fn events(
-        &self,
-        calendar_id: &str,
-        from: DateTime<Utc>,
-        to: DateTime<Utc>,
-    ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn events(&self, calendar_id: &str, from: DateTime<Utc>, to: DateTime<Utc>) -> anyhow::Result<Vec<CalendarEvent>>;
 }
 
 /// Permiso de acceso al calendario del sistema.
@@ -68,9 +63,7 @@ pub fn find_conference_url<'a>(texts: impl IntoIterator<Item = &'a str>) -> Opti
             if !(rest.starts_with("https://") || rest.starts_with("http://")) {
                 continue;
             }
-            let end = rest
-                .find(|c: char| c.is_whitespace() || matches!(c, '<' | '>' | '"' | '\'' | ')' | ']' | '|'))
-                .unwrap_or(rest.len());
+            let end = rest.find(|c: char| c.is_whitespace() || matches!(c, '<' | '>' | '"' | '\'' | ')' | ']' | '|')).unwrap_or(rest.len());
             let url = rest[..end].trim_end_matches(['.', ',', ';']);
             if CONFERENCE_HOSTS.iter().any(|h| url.contains(h)) {
                 return Some(url.to_string());
@@ -152,7 +145,10 @@ mod tests {
         assert_eq!(find_conference_url([notes]).as_deref(), Some("https://meet.google.com/abc-defg-hij"));
         let teams = "<https://teams.microsoft.com/l/meetup-join/19%3ameeting_X%40thread.v2/0?context=%7b%7d>";
         assert!(find_conference_url(["", teams]).unwrap().starts_with("https://teams.microsoft.com/l/meetup-join/"));
-        assert_eq!(find_conference_url(["https://acme.zoom.us/j/123456789?pwd=x."]).as_deref(), Some("https://acme.zoom.us/j/123456789?pwd=x"));
+        assert_eq!(
+            find_conference_url(["https://acme.zoom.us/j/123456789?pwd=x."]).as_deref(),
+            Some("https://acme.zoom.us/j/123456789?pwd=x")
+        );
         assert_eq!(find_conference_url(["https://example.com/agenda", "Sala 3"]), None);
     }
 
