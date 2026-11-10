@@ -1,6 +1,6 @@
 # Plan: dataset multilingüe end-to-end para elegir la combinación STT + LLM
 
-Fecha: 8 de noviembre de 2026. Estado: propuesta, sin nada construido todavía.
+Fecha: 8 de noviembre de 2026. **Estado (10 nov):** de la capa C existen 11 guiones en texto con sus hechos y notas (`crates/enhance/fixtures/`, en seis idiomas), que se convierten a segmentos sin STT (`tools/script_to_segments.py`) o a audio con `say` (`tools/script_to_audio.py`); se usan para medir el enhance y el STT. Las capas A, B y D y el generador con Qwen3-TTS y degradaciones siguen sin construir. Desde el 9 nov el foco es castellano e inglés.
 
 ## 0. Resumen
 

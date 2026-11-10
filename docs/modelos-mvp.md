@@ -1,10 +1,10 @@
 # Modelos y runtimes para el MVP
 
-Fecha: 6 de noviembre de 2026. Criterio: relación calidad/peso, no licencia. Formatos nativos por plataforma: MLX y CoreML en Mac con Apple Silicon; GGUF y ONNX en Windows. Tamaños verificados contra la API de Hugging Face hoy. Decisiones del propietario del proyecto: LLM = LFM3-1.7B de Liquid AI; embeddings = EmbeddingGemma 2.
+Fecha: 6 de noviembre de 2026; actualizado el 10 nov con lo que se cambió después de medir (Q8_0 del LLM, Qwen3-ASR 1.7B). Las medidas están en [experimentos.md](experimentos.md). Criterio: relación calidad/peso, no licencia. Formatos nativos por plataforma: MLX y CoreML en Mac con Apple Silicon; GGUF y ONNX en Windows. Tamaños verificados contra la API de Hugging Face hoy. Decisiones del propietario del proyecto: LLM = LFM3-1.7B de Liquid AI; embeddings = EmbeddingGemma 2.
 
 ## 1. Decisión en una frase
 
-**LFM3-1.7B** para texto (MLX 4-bit en Mac cuando el runtime Rust lo soporte, GGUF Q4 mientras tanto y en Windows), **Qwen3-ASR** para voz en streaming (1.7B MLX de 4 bits en Mac desde el 9 nov, 0.6B de 4 bits en Mac con menos de 16 GB; 0.6B ONNX int8 en Windows), **EmbeddingGemma 2** solo texto para búsqueda (ONNX q8 en todas; CoreML opcional en Mac), Silero VAD y `speakrs` para diarización. Todo junto pesa unos 3,9 GB de disco en Mac con el STT de 1.7B (unos 3 GB con el 0.6B, que es lo que se instala con menos de 16 GB de RAM).
+**LFM3-1.7B** para texto (MLX 4-bit en Mac cuando el runtime Rust lo soporte; GGUF Q8_0 mientras tanto y en Windows, desde el 9 nov, antes Q4_K_M), **Qwen3-ASR** para voz en streaming (1.7B MLX de 4 bits en Mac desde el 9 nov, 0.6B de 4 bits en Mac con menos de 16 GB; 0.6B ONNX int8 en Windows), **EmbeddingGemma 2** solo texto para búsqueda (ONNX q8 en todas; CoreML opcional en Mac), Silero VAD y `speakrs` para diarización. Todo junto pesa unos 3,9 GB de disco en Mac con el STT de 1.7B (unos 3 GB con el 0.6B, que es lo que se instala con menos de 16 GB de RAM).
 
 ## 2. Catálogo de Liquid AI y qué sirve aquí
 
@@ -34,13 +34,15 @@ Detalles de uso que afectan al código:
 - Muestreo recomendado: temperature 0,1, top_k 50, repetition_penalty 1,1.
 - Tool calling con etiquetas XML `<tool_call>`; sirve para las acciones de chat de la fase 3.
 - Contexto 256K: una reunión de una hora (10-15k tokens) entra entera.
-- Variante **QAD-Q4_0** (quantization-aware) de 1,05 GB: preferible a Q4_K_M si el runtime la carga igual de rápido; medir en fase 1.
+- Variante **QAD-Q4_0** (quantization-aware) de 1,05 GB: sin medir. Se midió Q8_0 frente a Q4_K_M y se adoptó Q8_0 (9 nov): mejor en la reunión larga, 1,35-2 × más lento.
 
 Runtimes:
 - **Windows, Linux, Mac Intel**: `llama-cpp-2` con una build de llama.cpp que incluya LFM3 (b11960 o posterior). Vulkan/CUDA/Metal.
 - **Mac Apple Silicon**: el objetivo es MLX 4-bit (repo oficial `LiquidAI/LFM3-1.7B-MLX-4bit`), pero hoy ningún crate Rust de MLX implementa la arquitectura LFM3: `mlxrs` 0.2 trae qwen3 y lfm2-vl, no lfm3. Hasta que exista, el MVP en Mac ejecuta el GGUF con `llama-cpp-2` + Metal, que a 1 GB ya va muy rápido. La entrada MLX queda en el catálogo marcada `ready = false` y el selector la salta. Opciones para activarla: aportar el bloque LFM3 a `mlxrs` (el tri-híbrido es gated short conv + SWA + atención global, todos ya presentes en MLX), o un sidecar nativo sin Python.
 
-### Voz: Qwen3-ASR 0.6B (y por qué no LFM3-Audio-2B como principal)
+### Voz: Qwen3-ASR (y por qué no LFM3-Audio-2B como principal)
+
+Desde el 9 nov, en Mac, el **1.7B de 4 bits** (1,6 GB; WER 6,3 % frente a 7,9 % del 0.6B en la llamada de ventas sintética) y el 0.6B de 4 bits con menos de 16 GB de RAM. La comparación de abajo, del 6 nov, es la que llevó a Qwen3-ASR frente a LFM3-Audio-2B.
 
 | | Qwen3-ASR 0.6B | LFM3-Audio-2B |
 |---|---|---|
