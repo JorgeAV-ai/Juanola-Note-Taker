@@ -1,0 +1,76 @@
+# Comprobaciones en cada push y pull request: formato, clippy, tests y build
+# del frontend. Corre en macOS con Apple Silicon, la única plataforma que la
+# app soporta hoy (Core Audio, EventKit, Metal).
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**", "fase-**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Rust y frontend (macOS arm64)
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Formato
+        run: cargo fmt --all --check
+
+      - uses: Swatinem/rust-cache@v2
+
+      # El código de llama.cpp no está en git (181 MB); el script lo baja en el
+      # tag fijado y comprueba su SHA-256.
+      - name: Caché de llama.cpp
+        id: llama
+        uses: actions/cache@v4
+        with:
+          path: third_party/llama-cpp-sys-2/llama.cpp
+          key: llama-cpp-${{ hashFiles('scripts/fetch-llama-cpp.sh') }}
+      - name: Bajar llama.cpp
+        if: steps.llama.outputs.cache-hit != 'true'
+        run: scripts/fetch-llama-cpp.sh
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/desktop/pnpm-lock.yaml
+
+      # Tauri incrusta el frontend al compilar, así que va antes que cargo.
+      - name: Frontend (tsc + vite)
+        working-directory: apps/desktop
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      # `tauri-build` exige que exista el sidecar de `bundle.externalBin` incluso
+      # para compilar; el de verdad (MLX) solo se construye en release.yml.
+      - name: Sidecar vacío para compilar
+        run: |
+          mkdir -p apps/desktop/src-tauri/binaries
+          touch "apps/desktop/src-tauri/binaries/juanola-stt-worker-$(rustc -vV | sed -n 's/^host: //p')"
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo test --workspace
