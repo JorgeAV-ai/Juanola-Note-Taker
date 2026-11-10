@@ -39,7 +39,13 @@
     ],
     "macOS": {
       "minimumSystemVersion": "13.0",
-      "entitlements": "entitlements.plist"
+      "entitlements": "entitlements.plist",
+      "dmg": {
+        "background": "dmg/background.tiff",
+        "windowSize": { "width": 660, "height": 400 },
+        "appPosition": { "x": 165, "y": 215 },
+        "applicationFolderPosition": { "x": 495, "y": 215 }
+      }
     },
     "externalBin": [
       "binaries/juanola-stt-worker"

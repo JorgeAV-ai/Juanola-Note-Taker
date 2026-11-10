@@ -1,0 +1,67 @@
+<!doctype html>
+<!-- Fondo de la ventana del .dmg (660×400). Se renderiza a PNG con
+     scripts/render-dmg-background.sh; Finder pinta encima el icono de la app
+     (centro en 165,215) y el alias de Aplicaciones (centro en 495,215), así
+     que esas zonas quedan libres. -->
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@1,6..72,400&family=Instrument+Sans:wght@400;500&display=block" rel="stylesheet">
+<style>
+  :root { --canvas: #f6f3ec; --ink: #1a1715; --ink-2: #57504a; --muted: #8a8279; --line: #e4ded2; --licorice: #141210; --leaf: #3f8f68; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { width: 660px; height: 400px; overflow: hidden; }
+  body {
+    position: relative;
+    background:
+      radial-gradient(120% 90% at 50% 0%, #fbf9f4 0%, var(--canvas) 55%, #efebe2 100%);
+    font-family: "Instrument Sans", system-ui, sans-serif;
+    color: var(--ink);
+  }
+  /* grano de papel */
+  body::before {
+    content: ""; position: absolute; inset: 0; opacity: .5; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .25 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  header { position: absolute; top: 34px; left: 0; right: 0; text-align: center; }
+  .brand { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+  .brand svg { width: 11px; height: 17px; }
+  h1 { margin-top: 10px; font-family: "Newsreader", Georgia, serif; font-style: italic; font-weight: 400; font-size: 29px; letter-spacing: -.01em; }
+  h1 em { color: var(--leaf); font-style: italic; }
+
+  /* barrita de regaliz que hace de flecha entre los dos iconos */
+  .stick { position: absolute; left: 262px; top: 209px; width: 120px; height: 12px; border-radius: 999px; background: var(--licorice); overflow: hidden;
+           box-shadow: 0 1px 0 rgb(255 255 255 / .6), 0 6px 14px -6px rgb(20 18 16 / .45); }
+  .stick i { position: absolute; inset: 0 -16px; background: repeating-linear-gradient(90deg, transparent 0 6px, rgb(255 255 255 / .17) 6px 9px); transform: skewX(-35deg); }
+  .head { position: absolute; left: 378px; top: 203px; width: 0; height: 0;
+          border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 19px solid var(--licorice);
+          filter: drop-shadow(0 4px 6px rgb(20 18 16 / .25)); }
+
+  /* sombra suave bajo cada icono para asentarlos en el papel */
+  .spot { position: absolute; top: 262px; width: 120px; height: 18px; border-radius: 50%;
+          background: radial-gradient(closest-side, rgb(20 18 16 / .13), transparent); }
+
+  footer { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; font-size: 11.5px; color: var(--muted); }
+  footer b { font-weight: 500; color: var(--ink-2); }
+  .rule { position: absolute; bottom: 52px; left: 210px; right: 210px; height: 1px; background: var(--line); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 64 100"><path d="M32 5 L58 49 L33 95 L6 51 Z" fill="#141210" stroke="#141210" stroke-width="6" stroke-linejoin="round"/></svg>
+      Juanola
+    </div>
+    <h1>Drag it into <em>Applications</em></h1>
+  </header>
+
+  <div class="spot" style="left:105px"></div>
+  <div class="spot" style="left:435px"></div>
+  <div class="stick"><i></i></div>
+  <div class="head"></div>
+
+  <div class="rule"></div>
+  <footer>Unsigned preview — the first time, <b>right-click › Open</b></footer>
+</body>
+</html>
