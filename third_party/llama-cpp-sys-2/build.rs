@@ -469,6 +469,17 @@ fn is_hidden(e: &DirEntry) -> bool {
         .unwrap_or_default()
 }
 
+/// Juanola: enlaza `libclang_rt.osx.a` (compiler-rt) del clang con el que se
+/// compila, para `__isPlatformVersionAtLeast`. Si no se encuentra, no hace nada.
+fn link_clang_rt_osx() {
+    let Ok(out) = std::process::Command::new("clang").arg("--print-resource-dir").output() else { return };
+    let dir = PathBuf::from(String::from_utf8_lossy(&out.stdout).trim()).join("lib/darwin");
+    if dir.join("libclang_rt.osx.a").exists() {
+        println!("cargo:rustc-link-search=native={}", dir.display());
+        println!("cargo:rustc-link-lib=static=clang_rt.osx");
+    }
+}
+
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
@@ -1522,6 +1533,13 @@ fn main() {
             }
             println!("cargo:rustc-link-lib=framework=Accelerate");
             println!("cargo:rustc-link-lib=c++");
+            // Juanola: con MACOSX_DEPLOYMENT_TARGET por debajo de lo que pide
+            // ggml-metal (p. ej. 13.0 en `tauri build`), los `@available` se
+            // compilan a llamadas a `__isPlatformVersionAtLeast`, que vive en
+            // compiler-rt y rustc no enlaza: se añade a mano.
+            if target_triple.contains("darwin") {
+                link_clang_rt_osx();
+            }
         }
         TargetOs::Android => {
             if cfg!(feature = "static-stdcxx") {
