@@ -48,7 +48,9 @@ pub enum BlockKind {
     /// Elemento de una lista con viñetas o numerada.
     ListItem,
     /// Elemento de una lista de tareas (`[ ]` en el editor).
-    Task { checked: bool },
+    Task {
+        checked: bool,
+    },
 }
 
 /// Bloque de las notas crudas del usuario: un párrafo, un título o un
@@ -162,28 +164,33 @@ fn clock(secs: f64) -> String {
     format!("{:02}:{:02}", s / 60, s % 60)
 }
 
-/// El ITN solo conoce los números en español: en otros idiomas confundía
+/// Idioma del ITN, si se aplica: solo castellano (el propio) e inglés
+/// (`text-processing-rs`). En otros idiomas el ITN castellano confundía
 /// palabras parecidas («vinte e cinco» → «vinte e 5» en portugués).
-fn itn(input: &EnhanceInput<'_>, opts: &EnhanceOptions) -> bool {
-    opts.itn && input.summary_language == crate::language::LANGUAGE_NAMES[0]
+fn itn<'a>(input: &EnhanceInput<'a>, opts: &EnhanceOptions) -> Option<&'a str> {
+    let es_en = crate::language::language_index(input.summary_language) <= 1;
+    (opts.itn && es_en).then_some(input.summary_language)
 }
 
-/// Transcripción numerada desde 1, una línea por segmento final. Con `itn`,
-/// los números escritos con letras pasan a dígitos.
-pub fn format_transcript(segments: &[Segment], itn: bool) -> String {
+/// Transcripción numerada desde 1, una línea por segmento final. Con `itn`
+/// (el idioma), los números escritos con letras pasan a dígitos.
+pub fn format_transcript(segments: &[Segment], itn: Option<&str>) -> String {
     format_transcript_from(segments, 1, itn)
 }
 
 /// Como [`format_transcript`], numerando desde `first` (para fragmentos: la
 /// numeración es la de la reunión completa, así las citas no cambian).
-pub fn format_transcript_from(segments: &[Segment], first: usize, itn: bool) -> String {
+pub fn format_transcript_from(segments: &[Segment], first: usize, itn: Option<&str>) -> String {
     let mut out = String::new();
     for (i, s) in segments.iter().enumerate() {
         let who = match s.channel {
             Channel::Mic => "Yo",
             Channel::System => "Ellos",
         };
-        let text = if itn { crate::itn::normalize_numbers(s.text.trim()) } else { s.text.trim().to_owned() };
+        let text = match itn {
+            Some(lang) => crate::itn::normalize_numbers_lang(s.text.trim(), lang),
+            None => s.text.trim().to_owned(),
+        };
         out.push_str(&format!("[{}] ({}) {who}: {text}\n", i + first, clock(s.start)));
     }
     out
@@ -206,7 +213,7 @@ pub struct EnhanceOptions {
     pub detail_chunk_secs: Option<f64>,
     /// Con plantilla: gramática GBNF sobre Markdown que fija los títulos de la
     /// plantilla, en su orden, y deja libre el texto de las viñetas (cada una
-    /// acaba en sus citas `[n, m]`). Experimental: ver `docs/plantillas.md` §6.4.
+    /// acaba en sus citas `[n, m]`). Experimental: ver `docs/experimentos.md`, «Plantillas: iteraciones» (quinta).
     pub markdown_grammar: bool,
     /// Pedir también tareas en las pasadas de detalle y añadir a «Próximos
     /// pasos» las que falten. Desactivado: acierta 1-3 tareas más por reunión
@@ -217,11 +224,38 @@ pub struct EnhanceOptions {
     /// en otro apartado («…; Nuria envía el correo antes del viernes»). Ver
     /// `promote_commitments`.
     pub promote_commitments: bool,
+    /// Piezas que se apagan para medir cuánto aporta cada una (ablation).
+    /// Por defecto, ninguna.
+    pub ablate: Ablation,
+}
+
+/// Interruptores del ablation: `true` quita la pieza. Solo para el evaluador;
+/// la app usa siempre el valor por defecto.
+#[derive(Debug, Clone, Default)]
+pub struct Ablation {
+    /// Sin cerrar las citas a las 6 referencias (`GenOptions::max_refs`).
+    pub cite_limit: bool,
+    /// En Auto, el tope de tokens sin el +400 ni el mínimo de 800.
+    pub auto_floor: bool,
+    /// Sin las notas del usuario en el prompt (se siguen colocando después).
+    pub user_notes: bool,
+    /// Sin el texto que se añade al prompt cuando el resumen no va en español.
+    pub language_suffix: bool,
 }
 
 impl Default for EnhanceOptions {
     fn default() -> Self {
-        Self { itn: true, prompt: None, max_tokens: 3000, seed: None, detail_chunk_secs: Some(240.0), markdown_grammar: false, detail_tasks: false, promote_commitments: true }
+        Self {
+            itn: true,
+            prompt: None,
+            max_tokens: 3000,
+            seed: None,
+            detail_chunk_secs: Some(240.0),
+            markdown_grammar: false,
+            detail_tasks: false,
+            promote_commitments: true,
+            ablate: Ablation::default(),
+        }
     }
 }
 
@@ -383,10 +417,10 @@ fn auto_messages(input: &EnhanceInput<'_>, blocks: &[UserBlock], opts: &EnhanceO
     let user = template
         .replace("{{context}}", &context_block(input, None))
         .replace("{{transcript}}", transcript.trim_end())
-        .replace("{{notes}}", &format_user_notes(blocks))
+        .replace("{{notes}}", &notes_for_prompt(blocks, opts))
         .replace("{{sections}}", sections_hint(transcript_words(input.segments)))
         .replace("{{language}}", input.summary_language)
-        + &crate::language::prompt_suffix(input.summary_language);
+        + &suffix(crate::language::prompt_suffix(input.summary_language), opts);
     vec![Message { role: "user".into(), content: user }]
 }
 
@@ -403,10 +437,10 @@ fn template_messages(
     let mut user = juanola_prompts::ENHANCE_TEMPLATE
         .replace("{{context}}", &context_block(input, Some(template)))
         .replace("{{transcript}}", transcript.trim_end())
-        .replace("{{notes}}", &format_user_notes(blocks))
+        .replace("{{notes}}", &notes_for_prompt(blocks, opts))
         .replace("{{structure}}", &structure_with_outlet(&template.structure, input.summary_language))
         .replace("{{language}}", input.summary_language)
-        + &crate::language::template_prompt_suffix(input.summary_language);
+        + &suffix(crate::language::template_prompt_suffix(input.summary_language), opts);
     if let Some(r) = retry {
         user.push('\n');
         user.push_str(r);
@@ -417,6 +451,26 @@ fn template_messages(
 /// Referencias por cita como mucho: más allá, el modelo suele estar
 /// enumerando líneas seguidas (`[96, 97, 98, …]`) en vez de citar.
 const MAX_REFS: usize = 6;
+
+fn max_refs(opts: &EnhanceOptions) -> Option<usize> {
+    (!opts.ablate.cite_limit).then_some(MAX_REFS)
+}
+
+fn notes_for_prompt(blocks: &[UserBlock], opts: &EnhanceOptions) -> String {
+    if opts.ablate.user_notes {
+        String::new()
+    } else {
+        format_user_notes(blocks)
+    }
+}
+
+fn suffix(text: String, opts: &EnhanceOptions) -> String {
+    if opts.ablate.language_suffix {
+        String::new()
+    } else {
+        text
+    }
+}
 
 /// Menos palabras que esto en la transcripción no da para resumir: el modelo
 /// acaba repitiendo las instrucciones o inventando.
@@ -707,12 +761,8 @@ pub(crate) const OTHER_TOPICS: &str = "Otros temas";
 fn fit_to_template(raw: Vec<RawSection>, template: &[TemplateSection]) -> Fit {
     let headings: Vec<&str> = template.iter().map(|s| s.heading.as_str()).collect();
     let tasks = template.iter().position(|s| s.kind == SectionKind::Tasks);
-    let topic_words: Vec<(usize, std::collections::HashSet<String>)> = template
-        .iter()
-        .enumerate()
-        .filter(|(_, s)| s.kind == SectionKind::Topics)
-        .map(|(i, s)| (i, section_words(s)))
-        .collect();
+    let topic_words: Vec<(usize, std::collections::HashSet<String>)> =
+        template.iter().enumerate().filter(|(_, s)| s.kind == SectionKind::Topics).map(|(i, s)| (i, section_words(s))).collect();
     let mut out: Vec<RawSection> = template.iter().map(|s| RawSection { heading: s.heading.clone(), bullets: Vec::new() }).collect();
     out.push(RawSection { heading: OTHER_TOPICS.into(), bullets: Vec::new() });
     let mut fit = Fit { sections: Vec::new(), matched_by_title: 0, unmatched_bullets: 0, bullets: 0, model_headings: Vec::new() };
@@ -770,9 +820,8 @@ fn fit_to_template(raw: Vec<RawSection>, template: &[TemplateSection]) -> Fit {
 /// igualdad, la del primero. Así un apartado del que no se
 /// habló no se rellena repitiendo otro (medido: «Feedback» en el 1:1).
 fn drop_cross_duplicates(sections: &mut [RawSection], template: &[TemplateSection]) {
-    let fitness = |i: usize, terms: &std::collections::HashSet<String>| {
-        template.get(i).map_or(0, |t| section_words(t).intersection(terms).count())
-    };
+    let fitness =
+        |i: usize, terms: &std::collections::HashSet<String>| template.get(i).map_or(0, |t| section_words(t).intersection(terms).count());
     let mut items: Vec<(usize, usize, std::collections::HashSet<String>)> = Vec::new();
     for (i, s) in sections.iter().enumerate() {
         for (j, b) in s.bullets.iter().enumerate() {
@@ -1190,7 +1239,8 @@ pub async fn enhance_with(
         }
         return resolve(Vec::new(), input.segments, &blocks, input.note.id, Layout::Auto);
     }
-    let gen = GenOptions { max_tokens: Some(summary_budget(words, opts.max_tokens)), seed: opts.seed, max_refs: Some(MAX_REFS), ..Default::default() };
+    let budget = if opts.ablate.auto_floor { base_budget(words, opts.max_tokens) } else { summary_budget(words, opts.max_tokens) };
+    let gen = GenOptions { max_tokens: Some(budget), seed: opts.seed, max_refs: max_refs(opts), ..Default::default() };
     let Some(template) = input.template else {
         return enhance_auto(model, input, &blocks, opts, &gen, None).await;
     };
@@ -1275,10 +1325,10 @@ fn detail_requests(input: &EnhanceInput<'_>, opts: &EnhanceOptions) -> Vec<(Vec<
                 .replace("{{to}}", &clock(segs[segs.len() - 1].end))
                 .replace("{{transcript}}", format_transcript_from(segs, range.start + 1, itn(input, opts)).trim_end())
                 .replace("{{language}}", input.summary_language)
-                + &crate::language::prompt_suffix(input.summary_language);
+                + &suffix(crate::language::prompt_suffix(input.summary_language), opts);
             // 12 datos caben en ~450 tokens, y las tareas, en otros ~150; el
             // tope corta las listas que el modelo alarga sin fin.
-            let gen = GenOptions { max_tokens: Some(600), seed: opts.seed, max_refs: Some(MAX_REFS), ..Default::default() };
+            let gen = GenOptions { max_tokens: Some(600), seed: opts.seed, max_refs: max_refs(opts), ..Default::default() };
             (vec![Message { role: "user".into(), content: prompt }], gen)
         })
         .collect()
@@ -1331,8 +1381,26 @@ fn looks_like_task(text: &str) -> bool {
     let first = rest.trim_start_matches(['[', ']', ' ']).split_whitespace().next().unwrap_or("").to_lowercase();
     !matches!(
         first.as_str(),
-        "ask" | "asks" | "tell" | "tells" | "explain" | "explains" | "mention" | "mentions" | "confirm" | "confirms"
-            | "preguntar" | "pregunta" | "decir" | "dice" | "explicar" | "explica" | "mencionar" | "menciona" | "confirmar" | "confirma"
+        "ask"
+            | "asks"
+            | "tell"
+            | "tells"
+            | "explain"
+            | "explains"
+            | "mention"
+            | "mentions"
+            | "confirm"
+            | "confirms"
+            | "preguntar"
+            | "pregunta"
+            | "decir"
+            | "dice"
+            | "explicar"
+            | "explica"
+            | "mencionar"
+            | "menciona"
+            | "confirmar"
+            | "confirma"
     )
 }
 
@@ -1383,8 +1451,27 @@ fn proper_names(segments: &[Segment]) -> std::collections::HashSet<String> {
     }
     // Los días y meses en inglés van con mayúscula y no son nadie.
     for w in [
-        "Yo", "Ellos", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "January", "February", "March",
-        "April", "May", "June", "July", "August", "September", "October", "November", "December",
+        "Yo",
+        "Ellos",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
     ] {
         names.remove(w);
     }
@@ -1397,16 +1484,41 @@ fn proper_names(segments: &[Segment]) -> std::collections::HashSet<String> {
 /// el fallo para el 23»). Solo castellano e inglés.
 fn commitment(clause: &str, names: &std::collections::HashSet<String>, english: bool) -> Option<usize> {
     const DEADLINE: &[&str] = &[
-        "para el ", "para la ", "para mañana", "antes del ", "antes de ", "esta semana", "semana que viene", "próxima semana",
-        "fin de mes", "final de mes", "mañana", "hoy", "lunes", "martes", "miércoles", "jueves", "viernes",
-        " by ", "before ", "next week", "this week", "tomorrow", "today", "end of ", "monday", "tuesday", "wednesday",
-        "thursday", "friday",
+        "para el ",
+        "para la ",
+        "para mañana",
+        "antes del ",
+        "antes de ",
+        "esta semana",
+        "semana que viene",
+        "próxima semana",
+        "fin de mes",
+        "final de mes",
+        "mañana",
+        "hoy",
+        "lunes",
+        "martes",
+        "miércoles",
+        "jueves",
+        "viernes",
+        " by ",
+        "before ",
+        "next week",
+        "this week",
+        "tomorrow",
+        "today",
+        "end of ",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
     ];
     const NOT_VERB: &[&str] = &[
-        "y", "e", "o", "de", "del", "con", "el", "la", "los", "las", "en", "para", "por", "a", "al", "and", "or", "of", "with", "the", "in", "on",
-        "at", "for", "s", "es", "está", "era", "fue", "son", "están", "is", "are", "was", "were", "porque", "que", "se", "because",
-        "which", "who", "that", "otra", "otro", "otras", "otros", "nueva", "nuevo", "this", "these", "those", "has", "was", "does",
-        "before", "after", "until", "since",
+        "y", "e", "o", "de", "del", "con", "el", "la", "los", "las", "en", "para", "por", "a", "al", "and", "or", "of", "with", "the",
+        "in", "on", "at", "for", "s", "es", "está", "era", "fue", "son", "están", "is", "are", "was", "were", "porque", "que", "se",
+        "because", "which", "who", "that", "otra", "otro", "otras", "otros", "nueva", "nuevo", "this", "these", "those", "has", "was",
+        "does", "before", "after", "until", "since",
     ];
     if clause.contains('?') {
         return None;
@@ -1630,7 +1742,10 @@ mod tests {
             {"type":"blockquote","content":[p("cita")]}
         ]});
         let b = user_blocks(&doc);
-        assert_eq!(texts(&b), [("b0", "Contratación"), ("b1", "Elena empieza en enero con contrato"), ("b2", "sin énfasis"), ("b4.0", "cita")]);
+        assert_eq!(
+            texts(&b),
+            [("b0", "Contratación"), ("b1", "Elena empieza en enero con contrato"), ("b2", "sin énfasis"), ("b4.0", "cita")]
+        );
         assert_eq!(b[0].kind, BlockKind::Heading(3));
         assert_eq!(b.iter().map(|b| b.emphasis).collect::<Vec<_>>(), [false, true, false, false]);
     }
@@ -1638,16 +1753,21 @@ mod tests {
     #[test]
     fn transcript_is_numbered_from_one() {
         let s = [seg(0, Channel::Mic, 65.0, 70.0, " hola "), seg(1, Channel::System, 71.0, 72.0, "qué tal")];
-        assert_eq!(format_transcript(&s, false), "[1] (01:05) Yo: hola\n[2] (01:11) Ellos: qué tal\n");
+        assert_eq!(format_transcript(&s, None), "[1] (01:05) Yo: hola\n[2] (01:11) Ellos: qué tal\n");
         let n = [seg(0, Channel::System, 0.0, 1.0, "son treinta y nueve euros")];
-        assert_eq!(format_transcript(&n, true), "[1] (00:00) Ellos: son 39 euros\n");
+        assert_eq!(format_transcript(&n, Some("español")), "[1] (00:00) Ellos: son 39 euros\n");
+        let e = [seg(0, Channel::System, 0.0, 1.0, "churn came in at three point one percent")];
+        assert_eq!(format_transcript(&e, Some("inglés")), "[1] (00:00) Ellos: churn came in at 3.1 %\n");
     }
 
     #[test]
     fn refs_are_split_from_text() {
         assert_eq!(split_refs("Ingresos de 112 mil euros [7]"), ("Ingresos de 112 mil euros".into(), vec![7]));
         assert_eq!(split_refs("Algo [3, 5] [8-10]."), ("Algo.".into(), vec![3, 5, 8, 9, 10]));
-        assert_eq!(split_refs("PDF falla con tildes [24]; se arregla esta semana."), ("PDF falla con tildes; se arregla esta semana.".into(), vec![24]));
+        assert_eq!(
+            split_refs("PDF falla con tildes [24]; se arregla esta semana."),
+            ("PDF falla con tildes; se arregla esta semana.".into(), vec![24])
+        );
         assert_eq!(split_refs("Lista [a, b]"), ("Lista [a, b]".into(), vec![]));
         assert_eq!(split_refs("Sin citas"), ("Sin citas".into(), vec![]));
         assert_eq!(split_refs("Rango [162\u{2011}164, 170]"), ("Rango".into(), vec![162, 163, 164, 170]));
@@ -1673,7 +1793,11 @@ mod tests {
         async fn complete(&self, _: &[Message], _: &GenOptions) -> Result<String, juanola_llm::LlmError> {
             panic!("no se debe llamar al modelo con una transcripción tan corta");
         }
-        fn stream<'a>(&'a self, _: &'a [Message], _: &'a GenOptions) -> futures::stream::BoxStream<'a, Result<String, juanola_llm::LlmError>> {
+        fn stream<'a>(
+            &'a self,
+            _: &'a [Message],
+            _: &'a GenOptions,
+        ) -> futures::stream::BoxStream<'a, Result<String, juanola_llm::LlmError>> {
             unreachable!()
         }
     }
@@ -1701,7 +1825,9 @@ mod tests {
         let input = EnhanceInput { note: &empty, segments: &segs, template: None, summary_language: "español", user_profile: "" };
         assert!(matches!(enhance(&NoModel, &input).await, Err(EnhanceError::TooShort { words: 6 })));
         // Con notas del usuario: se devuelven tal cual, sin modelo.
-        let with_notes = note(serde_json::json!({"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "llamar a Luis"}]}]}));
+        let with_notes = note(
+            serde_json::json!({"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "llamar a Luis"}]}]}),
+        );
         let input = EnhanceInput { note: &with_notes, segments: &segs, template: None, summary_language: "español", user_profile: "" };
         let (notes, _) = enhance(&NoModel, &input).await.unwrap();
         assert_eq!(notes.sections[0].bullets[0].text, "llamar a Luis");
@@ -1727,7 +1853,9 @@ mod tests {
 
     #[test]
     fn details_fill_gaps_without_duplicates() {
-        let mut secs = parse_markdown("## Métricas\n- MRR de 112000 euros [7]\n## Precios\n- Tres planes nuevos [30]\n## Próximos pasos\n- Luis llama [50]\n");
+        let mut secs = parse_markdown(
+            "## Métricas\n- MRR de 112000 euros [7]\n## Precios\n- Tres planes nuevos [30]\n## Próximos pasos\n- Luis llama [50]\n",
+        );
         let details = parse_markdown(
             "- Ingresos recurrentes de 112000 euros [7]\n- 1840 clínicas activas [6]\n- Plan básico de 39 euros [31]\n- Sin cita\n- Algo lejano [90]\n",
         )
@@ -1782,17 +1910,27 @@ mod tests {
         promote_commitments(&mut raw, &[false, false, true], &segs, "español", false);
         let steps: Vec<&str> = raw[2].bullets.iter().map(|b| b.text.as_str()).collect();
         // El de Nuria entra, sin la parte del descuento; el de Tomás ya estaba.
-        assert_eq!(steps, ["Nuria envía correo explicativo antes del viernes", "Tomás: arreglar el fallo de sincronización para el 23 de noviembre"]);
+        assert_eq!(
+            steps,
+            ["Nuria envía correo explicativo antes del viernes", "Tomás: arreglar el fallo de sincronización para el 23 de noviembre"]
+        );
         assert_eq!(raw[0].bullets.len(), 1, "el original se queda en su apartado");
     }
 
     #[test]
     fn detail_tasks_go_to_next_steps_without_duplicates() {
-        let mut secs = parse_markdown("## Métricas\n- MRR de 112000 euros [7]\n## Próximos pasos\n- Luis llama al proveedor el lunes [50]\n");
-        let md = ["- 1840 clínicas activas [6]\n## Tareas\n- Ana prepara la propuesta para el viernes [20]\n- Luis llama al proveedor [51]\n".to_owned()];
+        let mut secs =
+            parse_markdown("## Métricas\n- MRR de 112000 euros [7]\n## Próximos pasos\n- Luis llama al proveedor el lunes [50]\n");
+        let md =
+            ["- 1840 clínicas activas [6]\n## Tareas\n- Ana prepara la propuesta para el viernes [20]\n- Luis llama al proveedor [51]\n"
+                .to_owned()];
         apply_details(&mut secs, &md, 100, &[false, true], false);
         let t: Vec<&str> = secs[1].bullets.iter().map(|b| b.text.as_str()).collect();
-        assert_eq!(t, ["Ana prepara la propuesta para el viernes", "Luis llama al proveedor el lunes"], "la de Luis ya estaba; la de Ana entra en orden");
+        assert_eq!(
+            t,
+            ["Ana prepara la propuesta para el viernes", "Luis llama al proveedor el lunes"],
+            "la de Luis ya estaba; la de Ana entra en orden"
+        );
         assert_eq!(secs[0].bullets.len(), 2, "el dato va a Métricas, no las tareas");
         // En Auto, sin «Próximos pasos», se crea.
         let mut secs = parse_markdown("## Métricas\n- MRR de 112000 euros [7]\n");
@@ -1839,11 +1977,7 @@ mod tests {
 
     #[test]
     fn resolve_maps_refs_places_user_notes_and_marks_tasks() {
-        let segs = [
-            seg(0, Channel::Mic, 1.0, 2.0, "a"),
-            seg(1, Channel::System, 3.0, 5.0, "b"),
-            seg(2, Channel::System, 6.0, 9.0, "c"),
-        ];
+        let segs = [seg(0, Channel::Mic, 1.0, 2.0, "a"), seg(1, Channel::System, 3.0, 5.0, "b"), seg(2, Channel::System, 6.0, 9.0, "c")];
         let blocks = [
             UserBlock { id: "b0".into(), text: "precios nuevos: enero".into(), kind: BlockKind::Paragraph, emphasis: false },
             UserBlock { id: "b1".into(), text: "llamar a la gestoría".into(), kind: BlockKind::Paragraph, emphasis: false },
@@ -1909,7 +2043,11 @@ mod tests {
         let f = fit_to_template(parse_markdown(md), &weekly());
         assert_eq!(heads(&f), ["Métricas y estado", "Temas tratados", "Decisiones", "Próximos pasos", OTHER_TOPICS]);
         assert_eq!(texts_of(&f.sections[0]), ["MRR de 112000 euros"], "repetidas fuera");
-        assert_eq!(texts_of(&f.sections[2]), ["Se aprueba el plan", "Se decidió subir precios"], "por palabras con «decidió»/«acordó o decidió»");
+        assert_eq!(
+            texts_of(&f.sections[2]),
+            ["Se aprueba el plan", "Se decidió subir precios"],
+            "por palabras con «decidió»/«acordó o decidió»"
+        );
         assert_eq!(texts_of(&f.sections[3]), ["Luis llama el lunes"], "una sección de tareas va al apartado Tasks");
         assert_eq!(texts_of(&f.sections[4]), ["Elena empieza en enero"], "sin palabras en común: «Otros temas»");
         assert_eq!((f.matched_by_title, f.unmatched_bullets, f.bullets), (2, 1, 6));
@@ -1947,7 +2085,11 @@ mod tests {
         let layout = Layout::Template { sections: &weekly(), language: "inglés" };
         let (notes, rep) = resolve(f.sections, &segs, &[], Id::nil(), layout).unwrap();
         let h: Vec<&str> = notes.sections.iter().map(|s| s.heading.as_str()).collect();
-        assert_eq!(h, ["Métricas y estado", "Temas tratados", "Decisiones", "Próximos pasos"], "los títulos de la plantilla no se traducen; sin «Otros temas» vacío");
+        assert_eq!(
+            h,
+            ["Métricas y estado", "Temas tratados", "Decisiones", "Próximos pasos"],
+            "los títulos de la plantilla no se traducen; sin «Otros temas» vacío"
+        );
         let empty = &notes.sections[0].bullets;
         assert_eq!(empty.len(), 1);
         assert_eq!(empty[0].text, "Not discussed");
@@ -1980,7 +2122,8 @@ mod tests {
             ub("b3", "llamar a Luis", BlockKind::Task { checked: true }),
         ];
         let f = fit_to_template(parse_markdown("## Métricas y estado\n- El MRR sube un 4 % [1]\n"), &weekly());
-        let (notes, rep) = resolve(f.sections, &segs, &blocks, Id::nil(), Layout::Template { sections: &weekly(), language: "español" }).unwrap();
+        let (notes, rep) =
+            resolve(f.sections, &segs, &blocks, Id::nil(), Layout::Template { sections: &weekly(), language: "español" }).unwrap();
         let sec = |h: &str| notes.sections.iter().find(|s| s.heading == h).unwrap_or_else(|| panic!("falta {h}"));
         let dec = sec("Decisiones");
         assert_eq!(dec.bullets.len(), 1, "solo la nota del usuario, sin «No se habló de esto»");
@@ -1990,7 +2133,10 @@ mod tests {
         assert_eq!(sec("Métricas y estado").bullets[0].text, "MRR sube", "por palabras, al principio");
         assert_eq!(sec("Otros temas").bullets[0].text, "cumpleaños de Marta");
         assert!(notes.sections.iter().all(|s| s.heading != "Tus notas"));
-        assert!(notes.sections.iter().all(|s| s.heading != "Decisiones" || s.bullets.iter().all(|b| b.text != "Decisiones")), "el título del usuario no se coloca");
+        assert!(
+            notes.sections.iter().all(|s| s.heading != "Decisiones" || s.bullets.iter().all(|b| b.text != "Decisiones")),
+            "el título del usuario no se coloca"
+        );
         assert_eq!((rep.user_bullets, rep.empty_sections), (4, 1));
         match &dec.bullets[0].source {
             Some(Citation::UserNote { block_id, .. }) => assert_eq!(block_id, "b2.0"),
@@ -2010,7 +2156,8 @@ mod tests {
         // Una plantilla sin apartado de tareas: la tarea se coloca como nota normal.
         let tpl = tpl_sections(&[("Oferta", "", SectionKind::Topics)]);
         let f = fit_to_template(parse_markdown("## Oferta\n- Precio cerrado [2]\n"), &tpl);
-        let (notes, _) = resolve(f.sections, &segs, &blocks[..1], Id::nil(), Layout::Template { sections: &tpl, language: "español" }).unwrap();
+        let (notes, _) =
+            resolve(f.sections, &segs, &blocks[..1], Id::nil(), Layout::Template { sections: &tpl, language: "español" }).unwrap();
         assert_eq!(notes.sections[0].bullets[0].text, "enviar la oferta");
         assert!(!notes.sections[0].bullets[0].is_action_item);
     }
@@ -2077,7 +2224,11 @@ mod tests {
                 self.auto.into()
             })
         }
-        fn stream<'a>(&'a self, _: &'a [Message], _: &'a GenOptions) -> futures::stream::BoxStream<'a, Result<String, juanola_llm::LlmError>> {
+        fn stream<'a>(
+            &'a self,
+            _: &'a [Message],
+            _: &'a GenOptions,
+        ) -> futures::stream::BoxStream<'a, Result<String, juanola_llm::LlmError>> {
             unreachable!()
         }
     }
@@ -2149,7 +2300,15 @@ mod tests {
         let calls = model.calls.lock().unwrap();
         let kinds: Vec<&str> = calls
             .iter()
-            .map(|c| if c.starts_with("Fragmento de la transcripción") { "detalle" } else if c.contains("usando exactamente estos apartados") { "plantilla" } else { "auto" })
+            .map(|c| {
+                if c.starts_with("Fragmento de la transcripción") {
+                    "detalle"
+                } else if c.contains("usando exactamente estos apartados") {
+                    "plantilla"
+                } else {
+                    "auto"
+                }
+            })
             .collect();
         // En el lote del primer intento van los detalles; el reintento y Auto los reutilizan.
         assert_eq!(kinds, ["plantilla", "detalle", "detalle", "plantilla", "auto"]);
@@ -2163,11 +2322,23 @@ mod tests {
 
     #[test]
     fn model_other_topics_stays_there_and_counts() {
-        let f = fit_to_template(parse_markdown("## Decisiones\n- Se aprueba [1]\n## Other topics\n- Viaje a Lisboa [2]\n- Decisión de algo [3]\n"), &weekly());
+        let f = fit_to_template(
+            parse_markdown("## Decisiones\n- Se aprueba [1]\n## Other topics\n- Viaje a Lisboa [2]\n- Decisión de algo [3]\n"),
+            &weekly(),
+        );
         assert_eq!(texts_of(&f.sections[4]), ["Viaje a Lisboa", "Decisión de algo"], "no se redistribuye");
         assert_eq!((f.unmatched_bullets, f.bullets, f.matched_by_title), (2, 3, 1));
-        let t = Template { id: Id::nil(), name: "x".into(), purpose: String::new(), style: String::new(), structure: weekly(), is_builtin: false, shared_with_workspace: false };
-        assert!(structure_with_outlet(&t.structure, "inglés").ends_with("## Other topics — solo si hace falta: lo que se habló y no corresponde a ninguno de los apartados anteriores"));
+        let t = Template {
+            id: Id::nil(),
+            name: "x".into(),
+            purpose: String::new(),
+            style: String::new(),
+            structure: weekly(),
+            is_builtin: false,
+            shared_with_workspace: false,
+        };
+        assert!(structure_with_outlet(&t.structure, "inglés")
+            .ends_with("## Other topics — solo si hace falta: lo que se habló y no corresponde a ninguno de los apartados anteriores"));
     }
 
     #[test]

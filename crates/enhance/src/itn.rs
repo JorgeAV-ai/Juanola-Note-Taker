@@ -162,6 +162,17 @@ fn number_len(words: &[Option<Word>]) -> usize {
     last_ok
 }
 
+/// Números escritos con letras a dígitos según el idioma del resumen: en
+/// castellano el ITN de este módulo; en inglés `text-processing-rs` (el ITN de
+/// NeMo portado a Rust). En los demás idiomas, el texto tal cual.
+pub fn normalize_numbers_lang(text: &str, language: &str) -> String {
+    match crate::language::language_index(language) {
+        0 => normalize_numbers(text),
+        1 => text_processing_rs::normalize_sentence_lang(text, "en"),
+        _ => text.to_owned(),
+    }
+}
+
 /// Sustituye los números escritos con letras por dígitos. Mantiene el resto
 /// del texto (puntuación, mayúsculas) intacto.
 pub fn normalize_numbers(text: &str) -> String {
@@ -217,11 +228,8 @@ pub fn normalize_numbers(text: &str) -> String {
             let body = pending.strip_suffix(' ').unwrap_or("");
             // Tras el último carácter que no es cifra (que puede ocupar varios
             // bytes: «≈112 mil», «€112 mil»).
-            let num_start = body
-                .char_indices()
-                .rev()
-                .find(|(_, c)| !(c.is_ascii_digit() || *c == ','))
-                .map_or(0, |(i, c)| i + c.len_utf8());
+            let num_start =
+                body.char_indices().rev().find(|(_, c)| !(c.is_ascii_digit() || *c == ',')).map_or(0, |(i, c)| i + c.len_utf8());
             let digits = &body[num_start..];
             if let Ok(v) = digits.replace(',', ".").parse::<f64>() {
                 if !digits.is_empty() && !digits.starts_with(',') {
