@@ -78,8 +78,9 @@ jobs:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
           releaseName: Juanola v__VERSION__
           releaseBody: |
-            Build de macOS para Apple Silicon (macOS 13 o posterior), sin firmar.
-            Para abrirla la primera vez: clic derecho sobre Juanola.app › Abrir.
-            Los modelos (unos 3,5 GB) se descargan desde la app al primer arranque.
+            Preview build for Apple Silicon Macs (macOS 14.6 or later). It is not signed yet:
+            the first time, right-click Juanola.app › Open (or run
+            `xattr -dr com.apple.quarantine /Applications/Juanola.app`).
+            The models (about 3.5 GB) are downloaded from the app on first launch.
           releaseDraft: true
           prerelease: true
