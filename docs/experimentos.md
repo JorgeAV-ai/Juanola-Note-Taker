@@ -35,6 +35,11 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 | Tareas también en las pasadas de detalle (`## Tareas`), añadidas a «Próximos pasos» sin duplicados (`detail_tasks`) | 1-3 tareas acertadas más, pero escribe el doble (29-41 en una reunión de 14), muchas falsas o atribuidas a «Yo» | ⚗️ `detail_tasks` | 9 nov | «Tareas en las pasadas de detalle» |
 | Modelo mayor, cuantizado en GGUF: Qwen3.5-9B Q4_K_M (4 bits, 5,7 GB) y Qwen3.5-4B Q8_0 (8 bits, 4,5 GB), frente a LFM3-1.7B Q8_0; sin razonamiento, reuniones de 60 min | Mismas tareas acertadas (dentro del ruido), pero escribe la mitad (6-17 frente a 15-33). Cobertura: el 9B peor (54-82 %), el 4B igual o mejor en Auto (80-89 % frente a 70 % en la revisión). Tarda 2 × (4B, ~210 s) y 3-4 × (9B, 330-520 s; 2 min solo en leer el prompt de 20.000 tokens) | ❌ | 10 nov | «Techo con un modelo mayor» |
 | QAD-Q4_0 o Q6_K de LFM3 | — | ⏳ | | HANDOFF, punto 3 |
+| Revisión a mano de las tareas «fallidas» de LFM3 (reuniones de 60 min, 12 ejecuciones) | El evaluador es justo: 43 % acertadas; 20 % están en las notas con dueño y acción, pero como dato en otro apartado; ~28 % aparecen sin dueño o con otro; 8 % no aparecen | ✅ medido | 10 nov | «Revisión de las tareas fallidas» |
+| Encargos de otros apartados repetidos en «Próximos pasos», y cada tarea con el nombre delante (prompt de Auto y de plantilla) | Tareas acertadas 73 → 68 de 168 (ruido); siguen 36 como dato en otro apartado. Revisión en Auto: tareas 22 → 14, cobertura 70 → 80-84 %. Lo sigue a medias: entran algunas («Tomás arregla el fallo de Lince») y también temas sin dueño («Becaria de datos: 6 meses…») | ❌ | 10 nov | «Revisión de las tareas fallidas» |
+| Regla que copia a «Próximos pasos» los encargos con dueño de otros apartados (`promote_commitments`, solo es/en): nombre de la transcripción + «to»/«will»/futuro, o verbo en 3.ª persona con plazo | Reuniones de 60 min: tareas acertadas 73 → 81 de 168, escritas 260 → 289; cobertura y colocación idénticas. Entrevista en Auto 7 → 11 de 24. 1:1, ventas y stand-up, mismas tareas (0-2 escritas más) | ✅ | 10 nov | «Revisión de las tareas fallidas» |
+| ITN también en inglés con `text-processing-rs` (NeMo, Apache-2.0, `normalize_sentence_lang`) | — | ⏳ | | Explica las cifras fieles del ~0 % de la weekly |
+| Cancelación de eco con LocalVQE (GGML, Apache-2.0; mic + `system.wav` como referencia) | — | ⏳ | | HANDOFF, punto 1 (AEC pendiente) |
 | Mostrar el resumen a los ~20 s y añadir los detalles después | — | ⏳ | | HANDOFF, punto 3 |
 
 ## Enhance con plantilla
@@ -210,6 +215,45 @@ Tareas acertadas · escritas · cobertura · segundos:
 - **Tiempo:** el 4B tarda ~2 × lo de LFM3 y el 9B 3-4 ×; al 9B, leer el prompt del resumen (20.550 tokens) le cuesta 116-126 s.
 
 Decisión: se queda LFM3. El techo de las tareas no es el tamaño del modelo; está en cómo se piden o en cómo se puntúan (las «acertadas» exigen casar con el guion). El soporte de Qwen en llama.cpp (`qwen_prompt`) queda por si hace falta otro modelo.
+
+## Revisión de las tareas fallidas (10 nov)
+
+Tras el techo con modelos mayores: ¿las tareas fallan de verdad o el evaluador es demasiado estricto? Una tarea cuenta como acertada si una viñeta marcada como tarea contiene al dueño y la acción (`facts.json`). Notas de LFM3-1.7B Q8_0 guardadas de las 12 ejecuciones (revisión trimestral y weekly, plantilla y Auto, 3 semillas) y cruzadas con las 14 tareas de cada guion (`audit_cat.py` en el scratchpad).
+
+| Qué pasa con la tarea | Veces (de 168) |
+|---|---|
+| Acertada | 73 (43 %) |
+| En las notas con dueño y acción, pero como dato en otro apartado («Nuria envía correo explicativo antes del viernes» dentro del descuento; «Hannah to prepare list of 200 accountants…» en ventas) | 34 (20 %) |
+| La acción aparece, sin dueño o con otro («El cuestionario de seguridad se enviará para el lunes 17»; «Update revenue model… by Thursday» sin Aisha; la cena «reservada por Yo y Carla», que es de Raúl) | ~47 (28 %; casado solo por la acción, es una cota alta) |
+| No aparece | 14 (8 %) |
+
+- El evaluador es justo: pide el dueño y que esté en «Próximos pasos», que es lo que el usuario espera de ese apartado.
+- El modelo casi nunca se olvida del encargo; falla en **dónde lo pone** y en **de quién es**. Con lo primero resuelto, rondaría el 64 %.
+- Entre las 260 escritas como tarea sigue habiendo decisiones y estados («Portugal: aplazar versión…», «Feria stand: decidido no hacer stand»).
+
+**Probado: pedirlo en el prompt ❌.** En Auto, «Próximos pasos» con «todos los encargos, también los que ya aparecen en otros apartados, empezando por el nombre de quien lo hará»; con plantilla, una excepción a «cada idea solo en su apartado». Mismas 12 ejecuciones:
+
+| Guion · modo | Acertadas antes → después (de 42) | Como dato con dueño | Escritas | Cobertura |
+|---|---|---|---|---|
+| revision_trimestral · plantilla | 17 → 18 | 12 → 7 | 54 → 56 | 89-91 → 80-93 % |
+| revision_trimestral · Auto | 22 → 14 | 8 → 8 | 48 → 38 | 70 → 80-84 % |
+| weekly_planning · plantilla | 20 → 22 | 8 → 10 | 93 → 80 | 70-87 → 80-87 % |
+| weekly_planning · Auto | 14 → 14 | 6 → 11 | 65 → 63 | 61-63 → 61-83 % |
+
+El 1.7B no sigue la instrucción con fiabilidad: mete temas enteros con el nombre en medio («Postmortem caída: … Álvaro debe explicar en la reunión del 18») y en Auto deja fuera otras. Revertido.
+
+**Adoptado: una regla sin el modelo ✅ (`promote_commitments`).** Tras resolver los detalles, cada viñeta de un apartado que no es de tareas se parte en cláusulas («;», « – », punto). Una cláusula se copia a «Próximos pasos» (desde el nombre; el original se queda) si un nombre propio de la transcripción (con mayúscula y no al principio de frase; sin días ni meses en inglés) hace de sujeto: en inglés «X to <verbo>» o «X will…»; en castellano un futuro («Nuria enviará…»); o, si la cláusula tiene plazo («para el», «antes del», «by», un día…), una palabra en tercera persona detrás (-a/-e en castellano, -s en inglés). Los duplicados se descartan con `add_tasks`. Desactivable con `+nopromote` en el evaluador.
+
+Tres rondas sobre las mismas 12 ejecuciones (acertadas / escritas, de 168):
+
+| Versión | Acertadas | Escritas |
+|---|---|---|
+| Sin regla | 73 | 260 |
+| 1.ª: nombre + verbo con plazo | 81 | 364 (días y meses como nombres: «Thursday will be walked…»; «Tierramar es el grupo…») |
+| 2.ª: sin días ni meses, ni «es/se/porque/is…» | 81 | 321 (fragmentos: «Santander, arrocerías y tabernas», «Lince otra vez») |
+| 3.ª: forma de verbo según el idioma, sin coma ni posesivo detrás del nombre | **81** | **289** |
+
+Lo que entra de más casi siempre es un encargo real que el guion no cuenta («Priya to chase HMRC by end of month», «Hannah will apply credit this week», «Marcos te llama antes del 18»). Quedan pocos falsos («Pro accounts linked to Thursday incident»). Reuniones cortas, con y sin la regla (3 semillas): entrevista en Auto 2/2/3 → 4/4/3 de 8; en el resto las mismas tareas y 0-2 escritas más. La cobertura, la colocación y el tiempo no cambian.
 
 ## Otras áreas (descartes medidos)
 

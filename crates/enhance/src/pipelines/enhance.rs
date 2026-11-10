@@ -213,11 +213,15 @@ pub struct EnhanceOptions {
     /// pero escribe el doble, muchas falsas o con otro responsable (ver
     /// `docs/experimentos.md`, «Tareas en las pasadas de detalle»).
     pub detail_tasks: bool,
+    /// Copiar a «Próximos pasos» los encargos con dueño que el resumen dejó
+    /// en otro apartado («…; Nuria envía el correo antes del viernes»). Ver
+    /// `promote_commitments`.
+    pub promote_commitments: bool,
 }
 
 impl Default for EnhanceOptions {
     fn default() -> Self {
-        Self { itn: true, prompt: None, max_tokens: 3000, seed: None, detail_chunk_secs: Some(240.0), markdown_grammar: false, detail_tasks: false }
+        Self { itn: true, prompt: None, max_tokens: 3000, seed: None, detail_chunk_secs: Some(240.0), markdown_grammar: false, detail_tasks: false, promote_commitments: true }
     }
 }
 
@@ -1238,6 +1242,9 @@ pub async fn enhance_with(
     let mut tasks: Vec<bool> = tpl.iter().map(|s| s.kind == SectionKind::Tasks).collect();
     tasks.push(false);
     apply_details(&mut raw, details.as_deref().unwrap_or_default(), input.segments.len(), &tasks, false);
+    if opts.promote_commitments {
+        promote_commitments(&mut raw, &tasks, input.segments, input.summary_language, false);
+    }
     let (notes, mut report) = resolve(raw, input.segments, &blocks, input.note.id, layout)?;
     report.template_retries = retries;
     report.unmatched_bullets = fit.unmatched_bullets;
@@ -1357,6 +1364,126 @@ fn add_tasks(steps: &mut RawSection, found: Vec<RawBullet>, n_lines: usize) {
     }
 }
 
+/// Nombres propios de la transcripción: palabras con mayúscula que no van al
+/// principio de una frase. Son las personas (y empresas) que pueden tener un
+/// encargo.
+fn proper_names(segments: &[Segment]) -> std::collections::HashSet<String> {
+    let mut names = std::collections::HashSet::new();
+    for seg in segments {
+        let mut after_stop = true;
+        for raw in seg.text.split_whitespace() {
+            let w = raw.trim_matches(|c: char| !c.is_alphanumeric());
+            let mut cs = w.chars();
+            let capital = cs.next().is_some_and(char::is_uppercase) && cs.any(char::is_lowercase);
+            if capital && !after_stop && w.chars().count() >= 3 {
+                names.insert(w.to_owned());
+            }
+            after_stop = raw.ends_with(['.', '?', '!', ':', '¿', '¡']);
+        }
+    }
+    // Los días y meses en inglés van con mayúscula y no son nadie.
+    for w in [
+        "Yo", "Ellos", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "January", "February", "March",
+        "April", "May", "June", "July", "August", "September", "October", "November", "December",
+    ] {
+        names.remove(w);
+    }
+    names
+}
+
+/// ¿Es un encargo con dueño? Un nombre de la reunión como sujeto: «Hannah to
+/// prepare…», «Aisha will redo…», «Nuria enviará…», o
+/// cualquier verbo detrás del nombre si la frase tiene plazo («Tomás arregla
+/// el fallo para el 23»). Solo castellano e inglés.
+fn commitment(clause: &str, names: &std::collections::HashSet<String>, english: bool) -> Option<usize> {
+    const DEADLINE: &[&str] = &[
+        "para el ", "para la ", "para mañana", "antes del ", "antes de ", "esta semana", "semana que viene", "próxima semana",
+        "fin de mes", "final de mes", "mañana", "hoy", "lunes", "martes", "miércoles", "jueves", "viernes",
+        " by ", "before ", "next week", "this week", "tomorrow", "today", "end of ", "monday", "tuesday", "wednesday",
+        "thursday", "friday",
+    ];
+    const NOT_VERB: &[&str] = &[
+        "y", "e", "o", "de", "del", "con", "el", "la", "los", "las", "en", "para", "por", "a", "al", "and", "or", "of", "with", "the", "in", "on",
+        "at", "for", "s", "es", "está", "era", "fue", "son", "están", "is", "are", "was", "were", "porque", "que", "se", "because",
+        "which", "who", "that", "otra", "otro", "otras", "otros", "nueva", "nuevo", "this", "these", "those", "has", "was", "does",
+        "before", "after", "until", "since",
+    ];
+    if clause.contains('?') {
+        return None;
+    }
+    let lower = clause.to_lowercase();
+    let deadline = DEADLINE.iter().any(|d| lower.contains(d));
+    let words: Vec<&str> = clause.split_whitespace().collect();
+    for (i, raw) in words.iter().enumerate() {
+        let w = raw.trim_matches(|c: char| !c.is_alphanumeric());
+        if !names.contains(w) {
+            continue;
+        }
+        let start = clause.find(raw).unwrap_or(0);
+        let next = words.get(i + 1).map(|n| n.trim_matches(|c: char| !c.is_alphanumeric() && c != '\'')).unwrap_or("");
+        let after = words.get(i + 2).copied().unwrap_or("");
+        let lowercase = next.chars().next().is_some_and(char::is_lowercase);
+        // «X to <verbo>»: un sustantivo en plural detrás («Corvex to customers») no.
+        let to_verb = next == "to" && after.chars().next().is_some_and(char::is_lowercase) && !after.ends_with('s');
+        let will = english && (to_verb || next == "will" || raw.ends_with("'ll") || raw.ends_with("’ll"));
+        let future = next.ends_with("rá") || next.ends_with("rán");
+        // Sin «to»/«will»/futuro, la palabra de detrás tiene que parecer un
+        // verbo en tercera persona («arregla», «envía», «sends»): si no, es
+        // un fragmento («Santander, arrocerías y tabernas», «Lince otra vez»).
+        let verb_like = next.chars().count() >= 3 && if english { next.ends_with('s') } else { next.ends_with(['a', 'e', 'á', 'é']) };
+        // «Priya's team», «Santander, arrocerías…»: el nombre no es el sujeto.
+        let not_subject = raw.contains("'s") || raw.contains("’s") || raw.ends_with([',', ')']);
+        let future = !english && future;
+        if !not_subject && (will || future || (lowercase && deadline && verb_like && !NOT_VERB.contains(&next))) {
+            return Some(start);
+        }
+    }
+    None
+}
+
+/// Copia a «Próximos pasos» los encargos con dueño que el resumen dejó como
+/// dato en otro apartado. Medido: el 20 % de las tareas de una reunión de una
+/// hora estaba en las notas, con dueño y acción, pero en otro apartado.
+/// Pedírselo al modelo no funcionó (`docs/experimentos.md`).
+fn promote_commitments(raw: &mut Vec<RawSection>, tasks: &[bool], segments: &[Segment], language: &str, auto: bool) {
+    // Las reglas solo saben castellano e inglés.
+    let english = match crate::language::language_index(language) {
+        0 => false,
+        1 => true,
+        _ => return,
+    };
+    let names = proper_names(segments);
+    let mut found = Vec::new();
+    for (s, _) in raw.iter().zip(tasks.iter().chain(std::iter::repeat(&false))).filter(|(_, t)| !**t) {
+        for b in &s.bullets {
+            for clause in b.text.split([';', '.']).flat_map(|c| c.split(" – ")) {
+                let clause = clause.trim();
+                if let Some(start) = commitment(clause, &names, english) {
+                    let text = clause[start..].trim_end_matches([',', ' ']);
+                    let mut cs = text.chars();
+                    let text: String = cs.next().map(|c| c.to_uppercase().chain(cs).collect()).unwrap_or_default();
+                    found.push(RawBullet { text, refs: b.refs.clone() });
+                }
+            }
+        }
+    }
+    if found.is_empty() {
+        return;
+    }
+    let target = match tasks.iter().position(|t| *t) {
+        Some(i) => i,
+        None if auto => {
+            raw.push(RawSection { heading: "Próximos pasos".into(), bullets: Vec::new() });
+            raw.len() - 1
+        }
+        None => return,
+    };
+    for t in &found {
+        trace(&format!("encargo de otro apartado: {}", t.text));
+    }
+    add_tasks(&mut raw[target], found, segments.len());
+}
+
 /// Genera `main` junto con las peticiones de detalle (si no se tienen ya) en
 /// un solo lote. Devuelve la salida de `main` y la de los detalles.
 async fn complete_with_details(
@@ -1398,6 +1525,10 @@ async fn enhance_auto(
     let mut raw = merge_sections(parse_markdown(&md));
     let tasks: Vec<bool> = raw.iter().map(|s| is_next_steps(&s.heading)).collect();
     apply_details(&mut raw, details.as_deref().unwrap_or_default(), input.segments.len(), &tasks, true);
+    if opts.promote_commitments {
+        let tasks: Vec<bool> = raw.iter().map(|s| is_next_steps(&s.heading)).collect();
+        promote_commitments(&mut raw, &tasks, input.segments, input.summary_language, true);
+    }
     if raw.is_empty() {
         return Err(EnhanceError::NoSections(md));
     }
@@ -1608,6 +1739,51 @@ mod tests {
         assert_eq!(m, ["1840 clínicas activas", "MRR de 112000 euros"], "el duplicado del MRR no entra; el nuevo va en orden");
         assert_eq!(secs[1].bullets.len(), 2);
         assert_eq!(secs[2].bullets.len(), 1, "las tareas no reciben detalles");
+    }
+
+    #[test]
+    fn commitments_left_in_other_sections_go_to_next_steps() {
+        let segs = vec![
+            seg(0, Channel::System, 0.0, 5.0, "Lo del correo lo hace Nuria, y Tomás mira lo de Lince con Hannah."),
+            seg(1, Channel::System, 5.0, 9.0, "Vale. A Marcos le dio rabia."),
+        ];
+        let names = proper_names(&segs);
+        assert!(names.contains("Nuria") && names.contains("Tomás") && names.contains("Marcos") && !names.contains("Vale"));
+        let en = proper_names(&[seg(2, Channel::System, 9.0, 12.0, "so on Thursday Tom will check it")]);
+        assert!(en.contains("Tom") && !en.contains("Thursday"));
+        for yes in [
+            "Nuria envía correo explicativo antes del viernes",
+            "Nuria enviará el correo",
+            "Tomás arregla el fallo de sincronización para el 23 de noviembre",
+            "Hannah to prepare list of 200 accountants",
+            "Tom will do it by end of November",
+        ] {
+            let names: std::collections::HashSet<String> = ["Nuria", "Tomás", "Hannah", "Tom"].map(String::from).into();
+            let english = yes.starts_with("Hannah") || yes.starts_with("Tom ");
+            assert!(commitment(yes, &names, english).is_some(), "{yes}");
+        }
+        for no in [
+            "Marcos le dio rabia en la llamada",
+            "Reunión con Marcos y Nuria el lunes",
+            "¿Nuria envía el correo el lunes?",
+            "Nuria es la responsable desde el lunes",
+            "Nuria se enviará para el lunes 17",
+            "Lince otra vez para el lunes",
+            "Santander, arrocerías y tabernas para el viernes",
+            "Priya's team by Friday",
+            "Inés sobreviva a diciembre",
+        ] {
+            let english = no.starts_with("Priya");
+            assert!(commitment(no, &names, english).is_none(), "{no}");
+        }
+        let mut raw = parse_markdown(
+            "## Descuento\n- Descuento del 8 % para los afectados; Nuria envía correo explicativo antes del viernes [1]\n## Integración\n- Un tercio de los tickets; Tomás arregla el fallo para el 23 de noviembre [2]\n## Próximos pasos\n- Tomás: arreglar el fallo de sincronización para el 23 de noviembre [2]\n",
+        );
+        promote_commitments(&mut raw, &[false, false, true], &segs, "español", false);
+        let steps: Vec<&str> = raw[2].bullets.iter().map(|b| b.text.as_str()).collect();
+        // El de Nuria entra, sin la parte del descuento; el de Tomás ya estaba.
+        assert_eq!(steps, ["Nuria envía correo explicativo antes del viernes", "Tomás: arreglar el fallo de sincronización para el 23 de noviembre"]);
+        assert_eq!(raw[0].bullets.len(), 1, "el original se queda en su apartado");
     }
 
     #[test]

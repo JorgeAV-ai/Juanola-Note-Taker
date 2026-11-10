@@ -2,7 +2,7 @@
 //!
 //! ```text
 //! cargo run --release -p juanola-enhance --example eval_enhance -- \
-//!   <segments.json> <facts.json> [notas.txt] [--runs N] [--variant nombre=itn|noitn[+detail<seg>|+nodetail][+gbnf][+tasks][:prompt.md]]...
+//!   <segments.json> <facts.json> [notas.txt] [--runs N] [--variant nombre=itn|noitn[+detail<seg>|+nodetail][+gbnf][+tasks][+nopromote][:prompt.md]]...
 //!   [--template 1on1|standup|semanal|entrevista|ventas|plantilla.json] [--title «Título de la reunión»] [--lang inglés] [--check]
 //! ```
 //! `segments.json` sale del STT o, sin audio, de `tools/script_to_segments.py`.
@@ -361,7 +361,11 @@ async fn main() -> anyhow::Result<()> {
                 let itn = !mode.split('+').any(|m| m == "noitn");
                 let markdown_grammar = mode.split('+').any(|m| m == "gbnf");
                 let detail_tasks = mode.split('+').any(|m| m == "tasks");
-                variants.push((name.to_owned(), EnhanceOptions { itn, prompt, detail_chunk_secs, markdown_grammar, detail_tasks, ..Default::default() }));
+                let promote_commitments = !mode.split('+').any(|m| m == "nopromote");
+                variants.push((
+                    name.to_owned(),
+                    EnhanceOptions { itn, prompt, detail_chunk_secs, markdown_grammar, detail_tasks, promote_commitments, ..Default::default() },
+                ));
                 i += 1;
             }
             _ => {}
