@@ -28,7 +28,10 @@ VOICES = {
 
 def synth(text: str, voice: str, tmp: str) -> bytes:
     path = os.path.join(tmp, "x.wav")
-    subprocess.run(["say", "-v", voice, "-o", path, "--data-format=LEI16@16000", text], check=True)
+    # El texto va como argumento suelto: que no empiece por '-' lo tomaría `say`
+    # como una opción.
+    assert not text.startswith("-"), f"el texto no puede empezar por '-': {text[:30]!r}"
+    subprocess.run(["say", "-v", voice, "-o", path, "--data-format=LEI16@16000", "--", text], check=True)
     with wave.open(path) as w:
         assert w.getframerate() == RATE and w.getnchannels() == 1 and w.getsampwidth() == 2
         return w.readframes(w.getnframes())
@@ -44,6 +47,8 @@ def write(path: str, pcm: bytearray) -> None:
 
 def main(script: str, out_dir: str, lang: str) -> None:
     os.makedirs(out_dir, exist_ok=True)
+    if lang not in VOICES:
+        sys.exit(f"idioma desconocido: {lang!r} (hay {', '.join(VOICES)})")
     voices = VOICES[lang]
     assigned: dict[str, str] = {}
     tracks = {"mic": bytearray(), "system": bytearray()}
