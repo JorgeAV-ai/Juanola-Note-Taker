@@ -131,6 +131,10 @@ export const en = {
   "backend.micSilent": "The microphone only gives silence. If it isn’t muted, check Juanola’s microphone permission.",
   "backend.systemSilent": "System audio arrives silent even though something is playing. Check that Juanola has permission in System Settings → Privacy & Security → Screen & System Audio Recording.",
   "backend.testMeeting": "Test meeting",
+  "backend.stillStopping": "The previous recording is still stopping.",
+  "backend.noteTrashed": "The note is in the trash: restore it before recording.",
+  "backend.noteMissing": "The note doesn’t exist.",
+  "backend.badEvent": "Invalid event.",
 
   // aviso de reunión
   "notice.meeting": "Meeting detected",
@@ -363,6 +367,10 @@ export const es: Record<Key, string> = {
   "backend.micSilent": "El micrófono solo da silencio. Si no lo tienes silenciado, revisa el permiso de micrófono de Juanola.",
   "backend.systemSilent": "El audio del sistema llega en silencio aunque algo suena. Revisa que Juanola tenga permiso en Ajustes del Sistema → Privacidad y seguridad → Grabación de pantalla y audio del sistema.",
   "backend.testMeeting": "Reunión de prueba",
+  "backend.stillStopping": "la grabación anterior aún está parando",
+  "backend.noteTrashed": "la nota está en la papelera: restáurala antes de grabar",
+  "backend.noteMissing": "la nota no existe",
+  "backend.badEvent": "evento no válido",
 
   "notice.meeting": "Reunión detectada",
   "notice.huddle": "Huddle detectado",

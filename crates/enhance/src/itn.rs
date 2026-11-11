@@ -105,7 +105,8 @@ fn value(words: &[Word]) -> u64 {
                 current = 0;
             }
             Word::Million => {
-                total = (total + current.max(1)) * 1_000_000;
+                // «mil millones» = 1000 M: el 1 solo multiplica un «millones» suelto.
+                total = (total + current).max(1) * 1_000_000;
                 current = 0;
             }
         }
@@ -225,7 +226,7 @@ pub fn normalize_numbers(text: &str) -> String {
             for t in &tokens[emitted..word_idx[w]] {
                 pending.push_str(t.1);
             }
-            let body = pending.strip_suffix(' ').unwrap_or("");
+            let body = pending.trim_end();
             // Tras el último carácter que no es cifra (que puede ocupar varios
             // bytes: «≈112 mil», «€112 mil»).
             let num_start =
@@ -240,6 +241,12 @@ pub fn normalize_numbers(text: &str) -> String {
                     w += 1;
                     continue;
                 }
+            }
+            // «millones» a secas no es una cifra («millones de usuarios»);
+            // «mil» suelto sí («cuesta mil») y sigue por `value`.
+            if words[0] == Word::Million {
+                w += 1;
+                continue;
             }
         }
         let mut repl = value(&words).to_string();

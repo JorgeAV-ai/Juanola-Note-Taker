@@ -71,8 +71,10 @@ pub async fn rename(db: &Db, id: Id, name: &str) -> Result<(), DbError> {
 
 /// Borra la carpeta; sus notas siguen existiendo, fuera de cualquier carpeta.
 pub async fn delete(db: &Db, id: Id) -> Result<(), DbError> {
-    sqlx::query("DELETE FROM folder_notes WHERE folder_id = ?").bind(id.to_string()).execute(db.pool()).await?;
-    sqlx::query("DELETE FROM folders WHERE id = ?").bind(id.to_string()).execute(db.pool()).await?;
+    let mut tx = db.pool().begin().await?;
+    sqlx::query("DELETE FROM folder_notes WHERE folder_id = ?").bind(id.to_string()).execute(&mut *tx).await?;
+    sqlx::query("DELETE FROM folders WHERE id = ?").bind(id.to_string()).execute(&mut *tx).await?;
+    tx.commit().await?;
     Ok(())
 }
 

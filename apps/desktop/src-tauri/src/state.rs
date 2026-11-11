@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
 use juanola_llm::backends::llamacpp::LlamaCpp;
@@ -12,6 +13,9 @@ pub struct AppState {
     pub data_dir: PathBuf,
     /// Grabación en curso (una a la vez).
     pub recording: Mutex<Option<Active>>,
+    /// `true` mientras `stop_recording` espera a que el hilo de grabación
+    /// termine: el slot ya está libre pero no puede empezar otra sesión.
+    pub stopping: AtomicBool,
     /// LFM3 se carga la primera vez que se hace un enhance y se queda en memoria
     /// hasta cerrar la app (ver `unload_llm`).
     pub llm: tokio::sync::Mutex<Option<Arc<LlamaCpp>>>,
@@ -24,7 +28,15 @@ pub struct AppState {
 impl AppState {
     pub fn new(db: juanola_db::Db, data_dir: PathBuf, detection: DetectionSettings) -> Self {
         let models = Arc::new(Models::new(&data_dir));
-        Self { db, data_dir, recording: Mutex::new(None), llm: tokio::sync::Mutex::new(None), models, detection: Detection::new(detection) }
+        Self {
+            db,
+            data_dir,
+            recording: Mutex::new(None),
+            stopping: AtomicBool::new(false),
+            llm: tokio::sync::Mutex::new(None),
+            models,
+            detection: Detection::new(detection),
+        }
     }
 
     /// Libera el modelo antes de salir. Si sigue cargado cuando el proceso

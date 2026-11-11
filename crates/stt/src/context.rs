@@ -6,9 +6,33 @@
 
 /// Límites para que un evento con una descripción enorme no infle el prompt
 /// de cada frase.
+const MAX_TITLE: usize = 150;
+const MAX_ATTENDEES: usize = 300;
 const MAX_DESCRIPTION: usize = 600;
 const MAX_NOTES: usize = 1000;
 const MAX_TERMS: usize = 200;
+
+/// Quita de un campo lo que podría leerse como tokens de control del modelo
+/// (`<|im_start|>`, `<|im_end|>`, `<asr_text>`): una descripción de calendario
+/// o unas notas con esos literales romperían la plantilla del prompt.
+fn sanitize(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(i) = rest.find("<|") {
+        out.push_str(&rest[..i]);
+        match rest[i + 2..].find("|>") {
+            Some(j) => {
+                out.push(' ');
+                rest = &rest[i + 2 + j + 2..];
+            }
+            None => {
+                rest = &rest[i + 2..];
+            }
+        }
+    }
+    out.push_str(rest);
+    out.replace("<asr_text>", " ")
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct AsrContext {
@@ -27,27 +51,37 @@ impl AsrContext {
     /// Texto para el mensaje de sistema; `None` si no hay nada que decir.
     pub fn render(&self) -> Option<String> {
         let mut lines = Vec::new();
-        let title = self.title.trim();
+        let title = sanitize(&self.title);
+        let title = title.trim();
         if !title.is_empty() {
-            lines.push(format!("Reunión: {title}"));
+            lines.push(format!("Reunión: {}", truncate(title, MAX_TITLE)));
         }
         let mut seen = std::collections::HashSet::new();
-        let attendees: Vec<&str> =
-            self.attendees.iter().map(|a| a.trim()).filter(|a| !a.is_empty() && seen.insert(a.to_lowercase())).collect();
+        let attendees: Vec<String> = self
+            .attendees
+            .iter()
+            .map(|a| sanitize(a).trim().to_string())
+            .filter(|a| !a.is_empty() && seen.insert(a.to_lowercase()))
+            .collect();
         if !attendees.is_empty() {
-            lines.push(format!("Asistentes: {}", attendees.join(", ")));
+            lines.push(format!("Asistentes: {}", truncate(&attendees.join(", "), MAX_ATTENDEES)));
         }
-        let description = clean_description(&self.description);
+        let description = sanitize(&clean_description(&self.description));
         if !description.is_empty() {
             lines.push(format!("Descripción: {}", truncate(&description, MAX_DESCRIPTION)));
         }
-        let notes = self.notes.split_whitespace().collect::<Vec<_>>().join(" ");
+        let notes = sanitize(&self.notes).split_whitespace().collect::<Vec<_>>().join(" ");
         if !notes.is_empty() {
             lines.push(format!("Notas: {}", truncate(&notes, MAX_NOTES)));
         }
         let mut seen = std::collections::HashSet::new();
-        let terms: Vec<&str> =
-            self.glossary.iter().map(|t| t.trim()).filter(|t| !t.is_empty() && seen.insert(t.to_lowercase())).take(MAX_TERMS).collect();
+        let terms: Vec<String> = self
+            .glossary
+            .iter()
+            .map(|t| sanitize(t).trim().to_string())
+            .filter(|t| !t.is_empty() && seen.insert(t.to_lowercase()))
+            .take(MAX_TERMS)
+            .collect();
         if !terms.is_empty() {
             lines.push(format!("Términos: {}.", terms.join(", ")));
         }

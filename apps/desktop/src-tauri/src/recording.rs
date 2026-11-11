@@ -432,10 +432,22 @@ fn run(
         }
     }
     worker.finish();
-    while let Ok(ev) = worker.events().recv_timeout(Duration::from_secs(30)) {
-        sink.handle(ev);
+    // Los finales pendientes pueden tardar si el decode va por detrás: tope
+    // total (no por hueco) mientras el worker siga vivo.
+    let deadline = Instant::now() + Duration::from_secs(90);
+    loop {
+        let left = deadline.saturating_duration_since(Instant::now());
+        if left.is_zero() {
+            tracing::warn!("tope de espera de finales alcanzado");
+            break;
+        }
+        match worker.events().recv_timeout(Duration::from_secs(5).min(left)) {
+            Ok(ev) => sink.handle(ev),
+            Err(mpsc::RecvTimeoutError::Timeout) if worker.exit_status().is_none() => continue,
+            Err(_) => break,
+        }
     }
-    let _ = worker.wait();
+    let _ = worker.wait(Duration::from_secs(30));
     tracing::info!(saved = sink.saved, finals = sink.finals, partials = sink.partials, "transcripción terminada");
     Ok(sink.saved)
 }

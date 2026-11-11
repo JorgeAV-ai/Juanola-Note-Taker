@@ -33,7 +33,7 @@ pub async fn insert(db: &Db, s: &Segment) -> Result<(), DbError> {
 /// Segmentos de una nota en orden temporal.
 pub async fn list(db: &Db, note_id: Id) -> Result<Vec<Segment>, DbError> {
     let rows = sqlx::query(
-        "SELECT id, note_id, channel, start_s, end_s, text, confidence, is_final FROM segments WHERE note_id = ? ORDER BY start_s",
+        "SELECT id, note_id, channel, speaker_id, start_s, end_s, text, confidence, is_final FROM segments WHERE note_id = ? ORDER BY start_s",
     )
     .bind(note_id.to_string())
     .fetch_all(db.pool())
@@ -42,11 +42,12 @@ pub async fn list(db: &Db, note_id: Id) -> Result<Vec<Segment>, DbError> {
         .map(|r| {
             let id: String = r.try_get("id")?;
             let channel: String = r.try_get("channel")?;
+            let speaker: Option<String> = r.try_get("speaker_id")?;
             Ok(Segment {
-                id: id.parse().unwrap_or_default(),
+                id: id.parse().map_err(|_| DbError::Corrupt("segments.id".into()))?,
                 note_id,
                 channel: if channel == "mic" { Channel::Mic } else { Channel::System },
-                speaker_id: None,
+                speaker_id: speaker.and_then(|s| s.parse().ok()),
                 start: r.try_get("start_s")?,
                 end: r.try_get("end_s")?,
                 text: r.try_get("text")?,

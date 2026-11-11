@@ -49,9 +49,11 @@ impl ChannelState {
     }
 
     fn audio(&self, span: Span) -> &[f32] {
-        let from = span.start.max(self.buf_start) - self.buf_start;
-        let to = span.end.min(self.end()) - self.buf_start;
-        &self.buf[from as usize..to as usize]
+        // Defensivo: si el tramo quedara fuera del búfer (p. ej. un `trim`
+        // desplazado), devolver lo que quede en vez de reventar el worker.
+        let from = (span.start.max(self.buf_start) - self.buf_start) as usize;
+        let to = (span.end.min(self.end()).saturating_sub(self.buf_start)) as usize;
+        &self.buf[from.min(self.buf.len())..to.clamp(from.min(self.buf.len()), self.buf.len())]
     }
 
     /// Descarta el audio que ya no puede formar parte de ningún tramo.
@@ -112,14 +114,19 @@ fn run() -> Result<(), String> {
     let _ = asr.transcribe(&vec![0.0; 16_000], language.as_deref());
     emit(&WorkerEvent::Ready { load_ms: t.elapsed().as_millis() as u64 });
 
-    let (tx, rx) = mpsc::channel::<Option<(Channel, Vec<f32>)>>();
+    // Cola acotada: si la decodificación va por detrás de la captura durante
+    // mucho tiempo, las tramas se descartan en vez de crecer sin límite. Las
+    // tramas son de ~10–20 ms por canal: esto deja minutos de margen (un
+    // decode largo no debe perder audio) con unos pocos MB como mucho.
+    const MAX_QUEUED_FRAMES: usize = 12_000;
+    let (tx, rx) = mpsc::sync_channel::<Option<(Channel, Vec<f32>)>>(MAX_QUEUED_FRAMES);
     std::thread::spawn(move || {
         let mut stdin = std::io::BufReader::new(std::io::stdin().lock());
         loop {
             match read_frame(&mut stdin) {
                 Ok(Some(f)) => {
-                    if tx.send(Some(f)).is_err() {
-                        return;
+                    if tx.try_send(Some(f)).is_err() {
+                        eprintln!("juanola-stt-worker: cola llena, se descarta una trama de audio");
                     }
                 }
                 Ok(None) => {
@@ -148,8 +155,16 @@ fn run() -> Result<(), String> {
         for item in batch {
             match item {
                 Some((channel, samples)) => {
-                    let ch = channels.iter_mut().find(|c| c.channel == channel).expect("canal");
-                    ch.push(&samples)?;
+                    // Un fallo de VAD/MLX en una ventana no tumba la sesión:
+                    // se avisa y se salta esa trama, como los errores del ASR.
+                    match channels.iter_mut().find(|c| c.channel == channel) {
+                        Some(ch) => {
+                            if let Err(e) = ch.push(&samples) {
+                                emit(&WorkerEvent::Error { message: format!("{channel:?}: {e}") });
+                            }
+                        }
+                        None => emit(&WorkerEvent::Error { message: format!("canal desconocido: {channel:?}") }),
+                    }
                 }
                 None => eof = true,
             }

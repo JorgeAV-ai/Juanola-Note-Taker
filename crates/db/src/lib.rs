@@ -10,6 +10,9 @@ pub enum DbError {
     Sqlx(#[from] sqlx::Error),
     #[error(transparent)]
     Migrate(#[from] sqlx::migrate::MigrateError),
+    /// Una fila con datos que no se pueden interpretar (uuid o fecha mal formados).
+    #[error("fila corrupta: {0}")]
+    Corrupt(String),
 }
 
 #[derive(Clone)]

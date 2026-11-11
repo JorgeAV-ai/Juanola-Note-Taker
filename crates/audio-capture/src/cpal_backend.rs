@@ -528,8 +528,11 @@ fn dsp_thread(
             let now = t0.elapsed().as_secs_f64() - out.len() as f64 / rate;
             let gap = now - emitted as f64 / rate;
             if gap > GAP_TOLERANCE_SECS {
-                tracing::debug!(channel = label(channel), gap, "relleno de silencio");
-                emit(vec![0.0; (gap * rate) as usize], &mut emitted);
+                // Acotado: un hueco de horas (suspensión, reconstrucción lenta)
+                // no puede reservar cientos de MB de ceros de golpe.
+                let fill = (gap.min(60.0) * rate) as usize;
+                tracing::debug!(channel = label(channel), gap, fill_secs = 60.0_f32.min(gap as f32), "relleno de silencio");
+                emit(vec![0.0; fill], &mut emitted);
             }
         }
         emit(out, &mut emitted);

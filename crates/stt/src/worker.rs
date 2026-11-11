@@ -47,6 +47,10 @@ pub fn write_frame(w: &mut impl Write, channel: Channel, samples: &[f32]) -> std
     w.write_all(&buf)
 }
 
+/// Máximo de muestras por trama (un minuto; lo normal son ~10 ms): un `n`
+/// corrupto en el stream no puede pedir una reserva gigante.
+const MAX_FRAME_SAMPLES: usize = 16_000 * 60;
+
 /// Lee una trama; `Ok(None)` al cerrarse la entrada.
 pub fn read_frame(r: &mut impl Read) -> std::io::Result<Option<(Channel, Vec<f32>)>> {
     let mut head = [0u8; 5];
@@ -57,6 +61,9 @@ pub fn read_frame(r: &mut impl Read) -> std::io::Result<Option<(Channel, Vec<f32
     }
     let channel = channel_from_byte(head[0]).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "canal desconocido"))?;
     let n = u32::from_le_bytes([head[1], head[2], head[3], head[4]]) as usize;
+    if n > MAX_FRAME_SAMPLES {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("trama de {n} muestras excede el tope")));
+    }
     let mut bytes = vec![0u8; n * 4];
     r.read_exact(&mut bytes)?;
     let samples = bytes.as_chunks::<4>().0.iter().map(|b| f32::from_le_bytes(*b)).collect();
@@ -179,9 +186,21 @@ impl SttWorker {
         self.stdin = None;
     }
 
-    pub fn wait(&mut self) -> std::io::Result<std::process::ExitStatus> {
+    /// Espera la salida del hijo como mucho `timeout`; si se pasa, lo mata y
+    /// devuelve su estado (un fallo de Metal puede dejar el proceso colgado).
+    pub fn wait(&mut self, timeout: std::time::Duration) -> std::io::Result<std::process::ExitStatus> {
         self.finish();
-        self.child.wait()
+        let deadline = std::time::Instant::now() + timeout;
+        loop {
+            if let Some(s) = self.child.try_wait()? {
+                return Ok(s);
+            }
+            if std::time::Instant::now() >= deadline {
+                let _ = self.child.kill();
+                return self.child.wait();
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
     }
 }
 

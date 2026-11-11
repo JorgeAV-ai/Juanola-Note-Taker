@@ -187,9 +187,12 @@ pub fn format_transcript_from(segments: &[Segment], first: usize, itn: Option<&s
             Channel::Mic => "Yo",
             Channel::System => "Ellos",
         };
+        // Saltos de línea dentro de un segmento falsificarían líneas `[n]` o
+        // títulos `##` en el bloque de transcripción del prompt.
+        let raw = s.text.split_whitespace().collect::<Vec<_>>().join(" ");
         let text = match itn {
-            Some(lang) => crate::itn::normalize_numbers_lang(s.text.trim(), lang),
-            None => s.text.trim().to_owned(),
+            Some(lang) => crate::itn::normalize_numbers_lang(&raw, lang),
+            None => raw,
         };
         out.push_str(&format!("[{}] ({}) {who}: {text}\n", i + first, clock(s.start)));
     }
@@ -311,20 +314,22 @@ fn format_user_notes(blocks: &[UserBlock]) -> String {
 }
 
 fn context_block(input: &EnhanceInput<'_>, template: Option<&Template>) -> String {
+    // Los campos de texto libre no deben meter líneas crudas en el prompt.
+    let clean = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
     let mut context = String::new();
     if !input.note.title.trim().is_empty() {
-        context.push_str(&format!("Reunión: {}\n", input.note.title.trim()));
+        context.push_str(&format!("Reunión: {}\n", clean(&input.note.title)));
     }
     if !input.user_profile.trim().is_empty() {
-        context.push_str(&format!("Sobre el usuario: {}\n", input.user_profile.trim()));
+        context.push_str(&format!("Sobre el usuario: {}\n", clean(input.user_profile)));
     }
     if let Some(t) = template {
-        let mut line = format!("Plantilla «{}».", t.name.trim());
+        let mut line = format!("Plantilla «{}».", clean(&t.name));
         if !t.purpose.trim().is_empty() {
-            line.push_str(&format!(" Propósito: {}.", t.purpose.trim().trim_end_matches('.')));
+            line.push_str(&format!(" Propósito: {}.", clean(&t.purpose).trim_end_matches('.')));
         }
         if !t.style.trim().is_empty() {
-            line.push_str(&format!(" Estilo: {}.", t.style.trim().trim_end_matches('.')));
+            line.push_str(&format!(" Estilo: {}.", clean(&t.style).trim_end_matches('.')));
         }
         context.push_str(&line);
         context.push('\n');
@@ -564,7 +569,6 @@ fn split_refs(line: &str) -> (String, Vec<i64>) {
     let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
     let text = text.replace(" ;", ";").replace(" ,", ",").replace(" .", ".");
     let text = text.trim().trim_end_matches([',', ';']).trim().to_owned();
-    let text = text.strip_suffix('.').map(|t| format!("{t}.")).unwrap_or(text);
     (text, refs)
 }
 
@@ -1202,11 +1206,18 @@ fn resolve(
     Ok((notes, report))
 }
 
+/// El esquema compilado (se reutiliza: `validate` corre hasta 3 veces por enhance).
+fn validator() -> Result<&'static jsonschema::Validator, EnhanceError> {
+    static V: std::sync::OnceLock<Result<jsonschema::Validator, String>> = std::sync::OnceLock::new();
+    V.get_or_init(|| jsonschema::validator_for(&enhanced_notes_schema()).map_err(|e| e.to_string()))
+        .as_ref()
+        .map_err(|e| EnhanceError::Schema(e.clone()))
+}
+
 /// Valida contra el esquema público de las notas mejoradas.
 pub fn validate(notes: &EnhancedNotes) -> Result<(), EnhanceError> {
     let value = serde_json::to_value(notes).map_err(|e| EnhanceError::Schema(e.to_string()))?;
-    let validator = jsonschema::validator_for(&enhanced_notes_schema()).map_err(|e| EnhanceError::Schema(e.to_string()))?;
-    let errors: Vec<String> = validator.iter_errors(&value).map(|e| format!("{} en {}", e, e.instance_path())).collect();
+    let errors: Vec<String> = validator()?.iter_errors(&value).map(|e| format!("{} en {}", e, e.instance_path())).collect();
     if errors.is_empty() {
         Ok(())
     } else {
@@ -1237,7 +1248,11 @@ pub async fn enhance_with(
         if blocks.is_empty() {
             return Err(EnhanceError::TooShort { words });
         }
-        return resolve(Vec::new(), input.segments, &blocks, input.note.id, Layout::Auto);
+        let (mut notes, report) = resolve(Vec::new(), input.segments, &blocks, input.note.id, Layout::Auto)?;
+        for s in notes.sections.iter_mut() {
+            s.heading = crate::language::localize_heading(&s.heading, input.summary_language);
+        }
+        return Ok((notes, report));
     }
     let budget = if opts.ablate.auto_floor { base_budget(words, opts.max_tokens) } else { summary_budget(words, opts.max_tokens) };
     let gen = GenOptions { max_tokens: Some(budget), seed: opts.seed, max_refs: max_refs(opts), ..Default::default() };
@@ -1526,12 +1541,16 @@ fn commitment(clause: &str, names: &std::collections::HashSet<String>, english: 
     let lower = clause.to_lowercase();
     let deadline = DEADLINE.iter().any(|d| lower.contains(d));
     let words: Vec<&str> = clause.split_whitespace().collect();
+    // `find` sin offset pillaría la primera aparición del nombre («Tomas dijo
+    // que Tom…»): seguir la posición real de la palabra i-ésima.
+    let mut off = 0usize;
     for (i, raw) in words.iter().enumerate() {
+        let start = clause[off..].find(raw).map(|p| off + p).unwrap_or(off);
+        off = start + raw.len();
         let w = raw.trim_matches(|c: char| !c.is_alphanumeric());
         if !names.contains(w) {
             continue;
         }
-        let start = clause.find(raw).unwrap_or(0);
         let next = words.get(i + 1).map(|n| n.trim_matches(|c: char| !c.is_alphanumeric() && c != '\'')).unwrap_or("");
         let after = words.get(i + 2).copied().unwrap_or("");
         let lowercase = next.chars().next().is_some_and(char::is_lowercase);

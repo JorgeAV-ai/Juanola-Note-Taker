@@ -134,11 +134,13 @@ fn join_numbers(ws: Vec<Word>) -> Vec<Word> {
             } else if k == "y" && last_tens && ws.get(j + 1).and_then(|w| number_word(&w.key)).is_some_and(|v| (1..10).contains(&v)) {
                 last_tens = true; // la «y» de «treinta y cinco»
             } else if k == "mil" {
-                total += cur.max(1) * 1000;
+                total = total.saturating_add(cur.max(1).saturating_mul(1000));
                 cur = 0;
                 last_tens = false;
             } else if matches!(k, "millon" | "millones") {
-                total = (total + cur.max(1)) * 1_000_000;
+                // «mil millones» → 1000 M, no 1001 M: el 1 solo aplica a un
+                // «millones» suelto. Saturado: bucles de repetición no desbordan.
+                total = (total + cur).max(1).saturating_mul(1_000_000);
                 cur = 0;
                 last_tens = false;
             } else {
@@ -290,7 +292,9 @@ pub fn merge(a: &[Word], b: &[Word], diffs: &[Diff], pick: impl Fn(usize) -> boo
     let mut out = Vec::with_capacity(a.len());
     let mut i = 0;
     for (n, d) in diffs.iter().enumerate() {
-        out.extend_from_slice(&a[i..d.a.start]);
+        // `diffs` debe venir ordenado y dentro de rango (como el de `diffs(align)`).
+        debug_assert!(d.a.start >= i && d.a.end <= a.len() && d.b.end <= b.len());
+        out.extend_from_slice(&a[i..d.a.start.min(a.len()).max(i)]);
         out.extend_from_slice(if pick(n) { &b[d.b.clone()] } else { &a[d.a.clone()] });
         i = d.a.end;
     }

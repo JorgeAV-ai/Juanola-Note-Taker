@@ -177,7 +177,8 @@ impl LlamaCpp {
         let needed = (total.div_ceil(1024) * 1024) as u32;
         let mut ctx_params = LlamaContextParams::default()
             .with_n_ctx(NonZeroU32::new(needed.min(self.n_ctx)))
-            .with_n_batch(N_BATCH)
+            // `n_batch` no puede superar `n_ctx` ni quedar bajo `n_ubatch`.
+            .with_n_batch(needed.min(N_BATCH).max(self.n_ubatch))
             .with_n_ubatch(self.n_ubatch)
             .with_n_seq_max(n_seq as u32)
             .with_kv_unified(true);
@@ -207,6 +208,9 @@ impl LlamaCpp {
         for (s, (tokens, max_new, opts)) in group.iter().enumerate() {
             let mut sampler = self.sampler(opts)?;
             let t = std::time::Instant::now();
+            if tokens.is_empty() {
+                return Err(err("prompt vacío tras tokenizar"));
+            }
             let last = tokens.len() - 1;
             for (chunk_i, chunk) in tokens.chunks(N_BATCH as usize).enumerate() {
                 batch.clear();
@@ -226,7 +230,9 @@ impl LlamaCpp {
                 out: Vec::new(),
                 stats,
                 done: false,
-                max_refs: opts.max_refs,
+                // Con gramática activa el cierre forzado de citas desincroniza el
+                // estado del sampler (la gramática ya restringe las citas).
+                max_refs: if opts.grammar.is_some() { None } else { opts.max_refs },
                 forced: Default::default(),
             });
         }
@@ -243,6 +249,8 @@ impl LlamaCpp {
                 }
                 if let Some(tok) = q.forced.pop_front() {
                     q.next = tok;
+                    // Los tokens forzados también entran en el sampler (penalties).
+                    q.sampler.accept(tok);
                 } else if let Some(max) = q.max_refs {
                     let piece = vocab.token_to_piece(q.next, false, None);
                     if piece.contains(&b',') && open_cite_refs(&q.out) >= max {

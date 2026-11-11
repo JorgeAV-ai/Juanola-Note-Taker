@@ -14,7 +14,22 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 use tokio::io::AsyncWriteExt;
+
+/// Establecer la conexión puede tardar con la red lenta; más de esto es caída.
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
+/// Un chunk que tarda más de esto significa descarga estancada (no aborta
+/// descargas lentas pero vivas, solo las que dejan de llegar).
+const STALL_TIMEOUT: Duration = Duration::from_secs(60);
+
+/// Une `rel` (de `models.toml`) a `root` rechazando rutas absolutas o `..`.
+fn safe_join(root: &Path, rel: &str) -> Result<PathBuf> {
+    if rel.starts_with('/') || rel.split(['/', '\\']).any(|c| c == "..") {
+        bail!("ruta no segura en models.toml: {rel}");
+    }
+    Ok(root.join(rel))
+}
 
 /// Slots que la app necesita hoy para grabar y generar notas.
 pub const APP_SLOTS: &[&str] = &["vad", "stt_streaming", "llm_main"];
@@ -58,7 +73,10 @@ impl Catalog {
             .iter()
             .map(|slot| {
                 let entry = self.pick(slot, machine).ok_or_else(|| anyhow!("no hay modelo para «{slot}» en esta máquina"))?;
-                Ok(Planned { slot: slot.to_string(), entry, dir: root.join(entry.install_dir(slot)) })
+                for f in &entry.files {
+                    safe_join(root, f)?;
+                }
+                Ok(Planned { slot: slot.to_string(), entry, dir: safe_join(root, &entry.install_dir(slot))? })
             })
             .collect()
     }
@@ -88,7 +106,9 @@ impl ModelEntry {
 
 impl Planned<'_> {
     pub fn status(&self) -> ModelStatus {
-        let mut installed = true;
+        // Sin lista de ficheros no hay nada que verificar: «instalado» si el
+        // runtime ya dejó algo en su carpeta (los que se autodescargan).
+        let mut installed = self.dir.is_dir();
         let mut partial_bytes = 0;
         for f in self.entry.expected_files() {
             let path = self.dir.join(&f);
@@ -136,18 +156,20 @@ pub async fn install(planned: &Planned<'_>, cancel: &AtomicBool, mut on_progress
         bail!("{}: la descarga de paquetes (no repos de Hugging Face) aún no está implementada", entry.name);
     }
     tokio::fs::create_dir_all(&planned.dir).await?;
-    let client = reqwest::Client::builder().user_agent("juanola-model-installer").build()?;
+    let client = reqwest::Client::builder().user_agent("juanola-model-installer").connect_timeout(CONNECT_TIMEOUT).build()?;
 
     let missing: Vec<&String> = entry.files.iter().filter(|f| !planned.dir.join(f).is_file()).collect();
     if !missing.is_empty() {
-        let tree: Vec<TreeEntry> = client
-            .get(format!("{HF}/api/models/{}/tree/main", entry.repo))
-            .send()
-            .await?
-            .error_for_status()
-            .with_context(|| format!("no se pudo leer el repo {}", entry.repo))?
-            .json()
-            .await?;
+        // `recursive` hace falta para los ficheros en subcarpetas (`onnx/…`);
+        // la API además pagina por cabeceras `Link: …; rel="next"`.
+        let mut tree: Vec<TreeEntry> = Vec::new();
+        let mut next = Some(format!("{HF}/api/models/{}/tree/main?recursive=true", entry.repo));
+        while let Some(url) = next.take() {
+            let resp =
+                client.get(&url).send().await?.error_for_status().with_context(|| format!("no se pudo leer el repo {}", entry.repo))?;
+            next = link_next(resp.headers());
+            tree.extend(resp.json::<Vec<TreeEntry>>().await?);
+        }
         let mut jobs = Vec::new();
         for f in &missing {
             let t = tree.iter().find(|t| &t.path == *f).ok_or_else(|| anyhow!("{} no tiene {f}", entry.repo))?;
@@ -163,6 +185,9 @@ pub async fn install(planned: &Planned<'_>, cancel: &AtomicBool, mut on_progress
         for (file, size, sha) in jobs {
             let url = format!("{HF}/{}/resolve/main/{file}", entry.repo);
             let dest = planned.dir.join(file);
+            if let Some(parent) = dest.parent() {
+                tokio::fs::create_dir_all(parent).await?;
+            }
             download(&client, &url, &dest, size, sha.as_deref(), cancel, |n| {
                 on_progress(Progress { slot: planned.slot.clone(), file: file.to_string(), done: done_before + n, total })
             })
@@ -207,12 +232,16 @@ pub async fn download(
         let mut out = tokio::fs::OpenOptions::new().create(true).write(true).append(append).truncate(!append).open(&part).await?;
         on_bytes(have);
         let mut stream = resp.bytes_stream();
-        while let Some(chunk) = stream.next().await {
+        loop {
+            let chunk = match tokio::time::timeout(STALL_TIMEOUT, stream.next()).await {
+                Ok(Some(c)) => c?,
+                Ok(None) => break,
+                Err(_) => bail!("descarga estancada: {url}"),
+            };
             if cancel.load(Ordering::Relaxed) {
                 out.flush().await?;
                 bail!("descarga cancelada");
             }
-            let chunk = chunk?;
             out.write_all(&chunk).await?;
             have += chunk.len() as u64;
             on_bytes(have);
@@ -232,6 +261,16 @@ pub async fn download(
     }
     tokio::fs::rename(&part, dest).await?;
     Ok(())
+}
+
+/// Siguiente página de un listado de la API de HF (`Link: <url>; rel="next"`).
+fn link_next(headers: &reqwest::header::HeaderMap) -> Option<String> {
+    let h = headers.get(reqwest::header::LINK)?.to_str().ok()?;
+    h.split(',').find_map(|part| {
+        let part = part.trim();
+        let (url, rel) = part.split_once(';')?;
+        rel.trim().eq_ignore_ascii_case("rel=\"next\"").then(|| url.trim().trim_start_matches('<').trim_end_matches('>').to_string())
+    })
 }
 
 fn sha256_file(path: &Path) -> Result<String> {

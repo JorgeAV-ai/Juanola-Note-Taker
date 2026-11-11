@@ -51,7 +51,13 @@ pub fn qwen_prompt(messages: &[Message]) -> String {
         out.push_str("<|im_start|>");
         out.push_str(&m.role);
         out.push('\n');
-        out.push_str(m.content.rsplit("</think>").next().unwrap_or("").trim_start());
+        // El razonamiento solo se quita en turnos del asistente (como la
+        // plantilla Jinja); en user/system es contenido legítimo.
+        if m.role == "assistant" {
+            out.push_str(m.content.rsplit("</think>").next().unwrap_or("").trim_start());
+        } else {
+            out.push_str(&m.content);
+        }
         out.push_str("<|im_end|>\n");
     }
     out.push_str("<|im_start|>assistant\n<think>\n\n</think>\n\n");

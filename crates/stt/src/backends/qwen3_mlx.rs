@@ -264,8 +264,12 @@ impl Qwen3AsrMlx {
     /// Argmax de los logits de la última posición de `hidden` `(1, L, H)` y su
     /// probabilidad (`exp(máx - logsumexp)`).
     fn next_token(&self, hidden: &Array) -> Result<(u32, f32), SttError> {
-        let l = hidden.shape()[1] as i32;
-        let h = hidden.shape()[2] as i32;
+        let shape = hidden.shape();
+        if shape.len() != 3 || shape[1] == 0 {
+            return Err(err(format!("hidden de forma inesperada: {shape:?}")));
+        }
+        let l = shape[1] as i32;
+        let h = shape[2] as i32;
         let last = mlxrs::ops::indexing::slice(hidden, &[0, l - 1, 0], &[1, l, h], &[1, 1, 1]).map_err(err)?;
         let logits = self.head.forward(&last)?.astype(mlxrs::Dtype::F32).map_err(err)?;
         let mut id = argmax(&logits, Some(-1), false).map_err(err)?;

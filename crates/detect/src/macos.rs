@@ -54,8 +54,10 @@ fn get_ids(object: AudioObjectID, selector: AudioObjectPropertySelector, scope: 
     if status != 0 || size == 0 {
         return Vec::new();
     }
-    let mut ids = vec![0 as AudioObjectID; size as usize / size_of::<AudioObjectID>()];
-    // SAFETY: `ids` tiene `size` bytes reservados.
+    // `size` podría no ser múltiplo de AudioObjectID: reservar de sobra para
+    // que el búfer nunca sea más pequeño que lo que la API escribe.
+    let mut ids = vec![0 as AudioObjectID; (size as usize).div_ceil(size_of::<AudioObjectID>())];
+    // SAFETY: `ids` tiene al menos `size` bytes reservados.
     let status = unsafe {
         AudioObjectGetPropertyData(
             object,
@@ -93,8 +95,10 @@ fn process_objects() -> Vec<AudioObjectID> {
     if status != 0 || size == 0 {
         return Vec::new();
     }
-    let mut ids = vec![0 as AudioObjectID; size as usize / size_of::<AudioObjectID>()];
-    // SAFETY: `ids` tiene `size` bytes reservados.
+    // `size` podría no ser múltiplo de AudioObjectID: reservar de sobra para
+    // que el búfer nunca sea más pequeño que lo que la API escribe.
+    let mut ids = vec![0 as AudioObjectID; (size as usize).div_ceil(size_of::<AudioObjectID>())];
+    // SAFETY: `ids` tiene al menos `size` bytes reservados.
     let status = unsafe {
         AudioObjectGetPropertyData(
             system,

@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "aux",
+  "description": "Ventanas auxiliares (aviso de reunión, indicador en vivo, píldora de dictado): solo lo necesario para pintarse y arrastrarse; plugins de más alcance quedan para la ventana principal.",
+  "windows": ["notification", "live-indicator", "dictation-pill"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-set-position",
+    "core:window:allow-set-always-on-top"
+  ]
+}

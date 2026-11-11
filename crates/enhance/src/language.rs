@@ -65,7 +65,8 @@ pub fn summary_language(segments: &[Segment]) -> &'static str {
             }
         }
     }
-    let (best, n) = counts.iter().enumerate().max_by_key(|(_, n)| **n).expect("hay idiomas");
+    // `max_by_key` gana el último en empate; preferir el primero (español).
+    let (best, n) = counts.iter().enumerate().max_by(|a, b| a.1.cmp(b.1).then_with(|| b.0.cmp(&a.0))).expect("hay idiomas");
     if *n < 5 {
         return LANGUAGES[0].0;
     }
