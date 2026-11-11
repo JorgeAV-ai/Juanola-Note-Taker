@@ -86,6 +86,7 @@ pub fn run() {
             commands::list_segments,
             commands::start_recording,
             commands::pause_recording,
+            commands::recording_state,
             commands::resume_recording,
             commands::stop_recording,
             commands::enhance_note,

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   Building2,
   ChevronsUpDown,
@@ -54,15 +54,21 @@ export function Sidebar({
   const [naming, setNaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Enter y blur disparan los dos: el segundo no debe crear otra carpeta.
+  const creating = useRef(false);
   const createFolder = async (name: string) => {
     setNaming(false);
-    if (!name.trim()) return;
+    const trimmed = name.trim();
+    if (!trimmed || creating.current) return;
+    creating.current = true;
     try {
-      const f = await ipc.createFolder(name);
+      const f = await ipc.createFolder(trimmed);
       await reload();
       onNavigate({ kind: "folder", id: f.id });
     } catch (e) {
       setError(String(e));
+    } finally {
+      creating.current = false;
     }
   };
 

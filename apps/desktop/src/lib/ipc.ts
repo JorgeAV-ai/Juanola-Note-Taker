@@ -162,6 +162,7 @@ export const ipc = {
   pauseRecording: () => invoke<void>("pause_recording"),
   resumeRecording: () => invoke<void>("resume_recording"),
   stopRecording: () => invoke<number>("stop_recording"),
+  recordingState: () => invoke<{ note_id: string | null; stopping_note: string | null; paused: boolean; stopping: boolean }>("recording_state"),
   enhanceNote: (id: string) => invoke<EnhancedNotes>("enhance_note", { id }),
   openPrivacySettings: (kind: SettingsAction) => invoke<void>("open_privacy_settings", { kind }),
   comingUp: () => invoke<CalendarEvent[]>("coming_up"),
@@ -199,8 +200,8 @@ export const ipc = {
 export const events = {
   recordingState: (cb: (e: RecordingStateEvent) => void): Promise<UnlistenFn> =>
     listen<RecordingStateEvent>("recording://state", (e) => cb(e.payload)),
-  levels: (cb: (e: { mic: number; system: number }) => void): Promise<UnlistenFn> =>
-    listen<{ mic: number; system: number }>("recording://levels", (e) => cb(e.payload)),
+  levels: (cb: (e: { note_id: string; mic: number; system: number }) => void): Promise<UnlistenFn> =>
+    listen<{ note_id: string; mic: number; system: number }>("recording://levels", (e) => cb(e.payload)),
   segment: (cb: (e: LiveSegment) => void): Promise<UnlistenFn> =>
     listen<LiveSegment>("transcript://segment", (e) => cb(e.payload)),
   noteStatus: (cb: (e: { note_id: string; status: NoteStatus; message?: string }) => void): Promise<UnlistenFn> =>

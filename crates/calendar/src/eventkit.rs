@@ -130,7 +130,11 @@ pub fn events(from: DateTime<Utc>, to: DateTime<Utc>) -> Vec<CalendarEvent> {
         let end = NSDate::dateWithTimeIntervalSince1970(to.timestamp() as f64);
         let predicate = store.predicateForEventsWithStartDate_endDate_calendars(&start, &end, None);
         let found = store.eventsMatchingPredicate(&predicate);
-        let mut out: Vec<CalendarEvent> = found.iter().filter_map(|e| convert(&e)).collect();
+        // Un evento corrupto de un calendario sincronizado (título o fecha en
+        // nil) paniquea en los getters de objc2: saltarlo en vez de tumbar el
+        // hilo de detección, que no tiene supervisión.
+        let mut out: Vec<CalendarEvent> =
+            found.iter().filter_map(|e| std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| convert(&e))).ok().flatten()).collect();
         out.sort_by_key(|e| e.start);
         // Una invitación puede estar en dos calendarios (dos cuentas) con el mismo UID.
         let mut seen = std::collections::HashSet::new();
@@ -150,9 +154,14 @@ pub fn calendars() -> Vec<(String, String, String)> {
         store
             .calendarsForEntityType(EKEntityType::Event)
             .iter()
-            .map(|c| {
-                let source = c.source().map(|s| s.title().to_string()).unwrap_or_default();
-                (c.calendarIdentifier().to_string(), c.title().to_string(), source)
+            .filter_map(|c| {
+                // Mismo motivo que en `events`: un calendario con campos nil
+                // no debe tumbar el diagnóstico.
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    let source = c.source().map(|s| s.title().to_string()).unwrap_or_default();
+                    (c.calendarIdentifier().to_string(), c.title().to_string(), source)
+                }))
+                .ok()
             })
             .collect()
     }

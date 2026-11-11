@@ -292,9 +292,14 @@ pub fn merge(a: &[Word], b: &[Word], diffs: &[Diff], pick: impl Fn(usize) -> boo
     let mut out = Vec::with_capacity(a.len());
     let mut i = 0;
     for (n, d) in diffs.iter().enumerate() {
-        // `diffs` debe venir ordenado y dentro de rango (como el de `diffs(align)`).
-        debug_assert!(d.a.start >= i && d.a.end <= a.len() && d.b.end <= b.len());
-        out.extend_from_slice(&a[i..d.a.start.min(a.len()).max(i)]);
+        // `diffs` debe venir ordenado y dentro de rango (como el de
+        // `diffs(align)`); uno malformado se ignora en vez de reventar en
+        // release o re-emitir palabras ya copiadas.
+        if d.a.start < i || d.a.end > a.len() || d.a.start > d.a.end || d.b.start > d.b.end || d.b.end > b.len() {
+            debug_assert!(false, "diff malformado: {d:?}");
+            continue;
+        }
+        out.extend_from_slice(&a[i..d.a.start]);
         out.extend_from_slice(if pick(n) { &b[d.b.clone()] } else { &a[d.a.clone()] });
         i = d.a.end;
     }

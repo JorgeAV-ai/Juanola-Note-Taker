@@ -51,7 +51,20 @@ impl Models {
 
     /// `Err(MISSING)` si falta alguno de `slots`.
     pub fn require(&self, slots: &[&str]) -> Result<(), String> {
-        let missing = self.status()?.into_iter().any(|s| slots.contains(&s.slot.as_str()) && !s.installed);
+        // Un slot fuera de APP_SLOTS también puede faltar (p. ej. diarization):
+        // hay que planearlo para no darlo por instalado.
+        let mut all: Vec<&str> = APP_SLOTS.to_vec();
+        for s in slots {
+            if !all.contains(s) {
+                all.push(s);
+            }
+        }
+        let missing = self
+            .catalog
+            .plan(&all, &self.machine, &self.root)
+            .map_err(|e| e.to_string())?
+            .iter()
+            .any(|p| slots.contains(&p.slot.as_str()) && !p.status().installed);
         if missing {
             Err(MISSING.into())
         } else {
@@ -106,6 +119,11 @@ impl Models {
     async fn install_all(&self, app: &AppHandle) -> Result<(), String> {
         let mut failed = Vec::new();
         for planned in self.plan()? {
+            // Sin esta comprobación, cancelar solo se nota dentro de una
+            // descarga: entre modelos se seguiría tirando.
+            if self.cancel.load(Ordering::Relaxed) {
+                return Err("descarga cancelada".into());
+            }
             if planned.status().installed {
                 continue;
             }

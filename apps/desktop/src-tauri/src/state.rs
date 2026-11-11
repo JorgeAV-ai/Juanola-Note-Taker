@@ -16,6 +16,14 @@ pub struct AppState {
     /// `true` mientras `stop_recording` espera a que el hilo de grabación
     /// termine: el slot ya está libre pero no puede empezar otra sesión.
     pub stopping: AtomicBool,
+    /// Nota cuya grabación está terminando (el slot ya está libre): los
+    /// últimos segmentos aún escriben en ella, así que no se puede borrar.
+    pub stopping_note: Mutex<Option<juanola_core_types::Id>>,
+    /// Serializa «qué nota se está grabando»: `start_recording`,
+    /// `stop_recording` y `trash_note` lo toman para que validar la nota,
+    /// registrar la grabación y borrarla no puedan cruzarse. Es de tokio para
+    /// poder mantenerlo durante los awaits de base de datos.
+    pub lifecycle: tokio::sync::Mutex<()>,
     /// LFM3 se carga la primera vez que se hace un enhance y se queda en memoria
     /// hasta cerrar la app (ver `unload_llm`).
     pub llm: tokio::sync::Mutex<Option<Arc<LlamaCpp>>>,
@@ -33,6 +41,8 @@ impl AppState {
             data_dir,
             recording: Mutex::new(None),
             stopping: AtomicBool::new(false),
+            stopping_note: Mutex::new(None),
+            lifecycle: tokio::sync::Mutex::new(()),
             llm: tokio::sync::Mutex::new(None),
             models,
             detection: Detection::new(detection),

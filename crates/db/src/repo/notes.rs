@@ -46,7 +46,7 @@ fn row_to_note(r: &sqlx::sqlite::SqliteRow) -> Result<Note, DbError> {
         title: r.try_get("title")?,
         raw_doc: serde_json::from_str(&raw).unwrap_or_else(|_| serde_json::json!({"type": "doc", "content": []})),
         enhanced_doc: enhanced.and_then(|e| serde_json::from_str(&e).ok()),
-        template_id: template.and_then(|t| t.parse().ok()),
+        template_id: template.map(|t| t.parse().map_err(|_| corrupt("template_id"))).transpose()?,
         status: status_from(&status),
         calendar_event_id: r.try_get("calendar_event_id")?,
         created_at: parse_time(&created)?,

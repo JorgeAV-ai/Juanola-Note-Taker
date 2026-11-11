@@ -174,12 +174,15 @@ impl LlamaCpp {
         // Unificada: las secuencias tienen longitudes muy distintas (el resumen
         // lleva toda la transcripción; los detalles, 4 minutos).
         let total: usize = group.iter().map(|(t, m, _)| t.len() + m).sum();
-        let needed = (total.div_ceil(1024) * 1024) as u32;
+        // Redondeado a 1024 pero sin pasar de `self.n_ctx`: con él se derivan
+        // `n_batch` y `n_ubatch`, que llama.cpp exige `<= n_ctx`.
+        let n_ctx = (total.max(1).div_ceil(1024) * 1024).min(self.n_ctx as usize).max(1) as u32;
+        let n_ubatch = self.n_ubatch.min(n_ctx);
         let mut ctx_params = LlamaContextParams::default()
-            .with_n_ctx(NonZeroU32::new(needed.min(self.n_ctx)))
+            .with_n_ctx(NonZeroU32::new(n_ctx))
             // `n_batch` no puede superar `n_ctx` ni quedar bajo `n_ubatch`.
-            .with_n_batch(needed.min(N_BATCH).max(self.n_ubatch))
-            .with_n_ubatch(self.n_ubatch)
+            .with_n_batch(n_ctx.min(N_BATCH).max(n_ubatch))
+            .with_n_ubatch(n_ubatch)
             .with_n_seq_max(n_seq as u32)
             .with_kv_unified(true);
         if let Some(on) = self.flash_attention {
@@ -230,9 +233,10 @@ impl LlamaCpp {
                 out: Vec::new(),
                 stats,
                 done: false,
-                // Con gramática activa el cierre forzado de citas desincroniza el
-                // estado del sampler (la gramática ya restringe las citas).
-                max_refs: if opts.grammar.is_some() { None } else { opts.max_refs },
+                // Con gramática activa (`grammar` o `json_schema`, ambas la
+                // instalan) el cierre forzado de citas desincroniza el estado
+                // del sampler — la gramática ya restringe las citas.
+                max_refs: if opts.grammar.is_some() || opts.json_schema.is_some() { None } else { opts.max_refs },
                 forced: Default::default(),
             });
         }
@@ -255,7 +259,11 @@ impl LlamaCpp {
                     let piece = vocab.token_to_piece(q.next, false, None);
                     if piece.contains(&b',') && open_cite_refs(&q.out) >= max {
                         q.forced.extend(close_cite.iter().copied());
-                        q.next = q.forced.pop_front().expect("«]\\n» tiene tokens");
+                        let tok = q.forced.pop_front().expect("«]\\n» tiene tokens");
+                        // El primer forzado también pasa por el sampler (si no,
+                        // un cierre de un solo token nunca se aceptaría).
+                        q.sampler.accept(tok);
+                        q.next = tok;
                     }
                 }
                 if vocab.is_eog(q.next) || q.stats.generated_tokens >= q.max_new {

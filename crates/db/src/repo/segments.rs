@@ -43,11 +43,16 @@ pub async fn list(db: &Db, note_id: Id) -> Result<Vec<Segment>, DbError> {
             let id: String = r.try_get("id")?;
             let channel: String = r.try_get("channel")?;
             let speaker: Option<String> = r.try_get("speaker_id")?;
+            let corrupt = |what: String| DbError::Corrupt(format!("segments.{what}"));
             Ok(Segment {
-                id: id.parse().map_err(|_| DbError::Corrupt("segments.id".into()))?,
+                id: id.parse().map_err(|_| corrupt("id".into()))?,
                 note_id,
-                channel: if channel == "mic" { Channel::Mic } else { Channel::System },
-                speaker_id: speaker.and_then(|s| s.parse().ok()),
+                channel: match channel.as_str() {
+                    "mic" => Channel::Mic,
+                    "system" => Channel::System,
+                    c => Err(corrupt(format!("channel «{c}»")))?,
+                },
+                speaker_id: speaker.map(|s| s.parse().map_err(|_| corrupt("speaker_id".into()))).transpose()?,
                 start: r.try_get("start_s")?,
                 end: r.try_get("end_s")?,
                 text: r.try_get("text")?,

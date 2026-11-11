@@ -47,7 +47,11 @@ pub async fn list(db: &Db, workspace_id: Id) -> Result<Vec<Folder>, DbError> {
     rows.iter()
         .map(|r| {
             let id: String = r.try_get("id")?;
-            Ok(Folder { id: id.parse().unwrap_or_default(), name: r.try_get("name")?, note_count: r.try_get("note_count")? })
+            Ok(Folder {
+                id: id.parse().map_err(|_| DbError::Corrupt("folders.id".into()))?,
+                name: r.try_get("name")?,
+                note_count: r.try_get("note_count")?,
+            })
         })
         .collect()
 }
@@ -98,7 +102,9 @@ pub async fn note_folder(db: &Db, note_id: Id) -> Result<Option<Id>, DbError> {
         .bind(note_id.to_string())
         .fetch_optional(db.pool())
         .await?;
-    Ok(row.and_then(|r| r.try_get::<String, _>("folder_id").ok()).and_then(|s| s.parse().ok()))
+    let Some(r) = row else { return Ok(None) };
+    let s: String = r.try_get("folder_id")?;
+    Ok(Some(s.parse().map_err(|_| DbError::Corrupt("folder_notes.folder_id".into()))?))
 }
 
 pub async fn notes(db: &Db, folder: Id) -> Result<Vec<Note>, DbError> {
@@ -114,7 +120,8 @@ pub async fn notes(db: &Db, folder: Id) -> Result<Vec<Note>, DbError> {
     .collect::<Result<_, _>>()?;
     let mut out = Vec::with_capacity(ids.len());
     for id in ids {
-        if let Some(n) = super::notes::get(db, id.parse().unwrap_or_default()).await? {
+        let id = id.parse().map_err(|_| DbError::Corrupt("notes.id".into()))?;
+        if let Some(n) = super::notes::get(db, id).await? {
             out.push(n);
         }
     }

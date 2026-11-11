@@ -98,9 +98,12 @@ pub async fn set_note_enhanced_doc(state: State<'_, AppState>, id: Id, doc: Enha
 
 #[tauri::command]
 pub async fn trash_note(state: State<'_, AppState>, id: Id) -> Res<()> {
-    // `start_recording` ya valida la nota: la carrera queda cubierta.
-    let recording = state.recording.lock().map_err(e)?.as_ref().is_some_and(|a| a.note_id == id);
-    if recording {
+    // Bajo `lifecycle` (como `start_recording` y `stop_recording`): la nota no
+    // se puede borrar mientras la validan para grabar ni mientras finaliza.
+    let _lifecycle = state.lifecycle.lock().await;
+    let busy = state.recording.lock().map_err(e)?.as_ref().is_some_and(|a| a.note_id == id)
+        || state.stopping_note.lock().map_err(e)?.is_some_and(|n| n == id);
+    if busy {
         return Err("Para la grabación antes de borrar la nota.".into());
     }
     repo::notes::trash(&state.db, id).await.map_err(e)
@@ -176,23 +179,49 @@ pub async fn list_segments(state: State<'_, AppState>, note_id: Id) -> Res<Vec<S
 
 #[tauri::command]
 pub async fn start_recording(app: AppHandle, state: State<'_, AppState>, note_id: Id, language: Option<String>) -> Res<()> {
-    if state.stopping.load(std::sync::atomic::Ordering::Relaxed) {
-        return Err("la grabación anterior aún está parando".into());
-    }
+    // `lifecycle` serializa con `trash_note` y `stop_recording`: validar la
+    // nota y registrar la grabación forman una sección crítica. El `Mutex`
+    // del slot no puede mantenerse entre awaits (su guard no es `Send`), así
+    // que solo cubre el último chequeo y la inserción.
+    let _lifecycle = state.lifecycle.lock().await;
     // Grabar en una nota que no existe o está en la papelera guardaría
     // segmentos que nunca se ven (la FK los tira en silencio).
     let note = repo::notes::get(&state.db, note_id).await.map_err(e)?.ok_or("la nota no existe")?;
     if note.trashed_at.is_some() {
         return Err("la nota está en la papelera: restáurala antes de grabar".into());
     }
+    state.models.require(&["vad", "stt_streaming"])?;
+    let language = language.or_else(|| Some("Spanish".into())).filter(|l| l != "auto");
     let mut slot = state.recording.lock().map_err(e)?;
+    if state.stopping.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err("la grabación anterior aún está parando".into());
+    }
     if let Some(active) = slot.as_ref() {
         return Err(format!("ya hay una grabación en curso (nota {})", active.note_id));
     }
-    state.models.require(&["vad", "stt_streaming"])?;
-    let language = language.or_else(|| Some("Spanish".into())).filter(|l| l != "auto");
     *slot = Some(Active::start(app, state.db.clone(), state.paths(), note_id, language)?);
     Ok(())
+}
+
+#[derive(Serialize)]
+pub struct RecordingInfo {
+    pub note_id: Option<Id>,
+    pub stopping_note: Option<Id>,
+    pub paused: bool,
+    pub stopping: bool,
+}
+
+/// Estado actual de la grabación: la píldora lo consulta al montar, porque si
+/// el webview se recarga en mitad de una sesión el backend sigue grabando.
+#[tauri::command]
+pub fn recording_state(state: State<'_, AppState>) -> RecordingInfo {
+    let a = state.recording.lock().ok().and_then(|r| r.as_ref().map(|a| (a.note_id, a.is_paused())));
+    RecordingInfo {
+        note_id: a.map(|(id, _)| id),
+        stopping_note: state.stopping_note.lock().ok().and_then(|n| *n),
+        paused: a.map(|(_, p)| p).unwrap_or(false),
+        stopping: state.stopping.load(std::sync::atomic::Ordering::Relaxed),
+    }
 }
 
 #[tauri::command]
@@ -211,22 +240,58 @@ pub fn resume_recording(state: State<'_, AppState>) -> Res<()> {
     Ok(())
 }
 
+/// Al soltarse (éxito, error o el future cancelado a mitad, p. ej. al recargar
+/// el webview), libera `stopping` y `stopping_note`: si no, una cancelación
+/// dejaría la grabación bloqueada para siempre.
+struct StopGuard<'a> {
+    stopping: &'a std::sync::atomic::AtomicBool,
+    note: &'a std::sync::Mutex<Option<Id>>,
+}
+
+impl Drop for StopGuard<'_> {
+    fn drop(&mut self) {
+        self.stopping.store(false, std::sync::atomic::Ordering::Relaxed);
+        if let Ok(mut n) = self.note.lock() {
+            *n = None;
+        }
+    }
+}
+
 /// Para la grabación y espera a los últimos segmentos. Devuelve cuántos se guardaron.
 #[tauri::command]
 pub async fn stop_recording(state: State<'_, AppState>) -> Res<usize> {
-    let active = state.recording.lock().map_err(e)?.take();
-    let Some(active) = active else {
-        tracing::warn!("stop_recording sin grabación activa");
-        return Ok(0);
+    let active = {
+        // Bajo `lifecycle` (como `start_recording` y `trash_note`), y con el
+        // flag y el id de la nota escritos antes de soltar el slot: ni se
+        // cuela otra captura ni se borra la nota mientras llegan sus últimos
+        // segmentos.
+        let _lifecycle = state.lifecycle.lock().await;
+        let mut slot = state.recording.lock().map_err(e)?;
+        let was = state.stopping.swap(true, std::sync::atomic::Ordering::Relaxed);
+        match slot.take() {
+            Some(a) => {
+                // `into_inner`: un mutex envenenado no debe dejar `stopping`
+                // encendido sin guardia (tampoco hay awaits que lo envenenen).
+                *state.stopping_note.lock().unwrap_or_else(|p| p.into_inner()) = Some(a.note_id);
+                a
+            }
+            None => {
+                // Restaurar, no apagar: otra parada puede seguir en marcha.
+                state.stopping.store(was, std::sync::atomic::Ordering::Relaxed);
+                if was {
+                    // La parada anterior sigue en curso: avisar en vez de
+                    // fingir que no había nada que parar.
+                    return Err("la grabación anterior aún está parando".into());
+                }
+                tracing::warn!("stop_recording sin grabación activa");
+                return Ok(0);
+            }
+        }
     };
     tracing::info!(note_id = %active.note_id, "stop_recording");
     state.detection.set_origin(detect::Origin::None);
-    // El slot ya está libre pero la sesión sigue terminando: `stopping`
-    // impide que `start_recording` solape otra captura mientras tanto.
-    state.stopping.store(true, std::sync::atomic::Ordering::Relaxed);
-    let result = tauri::async_runtime::spawn_blocking(move || active.stop()).await.map_err(e);
-    state.stopping.store(false, std::sync::atomic::Ordering::Relaxed);
-    result?
+    let _guard = StopGuard { stopping: &state.stopping, note: &state.stopping_note };
+    tauri::async_runtime::spawn_blocking(move || active.stop()).await.map_err(e)?
 }
 
 // ------------------------------------------------------------------ enhance
@@ -506,10 +571,16 @@ pub async fn open_privacy_settings(kind: String) -> Res<()> {
     }
 }
 
+/// Sin caracteres de control ni separadores Unicode: no se pueden falsificar
+/// líneas de log ni meter secuencias ANSI.
+fn log_clean(s: &str) -> String {
+    s.chars().map(|c| if c.is_control() || matches!(c, '\u{2028}' | '\u{2029}') { ' ' } else { c }).collect()
+}
+
 /// Error de pintado del frontend (lo captura su ErrorBoundary): al log.
 #[tauri::command]
 pub fn frontend_error(message: String) {
-    tracing::error!(target: "frontend", "{message}");
+    tracing::error!(target: "frontend", "{}", log_clean(&message));
 }
 
 /// Estado del permiso de micrófono para la pantalla de Ajustes. (El de audio
@@ -563,8 +634,7 @@ pub fn autotest_env(key: String) -> Option<String> {
 #[tauri::command]
 pub fn autotest_log(line: String) {
     if autotest_enabled() {
-        // Sin saltos de línea: no se pueden falsificar líneas de log.
-        tracing::info!(target: "autotest", "{}", line.replace('\n', " "));
+        tracing::info!(target: "autotest", "{}", log_clean(&line));
     }
 }
 

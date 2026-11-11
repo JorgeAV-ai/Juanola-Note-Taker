@@ -27,9 +27,11 @@ export const useTranscript = create<TranscriptState>((set, get) => ({
     const saved = await ipc.listSegments(noteId);
     if (get().noteId !== noteId) return;
     // Lo que haya llegado en vivo mientras tanto, sin repetir lo guardado (dos
-    // `load` seguidos de la misma nota, p. ej. en StrictMode, se solapan).
-    const ids = new Set(saved.map((s) => s.id));
-    const live = get().lines.filter((l) => !ids.has(l.id));
+    // `load` seguidos de la misma nota, p. ej. en StrictMode, se solapan). Los
+    // ids no sirven para deduplicar: el vivo usa «canal-sesión-id del worker»
+    // y lo guardado, un uuid nuevo; se compara por contenido.
+    const savedKeys = new Set(saved.map((s) => `${s.channel}:${s.start}:${s.text}`));
+    const live = get().lines.filter((l) => !savedKeys.has(`${l.channel}:${l.start}:${l.text}`));
     set({
       lines: [
         ...saved.map((s) => ({ id: s.id, channel: s.channel, start: s.start, end: s.end, text: s.text, final: true })),

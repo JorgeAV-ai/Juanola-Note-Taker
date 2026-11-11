@@ -15,7 +15,7 @@ use juanola_stt::backends::qwen3_mlx::Qwen3AsrMlx;
 use juanola_stt::backends::silero_mlx::{SileroMlx, WINDOW};
 use juanola_stt::language_lock::LanguageLock;
 use juanola_stt::segmenter::{Action, Segmenter, SegmenterConfig, Span};
-use juanola_stt::worker::{read_frame, WorkerEvent, TARGET_SAMPLE_RATE};
+use juanola_stt::worker::{channel_byte, read_frame, WorkerEvent, TARGET_SAMPLE_RATE};
 
 struct ChannelState {
     channel: Channel,
@@ -26,6 +26,14 @@ struct ChannelState {
     buf_start: u64,
     /// Siguiente muestra que pasa por el VAD.
     vad_pos: u64,
+    /// El VAD falló de forma persistente (típicamente Metal): se deja de
+    /// segmentar el canal pero se sigue consumiendo el búfer para que `trim`
+    /// pueda drenarlo y la sesión no se coma la memoria.
+    vad_poisoned: bool,
+    /// Huecos por tramas descartadas con la cola llena: posición del canal
+    /// donde cayó el hueco y muestras perdidas. Las posiciones internas no los
+    /// cuentan, así que `abs` los suma al publicar tiempos.
+    skips: Vec<(u64, u64)>,
     next_id: u64,
     pending: Vec<Action>,
 }
@@ -35,14 +43,40 @@ impl ChannelState {
         self.buf_start + self.buf.len() as u64
     }
 
+    /// Posición real en el reloj del canal: el búfer solo cuenta lo recibido,
+    /// pero los huecos de tramas descartadas también pasaron.
+    /// `inclusive = false` es para límites de fin exclusivos: un hueco justo en
+    /// la posición empieza DESPUÉS del tramo, así que no se suma.
+    fn abs(&self, pos: u64, inclusive: bool) -> u64 {
+        pos + self.skips.iter().filter(|(h, _)| if inclusive { *h <= pos } else { *h < pos }).map(|(_, c)| c).sum::<u64>()
+    }
+
     fn push(&mut self, samples: &[f32]) -> Result<(), String> {
         self.buf.extend_from_slice(samples);
         while self.end() - self.vad_pos >= WINDOW as u64 {
+            if self.vad_poisoned {
+                self.vad_pos += WINDOW as u64;
+                continue;
+            }
             let i = (self.vad_pos - self.buf_start) as usize;
-            let p = self.vad.prob(&self.buf[i..i + WINDOW]).map_err(|e| e.to_string())?;
-            self.vad_pos += WINDOW as u64;
-            if let Some(a) = self.seg.push(p, WINDOW as u64, self.vad_pos) {
-                self.pending.push(a);
+            match self.vad.prob(&self.buf[i..i + WINDOW]) {
+                Ok(p) => {
+                    self.vad_pos += WINDOW as u64;
+                    if let Some(a) = self.seg.push(p, WINDOW as u64, self.vad_pos) {
+                        self.pending.push(a);
+                    }
+                }
+                Err(e) => {
+                    // Un fallo de VAD/MLX no tumba la sesión: se cierra la
+                    // frase abierta (si la hay) para que `trim` no quede
+                    // anclado, se deja de segmentar el canal y se avisa una vez.
+                    self.vad_poisoned = true;
+                    self.vad_pos += WINDOW as u64;
+                    if let Some(a) = self.seg.flush(self.vad_pos) {
+                        self.pending.push(a);
+                    }
+                    return Err(e.to_string());
+                }
             }
         }
         Ok(())
@@ -106,6 +140,8 @@ fn run() -> Result<(), String> {
             buf: Vec::new(),
             buf_start: 0,
             vad_pos: 0,
+            vad_poisoned: false,
+            skips: Vec::new(),
             next_id: 0,
             pending: Vec::new(),
         });
@@ -120,13 +156,39 @@ fn run() -> Result<(), String> {
     // decode largo no debe perder audio) con unos pocos MB como mucho.
     const MAX_QUEUED_FRAMES: usize = 12_000;
     let (tx, rx) = mpsc::sync_channel::<Option<(Channel, Vec<f32>)>>(MAX_QUEUED_FRAMES);
+    // Muestras encoladas y huecos descartados por canal: el reloj de cada
+    // canal es lo que llegó a la cola, así que cada descarte queda anclado a
+    // la posición donde ocurrió (no a la que vaya procesando el bucle).
+    #[derive(Default)]
+    struct ChanClock {
+        sent: u64,
+        drops: Vec<(u64, u64)>,
+    }
+    let clock: [std::sync::Arc<std::sync::Mutex<ChanClock>>; 2] = [
+        std::sync::Arc::new(std::sync::Mutex::new(ChanClock::default())),
+        std::sync::Arc::new(std::sync::Mutex::new(ChanClock::default())),
+    ];
+    let reader_clock = clock.clone();
     std::thread::spawn(move || {
         let mut stdin = std::io::BufReader::new(std::io::stdin().lock());
+        let mut warned = 0u64;
         loop {
             match read_frame(&mut stdin) {
-                Ok(Some(f)) => {
-                    if tx.try_send(Some(f)).is_err() {
-                        eprintln!("juanola-stt-worker: cola llena, se descarta una trama de audio");
+                Ok(Some((ch, samples))) => {
+                    let n = samples.len() as u64;
+                    match tx.try_send(Some((ch, samples))) {
+                        Ok(()) => {
+                            reader_clock[channel_byte(ch) as usize].lock().unwrap_or_else(|e| e.into_inner()).sent += n;
+                        }
+                        Err(_) => {
+                            let mut c = reader_clock[channel_byte(ch) as usize].lock().unwrap_or_else(|e| e.into_inner());
+                            let at = c.sent;
+                            c.drops.push((at, n));
+                            warned += 1;
+                            if warned == 1 || warned % 200 == 0 {
+                                eprintln!("juanola-stt-worker: cola llena, {warned} tramas de audio descartadas");
+                            }
+                        }
                     }
                 }
                 Ok(None) => {
@@ -155,10 +217,17 @@ fn run() -> Result<(), String> {
         for item in batch {
             match item {
                 Some((channel, samples)) => {
-                    // Un fallo de VAD/MLX en una ventana no tumba la sesión:
-                    // se avisa y se salta esa trama, como los errores del ASR.
                     match channels.iter_mut().find(|c| c.channel == channel) {
                         Some(ch) => {
+                            // Las tramas que la cola llena descartó dejan un
+                            // hueco en el reloj del canal: se anotan en su
+                            // posición real para que los tiempos de los
+                            // segmentos sigan siendo reales.
+                            let drops =
+                                std::mem::take(&mut clock[channel_byte(channel) as usize].lock().unwrap_or_else(|e| e.into_inner()).drops);
+                            ch.skips.extend(drops);
+                            // Un fallo de VAD/MLX en una ventana no tumba la
+                            // sesión: se avisa y el canal queda envenenado.
                             if let Err(e) = ch.push(&samples) {
                                 emit(&WorkerEvent::Error { message: format!("{channel:?}: {e}") });
                             }
@@ -213,8 +282,8 @@ fn run_pending(asr: &Qwen3AsrMlx, ch: &mut ChannelState, fixed: Option<&str>, lo
                 WorkerEvent::Segment {
                     channel: ch.channel,
                     id: ch.next_id,
-                    start: span.start as f64 / TARGET_SAMPLE_RATE,
-                    end: span.end as f64 / TARGET_SAMPLE_RATE,
+                    start: ch.abs(span.start, true) as f64 / TARGET_SAMPLE_RATE,
+                    end: ch.abs(span.end, false) as f64 / TARGET_SAMPLE_RATE,
                     confidence: out.min_prob(),
                     token_probs: if is_final { out.token_probs } else { Vec::new() },
                     token_texts: if is_final { out.token_texts } else { Vec::new() },

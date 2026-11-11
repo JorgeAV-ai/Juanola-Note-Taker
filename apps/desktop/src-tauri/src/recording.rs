@@ -28,6 +28,7 @@ enum Ctl {
 
 pub struct Active {
     pub note_id: Id,
+    paused: std::sync::atomic::AtomicBool,
     ctl: mpsc::Sender<Ctl>,
     handle: JoinHandle<Result<usize, String>>,
 }
@@ -73,6 +74,7 @@ const SILENT_SYSTEM_SECS: f32 = 6.0;
 
 #[derive(Serialize, Clone)]
 struct Levels {
+    note_id: Id,
     mic: f32,
     system: f32,
 }
@@ -147,15 +149,21 @@ impl Active {
                 res.map_err(|f| f.message)
             })
             .map_err(|e| e.to_string())?;
-        Ok(Self { note_id, ctl, handle })
+        Ok(Self { note_id, paused: std::sync::atomic::AtomicBool::new(false), ctl, handle })
     }
 
     pub fn pause(&self) {
+        self.paused.store(true, std::sync::atomic::Ordering::Relaxed);
         let _ = self.ctl.send(Ctl::Pause);
     }
 
     pub fn resume(&self) {
+        self.paused.store(false, std::sync::atomic::Ordering::Relaxed);
         let _ = self.ctl.send(Ctl::Resume);
+    }
+
+    pub fn is_paused(&self) -> bool {
+        self.paused.load(std::sync::atomic::Ordering::Relaxed)
     }
 
     /// Para y espera a que se transcriba lo pendiente. Devuelve cuántos
@@ -289,7 +297,23 @@ fn run(
     };
     if mic_permission == juanola_audio_capture::Permission::NotDetermined {
         emit_notice(app, note_id, "warning", Some(MIC_ASK.into()), None);
-        mic_permission = juanola_audio_capture::request_mic_permission(Duration::from_secs(120));
+        // La petición espera la respuesta del usuario (hasta 2 min) en un hilo
+        // aparte: Stop tiene que seguir funcionando mientras tanto.
+        let (ptx, prx) = mpsc::channel();
+        let _ = std::thread::Builder::new().name("mic-permission".into()).spawn(move || {
+            let _ = ptx.send(juanola_audio_capture::request_mic_permission(Duration::from_secs(120)));
+        });
+        mic_permission = loop {
+            match ctl.try_recv() {
+                Ok(Ctl::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(0),
+                _ => {}
+            }
+            match prx.recv_timeout(Duration::from_millis(500)) {
+                Ok(p) => break p,
+                Err(mpsc::RecvTimeoutError::Disconnected) => break juanola_audio_capture::mic_permission(),
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
+            }
+        };
         emit_notice(app, note_id, "warning", None, None);
     }
     tracing::info!(?mic_permission, "permiso de micrófono");
@@ -310,11 +334,28 @@ fn run(
         context: asr_context(db, note_id),
     })
     .map_err(|e| e.to_string())?;
-    match worker.events().recv_timeout(Duration::from_secs(120)) {
-        Ok(WorkerEvent::Ready { load_ms }) => tracing::info!(load_ms, "STT listo"),
-        Ok(WorkerEvent::Error { message }) => return Err(format!("el STT no arrancó: {message}").into()),
-        Ok(other) => return Err(format!("el STT no arrancó: {other:?}").into()),
-        Err(_) => return Err("el STT no arrancó a tiempo".into()),
+    // Espera de Ready escuchando `ctl`: parar durante el arranque no debe
+    // quedarse bloqueado dos minutos.
+    let ready = {
+        let deadline = Instant::now() + Duration::from_secs(120);
+        loop {
+            match ctl.try_recv() {
+                Ok(Ctl::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(0),
+                _ => {}
+            }
+            let left = deadline.saturating_duration_since(Instant::now());
+            match worker.events().recv_timeout(left.min(Duration::from_millis(500))) {
+                Ok(ev) => break ev,
+                Err(mpsc::RecvTimeoutError::Disconnected) => return Err("el STT no arrancó".into()),
+                Err(mpsc::RecvTimeoutError::Timeout) if left.is_zero() => return Err("el STT no arrancó a tiempo".into()),
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
+            }
+        }
+    };
+    match ready {
+        WorkerEvent::Ready { load_ms } => tracing::info!(load_ms, "STT listo"),
+        WorkerEvent::Error { message } => return Err(format!("el STT no arrancó: {message}").into()),
+        other => return Err(format!("el STT no arrancó: {other:?}").into()),
     }
 
     // Retomar una nota ya grabada: los tiempos siguen tras lo último guardado.
@@ -401,7 +442,7 @@ fn run(
             Err(tokio::sync::broadcast::error::TryRecvError::Empty) => std::thread::sleep(Duration::from_millis(5)),
         }
         if last_levels.elapsed() >= Duration::from_millis(50) {
-            let _ = app.emit("recording://levels", Levels { mic: rms(&mic_acc), system: rms(&sys_acc) });
+            let _ = app.emit("recording://levels", Levels { note_id, mic: rms(&mic_acc), system: rms(&sys_acc) });
             mic_acc.clear();
             sys_acc.clear();
             last_levels = Instant::now();
@@ -447,7 +488,17 @@ fn run(
             Err(_) => break,
         }
     }
+    // Si el worker murió justo tras escribir, el hilo lector puede seguir con
+    // líneas sin entregar: último vaciado antes de esperar la salida.
+    for ev in worker.events().try_iter() {
+        sink.handle(ev);
+    }
     let _ = worker.wait(Duration::from_secs(30));
+    // El hilo lector puede seguir entregando líneas que el worker escribió
+    // justo antes de morir: último vaciado tras esperar la salida.
+    for ev in worker.events().try_iter() {
+        sink.handle(ev);
+    }
     tracing::info!(saved = sink.saved, finals = sink.finals, partials = sink.partials, "transcripción terminada");
     Ok(sink.saved)
 }

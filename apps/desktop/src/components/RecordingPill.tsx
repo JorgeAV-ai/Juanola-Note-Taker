@@ -44,7 +44,9 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
           setAction(e.action ?? null);
         }
       }),
-      events.levels((l) => setLevel(Math.max(l.mic, l.system))),
+      events.levels((l) => {
+        if (l.note_id === noteId) setLevel(Math.max(l.mic, l.system));
+      }),
       events.segment(apply),
     ];
     return () => subs.forEach((p) => p.then((un) => un()));
@@ -64,6 +66,18 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
     bottom.current?.scrollIntoView({ block: "end" });
   }, [lines.length, open]);
 
+  // Si el webview se recargó a mitad de una sesión, recupera la vista (el
+  // backend sigue grabando o finalizando).
+  useEffect(() => {
+    ipc
+      .recordingState()
+      .then((r) => {
+        if (r.note_id === noteId) setState(r.paused ? "paused" : "recording");
+        else if (r.stopping && r.stopping_note === noteId) setState("finishing");
+      })
+      .catch(() => {});
+  }, [noteId]);
+
   const live = state === "recording" || state === "starting";
   const start = async () => {
     setMessage(null);
@@ -81,11 +95,15 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
     }
   };
   const stop = async () => {
+    if (state === "finishing") return;
     setState("finishing");
     try {
       const saved = await ipc.stopRecording();
       onStopped(saved);
     } catch (e) {
+      // Otra parada ya en marcha (doble clic o meetingEnded a la vez):
+      // quedarse en «finishing», que la primera completará.
+      if (String(e).includes("parando")) return;
       setState("error");
       setMessage(String(e));
     }
@@ -148,12 +166,12 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
     state === "recording" || state === "paused" ? (
       <>
         {state === "recording" ? (
-          <button className="pill-btn flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title={t("rec.pause")} onClick={() => ipc.pauseRecording()}>
+          <button className="pill-btn flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title={t("rec.pause")} onClick={() => ipc.pauseRecording().catch((e) => setMessage(String(e)))}>
             <Pause className="size-[17px]" fill="currentColor" strokeWidth={0} />
             <span className="sr-only">{t("rec.pause")}</span>
           </button>
         ) : (
-          <button className="pill-btn flex size-10 items-center justify-center rounded-full text-olive-ink hover:bg-hover" title={t("rec.resume")} onClick={() => ipc.resumeRecording()}>
+          <button className="pill-btn flex size-10 items-center justify-center rounded-full text-olive-ink hover:bg-hover" title={t("rec.resume")} onClick={() => ipc.resumeRecording().catch((e) => setMessage(String(e)))}>
             <Play className="size-[17px]" fill="currentColor" strokeWidth={0} />
             <span className="sr-only">{t("rec.resume")}</span>
           </button>

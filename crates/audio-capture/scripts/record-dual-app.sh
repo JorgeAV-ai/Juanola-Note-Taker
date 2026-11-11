@@ -8,7 +8,8 @@
 set -euo pipefail
 
 SECS="${1:-30}"
-OUT="$(cd "$(dirname "${2:-recordings}")" 2>/dev/null && pwd)/$(basename "${2:-recordings}")"
+mkdir -p "${2:-recordings}"
+OUT="$(cd "$(dirname "${2:-recordings}")" && pwd)/$(basename "${2:-recordings}")"
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 APP="$ROOT/target/debug/RecordDual.app"
 

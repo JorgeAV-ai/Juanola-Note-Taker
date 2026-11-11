@@ -11,7 +11,7 @@
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::PathBuf;
-use std::process::{Child, ChildStdin, Command, Stdio};
+use std::process::{Child, Command, Stdio};
 use std::sync::mpsc;
 
 use juanola_core_types::Channel;
@@ -132,9 +132,14 @@ pub struct WorkerConfig {
 }
 
 /// Cliente: lanza el worker, le envía audio y recibe eventos.
+///
+/// El stdin del hijo lo escribe un hilo escritor aparte: si el worker se
+/// cuelga (un fallo de Metal puede dejarlo irrecuperable), el pipe se llena y
+/// un `write` bloqueante colgaría al hilo de grabación para siempre. Con una
+/// cola acotada y `try_send`, el error se detecta en su lugar.
 pub struct SttWorker {
     child: Child,
-    stdin: Option<std::io::BufWriter<ChildStdin>>,
+    frames: Option<mpsc::SyncSender<(Channel, Vec<f32>)>>,
     events: mpsc::Receiver<WorkerEvent>,
 }
 
@@ -150,6 +155,21 @@ impl SttWorker {
         let mut child = cmd.spawn().map_err(|e| SttError::Backend(format!("no se pudo lanzar {}: {e}", cfg.program.display())))?;
         let stdin = child.stdin.take().map(std::io::BufWriter::new);
         let stdout = child.stdout.take().ok_or_else(|| SttError::Backend("sin stdout".into()))?;
+        // ~5-10 s de cola (tramas de 10-20 ms): margen para el JIT sin que una
+        // escritura bloqueada cuelgue la captura si el worker muere colgado.
+        let (ftx, frx) = mpsc::sync_channel::<(Channel, Vec<f32>)>(512);
+        std::thread::Builder::new()
+            .name("stt-worker-writer".into())
+            .spawn(move || {
+                let Some(mut w) = stdin else { return };
+                while let Ok((ch, samples)) = frx.recv() {
+                    if write_frame(&mut w, ch, &samples).and_then(|_| w.flush()).is_err() {
+                        break;
+                    }
+                }
+                // Al soltar `w` el hijo ve EOF en stdin y emite sus finales.
+            })
+            .map_err(|e| SttError::Backend(e.to_string()))?;
         let (tx, events) = mpsc::channel();
         std::thread::Builder::new()
             .name("stt-worker-reader".into())
@@ -164,12 +184,12 @@ impl SttWorker {
                 }
             })
             .map_err(|e| SttError::Backend(e.to_string()))?;
-        Ok(Self { child, stdin, events })
+        Ok(Self { child, frames: Some(ftx), events })
     }
 
     pub fn send(&mut self, channel: Channel, samples: &[f32]) -> Result<(), SttError> {
-        let w = self.stdin.as_mut().ok_or_else(|| SttError::Backend("worker cerrado".into()))?;
-        write_frame(w, channel, samples).and_then(|_| w.flush()).map_err(|e| SttError::Backend(format!("el worker no acepta audio: {e}")))
+        let tx = self.frames.as_ref().ok_or_else(|| SttError::Backend("worker cerrado".into()))?;
+        tx.try_send((channel, samples.to_vec())).map_err(|e| SttError::Backend(format!("el worker no acepta audio: {e}")))
     }
 
     /// Estado de salida si el proceso ya terminó.
@@ -183,21 +203,29 @@ impl SttWorker {
 
     /// Cierra stdin para que el worker emita los finales pendientes y termine.
     pub fn finish(&mut self) {
-        self.stdin = None;
+        self.frames = None;
     }
 
-    /// Espera la salida del hijo como mucho `timeout`; si se pasa, lo mata y
-    /// devuelve su estado (un fallo de Metal puede dejar el proceso colgado).
-    pub fn wait(&mut self, timeout: std::time::Duration) -> std::io::Result<std::process::ExitStatus> {
+    /// Espera la salida del hijo como mucho `timeout`; si se pasa, lo mata y le
+    /// da un margen corto más. `Ok(None)` si ni con SIGKILL termina: un hilo de
+    /// Metal bloqueado en el driver puede quedar en estado ininterrumpible, y
+    /// esperarlo colgaría el hilo que llama. El proceso se limpia al salir.
+    pub fn wait(&mut self, timeout: std::time::Duration) -> std::io::Result<Option<std::process::ExitStatus>> {
         self.finish();
-        let deadline = std::time::Instant::now() + timeout;
+        const KILL_GRACE: std::time::Duration = std::time::Duration::from_secs(5);
+        let mut deadline = std::time::Instant::now() + timeout;
+        let mut killed = false;
         loop {
             if let Some(s) = self.child.try_wait()? {
-                return Ok(s);
+                return Ok(Some(s));
             }
             if std::time::Instant::now() >= deadline {
+                if killed {
+                    return Ok(None);
+                }
                 let _ = self.child.kill();
-                return self.child.wait();
+                killed = true;
+                deadline = std::time::Instant::now() + KILL_GRACE;
             }
             std::thread::sleep(std::time::Duration::from_millis(50));
         }
@@ -209,8 +237,16 @@ impl Drop for SttWorker {
         self.finish();
         if let Ok(None) = self.child.try_wait() {
             let _ = self.child.kill();
+            // Un par de segundos para que SIGKILL haga efecto; si el hijo está
+            // irrecuperable se suelta tal cual (mejor eso que un Drop colgado).
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+            while std::time::Instant::now() < deadline {
+                match self.child.try_wait() {
+                    Ok(Some(_)) | Err(_) => return,
+                    Ok(None) => std::thread::sleep(std::time::Duration::from_millis(50)),
+                }
+            }
         }
-        let _ = self.child.wait();
     }
 }
 

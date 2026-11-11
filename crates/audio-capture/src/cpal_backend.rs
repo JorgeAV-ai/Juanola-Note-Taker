@@ -529,7 +529,17 @@ fn dsp_thread(
             let gap = now - emitted as f64 / rate;
             if gap > GAP_TOLERANCE_SECS {
                 // Acotado: un hueco de horas (suspensión, reconstrucción lenta)
-                // no puede reservar cientos de MB de ceros de golpe.
+                // no puede reservar cientos de MB de ceros de golpe. La pega:
+                // si el otro canal sí llenó su hueco entero, este queda
+                // `gap - 60` s por detrás el resto de la sesión.
+                if gap > 60.0 {
+                    tracing::warn!(
+                        channel = label(channel),
+                        gap_secs = gap,
+                        desync_secs = gap - 60.0,
+                        "hueco mayor que el tope de relleno: el canal queda desincronizado"
+                    );
+                }
                 let fill = (gap.min(60.0) * rate) as usize;
                 tracing::debug!(channel = label(channel), gap, fill_secs = 60.0_f32.min(gap as f32), "relleno de silencio");
                 emit(vec![0.0; fill], &mut emitted);

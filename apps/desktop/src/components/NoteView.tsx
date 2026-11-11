@@ -118,7 +118,7 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
         onChange={(e) => {
           const t = e.target.value;
           window.clearTimeout(titleTimer.current);
-          titleTimer.current = window.setTimeout(() => ipc.setNoteTitle(id, t), 400);
+          titleTimer.current = window.setTimeout(() => ipc.setNoteTitle(id, t).catch((e) => setError(String(e))), 400);
         }}
       />
 
@@ -215,7 +215,7 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
 
       <div className="flex-1">
         {tab === "mine" || !note.enhanced_doc ? (
-          <NoteEditor key={`${id}-${t("note.writeNotes")}`} initial={note.raw_doc} onChange={(doc) => ipc.setNoteRawDoc(id, doc)} />
+          <NoteEditor key={`${id}-${t("note.writeNotes")}`} initial={note.raw_doc} onChange={(doc) => ipc.setNoteRawDoc(id, doc).catch((e) => setError(String(e)))} />
         ) : (
           <EnhancedView
             notes={note.enhanced_doc}

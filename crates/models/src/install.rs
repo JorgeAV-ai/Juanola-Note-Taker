@@ -19,13 +19,21 @@ use tokio::io::AsyncWriteExt;
 
 /// Establecer la conexión puede tardar con la red lenta; más de esto es caída.
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
+/// Espera a las cabeceras de una respuesta o al cuerpo (pequeño) de la API:
+/// `connect_timeout` no cubre un servidor que acepta y luego no contesta.
+const HEADERS_TIMEOUT: Duration = Duration::from_secs(60);
 /// Un chunk que tarda más de esto significa descarga estancada (no aborta
 /// descargas lentas pero vivas, solo las que dejan de llegar).
 const STALL_TIMEOUT: Duration = Duration::from_secs(60);
 
-/// Une `rel` (de `models.toml`) a `root` rechazando rutas absolutas o `..`.
+/// Une `rel` (de `models.toml`) a `root` rechazando rutas absolutas, `..` o vacías.
 fn safe_join(root: &Path, rel: &str) -> Result<PathBuf> {
-    if rel.starts_with('/') || rel.split(['/', '\\']).any(|c| c == "..") {
+    let p = Path::new(rel);
+    if rel.is_empty()
+        || p.is_absolute()
+        || p.components()
+            .any(|c| matches!(c, std::path::Component::Prefix(_) | std::path::Component::ParentDir | std::path::Component::CurDir))
+    {
         bail!("ruta no segura en models.toml: {rel}");
     }
     Ok(root.join(rel))
@@ -106,9 +114,11 @@ impl ModelEntry {
 
 impl Planned<'_> {
     pub fn status(&self) -> ModelStatus {
-        // Sin lista de ficheros no hay nada que verificar: «instalado» si el
-        // runtime ya dejó algo en su carpeta (los que se autodescargan).
-        let mut installed = self.dir.is_dir();
+        // Sin lista de ficheros no hay nada que verificar: «instalado» solo si
+        // el runtime ya dejó ALGO en su carpeta (los que se autodescargan);
+        // una carpeta vacía no cuenta. Con lista, todos tienen que existir.
+        let mut installed =
+            if self.entry.files.is_empty() { std::fs::read_dir(&self.dir).map(|mut d| d.next().is_some()).unwrap_or(false) } else { true };
         let mut partial_bytes = 0;
         for f in self.entry.expected_files() {
             let path = self.dir.join(&f);
@@ -155,7 +165,12 @@ pub async fn install(planned: &Planned<'_>, cancel: &AtomicBool, mut on_progress
     if entry.repo.starts_with("http") {
         bail!("{}: la descarga de paquetes (no repos de Hugging Face) aún no está implementada", entry.name);
     }
-    tokio::fs::create_dir_all(&planned.dir).await?;
+    // La carpeta solo hace falta si hay ficheros que bajar (o derivados que
+    // generar): una entrada con `files = []` no debe dejar una carpeta vacía
+    // que luego cuente de más o de menos en `status()`.
+    if !entry.files.is_empty() {
+        tokio::fs::create_dir_all(&planned.dir).await?;
+    }
     let client = reqwest::Client::builder().user_agent("juanola-model-installer").connect_timeout(CONNECT_TIMEOUT).build()?;
 
     let missing: Vec<&String> = entry.files.iter().filter(|f| !planned.dir.join(f).is_file()).collect();
@@ -165,10 +180,18 @@ pub async fn install(planned: &Planned<'_>, cancel: &AtomicBool, mut on_progress
         let mut tree: Vec<TreeEntry> = Vec::new();
         let mut next = Some(format!("{HF}/api/models/{}/tree/main?recursive=true", entry.repo));
         while let Some(url) = next.take() {
-            let resp =
-                client.get(&url).send().await?.error_for_status().with_context(|| format!("no se pudo leer el repo {}", entry.repo))?;
+            let resp = tokio::time::timeout(HEADERS_TIMEOUT, client.get(&url).send())
+                .await
+                .context("el repo no respondió a tiempo")?
+                .context("la petición al repo falló")?
+                .error_for_status()
+                .with_context(|| format!("no se pudo leer el repo {}", entry.repo))?;
             next = link_next(resp.headers());
-            tree.extend(resp.json::<Vec<TreeEntry>>().await?);
+            tree.extend(
+                tokio::time::timeout(HEADERS_TIMEOUT, resp.json::<Vec<TreeEntry>>())
+                    .await
+                    .context("el listado del repo no llegó a tiempo")??,
+            );
         }
         let mut jobs = Vec::new();
         for f in &missing {
@@ -223,9 +246,25 @@ pub async fn download(
         if have > 0 {
             req = req.header(reqwest::header::RANGE, format!("bytes={have}-"));
         }
-        let resp = req.send().await?.error_for_status().with_context(|| format!("descargando {url}"))?;
+        let resp = tokio::time::timeout(HEADERS_TIMEOUT, req.send())
+            .await
+            .context("el servidor no respondió a tiempo")?
+            .with_context(|| format!("descargando {url}"))?
+            .error_for_status()
+            .with_context(|| format!("descargando {url}"))?;
         // Si el servidor ignora el Range, empieza de cero.
         let append = have > 0 && resp.status() == reqwest::StatusCode::PARTIAL_CONTENT;
+        if append {
+            // Un 206 que no empieza donde lo pedimos corrompería el .part.
+            let range_ok = resp
+                .headers()
+                .get(reqwest::header::CONTENT_RANGE)
+                .and_then(|v| v.to_str().ok())
+                .is_some_and(|v| v.trim().to_ascii_lowercase().starts_with(&format!("bytes {have}-")));
+            if !range_ok {
+                bail!("respuesta 206 sin Content-Range válido: {url}");
+            }
+        }
         if !append {
             have = 0;
         }
@@ -266,11 +305,13 @@ pub async fn download(
 /// Siguiente página de un listado de la API de HF (`Link: <url>; rel="next"`).
 fn link_next(headers: &reqwest::header::HeaderMap) -> Option<String> {
     let h = headers.get(reqwest::header::LINK)?.to_str().ok()?;
-    h.split(',').find_map(|part| {
-        let part = part.trim();
-        let (url, rel) = part.split_once(';')?;
-        rel.trim().eq_ignore_ascii_case("rel=\"next\"").then(|| url.trim().trim_start_matches('<').trim_end_matches('>').to_string())
-    })
+    // Cada enlace es `<url>; params`; un `<` nunca aparece dentro de una URL,
+    // así que delimita los enlaces mejor que la coma (que sí puede llevar el
+    // cursor). El `rel` se busca solo entre los parámetros de SU enlace.
+    h.split('<')
+        .filter_map(|part| part.split_once('>'))
+        .find(|(_, params)| params.split(';').any(|p| p.trim().eq_ignore_ascii_case("rel=\"next\"")))
+        .map(|(url, _)| url.trim().to_string())
 }
 
 fn sha256_file(path: &Path) -> Result<String> {
@@ -340,11 +381,13 @@ mod tests {
                         .lines()
                         .find_map(|l| l.strip_prefix("range: bytes="))
                         .and_then(|r| r.trim_end_matches('-').parse::<usize>().ok());
-                    let (status, slice) = match from {
-                        Some(f) => ("206 Partial Content", &body[f..]),
-                        None => ("200 OK", &body[..]),
+                    let (status, slice, range) = match from {
+                        Some(f) => {
+                            ("206 Partial Content", &body[f..], format!("content-range: bytes {f}-{}/{}\r\n", body.len() - 1, body.len()))
+                        }
+                        None => ("200 OK", &body[..], String::new()),
                     };
-                    let head = format!("HTTP/1.1 {status}\r\ncontent-length: {}\r\nconnection: close\r\n\r\n", slice.len());
+                    let head = format!("HTTP/1.1 {status}\r\ncontent-length: {}\r\n{range}connection: close\r\n\r\n", slice.len());
                     sock.write_all(head.as_bytes()).await.unwrap();
                     sock.write_all(slice).await.unwrap();
                 });
