@@ -9,9 +9,7 @@ mod state;
 use tauri::Manager;
 
 pub fn run() {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .init();
+    tracing_subscriber::fmt().with_env_filter(tracing_subscriber::EnvFilter::from_default_env()).init();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -27,10 +25,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            None,
-        ))
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&data_dir)?;
@@ -85,6 +80,8 @@ pub fn run() {
             commands::autotest_config,
             commands::autotest_log,
             commands::autotest_say,
+            commands::autotest_play,
+            commands::autotest_env,
             commands::autotest_quit,
             commands::list_segments,
             commands::start_recording,
@@ -99,6 +96,8 @@ pub fn run() {
             commands::request_calendar_access,
             commands::open_event_note,
             commands::note_event,
+            commands::stt_glossary,
+            commands::set_stt_glossary,
             commands::detection_settings,
             commands::set_detection_settings,
             commands::notification_payload,

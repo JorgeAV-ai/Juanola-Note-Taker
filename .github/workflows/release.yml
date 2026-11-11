@@ -1,0 +1,94 @@
+# Release de la app de macOS: al subir un tag `v*` (o a mano), compila el worker
+# de STT con MLX y la app, y crea un borrador de GitHub Release con el .dmg y
+# el .app comprimido. El borrador se revisa y se publica a mano.
+#
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# La versión sale de `apps/desktop/src-tauri/tauri.conf.json`; el tag debería
+# coincidir con ella.
+#
+# Firma: sin certificado, la app sale sin firmar ni notarizar y macOS pide
+# abrirla con clic derecho › Abrir (o `xattr -dr com.apple.quarantine`). Para
+# firmar, añade los secretos APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD,
+# APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD y APPLE_TEAM_ID y pásalos en
+# el `env` del paso de tauri-action.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  macos:
+    name: macOS (Apple Silicon)
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@e9d7b9f1e587218970671bac74e5511ed9506e6a # v2
+        with:
+          key: release
+
+      # Código de llama.cpp y kernels de MLX precompilados: no están en git y
+      # los scripts comprueban su SHA-256.
+      - name: Caché de llama.cpp y MLX
+        id: vendor
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            third_party/llama-cpp-sys-2/llama.cpp
+            third_party/mlx-metallib
+          key: vendor-${{ hashFiles('scripts/fetch-llama-cpp.sh', 'scripts/fetch-mlx-metallib.sh') }}
+      - name: Bajar llama.cpp y el metallib de MLX
+        if: steps.vendor.outputs.cache-hit != 'true'
+        run: |
+          scripts/fetch-llama-cpp.sh
+          scripts/fetch-mlx-metallib.sh
+
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 11
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/desktop/pnpm-lock.yaml
+      - name: Dependencias del frontend
+        working-directory: apps/desktop
+        run: pnpm install --frozen-lockfile
+
+      # Un tag vX que no coincide con la versión de tauri.conf.json crearía
+      # una release llamada vX con binarios vY.
+      - name: Comprobar tag ↔ versión
+        if: github.ref_type == 'tag'
+        run: |
+          v=$(python3 -c "import json; print(json.load(open('apps/desktop/src-tauri/tauri.conf.json'))['version'])")
+          [ "${GITHUB_REF_NAME#v}" = "$v" ] || { echo "::error::el tag ${GITHUB_REF_NAME} no coincide con version=$v de tauri.conf.json"; exit 1; }
+
+      # `beforeBuildCommand` (tauri.conf.json) compila el sidecar con MLX y el
+      # frontend; tauri-action empaqueta y sube los artefactos al borrador.
+      - name: Compilar y crear el borrador de release
+        uses: tauri-apps/tauri-action@fce9c6108b31ea247710505d3aaaa893ee6768d4 # v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tauriScript: pnpm tauri
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
+          releaseName: Juanola v__VERSION__
+          releaseBody: |
+            Preview build for Apple Silicon Macs (macOS 14.6 or later). It is not signed yet:
+            the first time, right-click Juanola.app › Open (or run
+            `xattr -dr com.apple.quarantine /Applications/Juanola.app`).
+            The models (about 3.5 GB) are downloaded from the app on first launch.
+          releaseDraft: true
+          prerelease: true

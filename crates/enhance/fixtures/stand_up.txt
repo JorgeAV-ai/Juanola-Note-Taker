@@ -1,0 +1,33 @@
+# Stand-up ficticio para evaluar plantillas (~4 min). Formato: Hablante|texto.
+# «Yo» lleva el equipo de la aplicación móvil (canal del micrófono); Ana, Pedro y Lucía.
+Yo|Buenos días. Vamos rápido, que el jueves sacamos la versión tres punto dos. Ana, empiezas tú.
+Ana|Buenos días. Ayer terminé el inicio de sesión con Google y con Apple. Está en revisión de código y han pasado las catorce pruebas automáticas del flujo de entrada.
+Yo|Genial. ¿Y hoy?
+Ana|Hoy empiezo con las notificaciones push para los recordatorios de pedidos. Quiero dejar al menos la parte de Android funcionando hoy.
+Yo|¿Algo que te frene?
+Ana|Sí. Para las notificaciones en iPhone necesito el certificado de Apple, y el que tenemos caduca el domingo. Hay que renovarlo y solo puede hacerlo alguien con acceso a la cuenta de desarrollador.
+Yo|Eso lo hago yo, tengo acceso. Lo renuevo esta mañana y te paso el certificado nuevo antes de comer.
+Ana|Perfecto, gracias.
+Yo|Pedro, tú.
+Pedro|Ayer arreglé el error de redondeo en los pagos. Cuando un pedido tenía tres productos con descuento, el total salía con un céntimo de diferencia. Ya está en producción desde anoche y no ha vuelto a pasar.
+Yo|Bien. ¿Plan de hoy?
+Pedro|Hoy sigo con la refactorización del carrito. Quiero separar el cálculo de impuestos del resto para poder probarlo aparte. Calculo que me lleva dos días.
+Yo|¿Bloqueos?
+Pedro|Uno. La pasarela de pagos nos está limitando a cien peticiones por minuto en el entorno de pruebas, y las pruebas del carrito se caen a mitad. He escrito al soporte de la pasarela, pero no me han contestado.
+Yo|¿Puedes abrir una incidencia formal? Así tiene número y podemos reclamar.
+Pedro|Sí, abro el ticket hoy y si mañana no hay respuesta te aviso para que lo escales.
+Yo|Hecho. Lucía.
+Lucía|Ayer terminé el diseño del nuevo proceso de bienvenida, las cinco pantallas del onboarding. Lo he dejado en Figma con los comentarios del lunes ya aplicados.
+Yo|Muy bien. ¿Hoy qué tienes?
+Lucía|Hoy tengo entrevistas con cinco usuarios para probar el prototipo del onboarding. Son por videollamada, de diez a una.
+Yo|¿Te bloquea algo?
+Lucía|Me faltan los textos legales de la pantalla de consentimiento. Sin ellos no puedo cerrar el diseño. El equipo legal dijo que los tendría el martes y seguimos esperando.
+Ana|Yo hablo hoy con legal, que tengo reunión con ellos a las cuatro por lo del inicio de sesión. Les pregunto por los textos.
+Lucía|Gracias, Ana.
+Yo|Lucía, ¿puedes compartir el enlace de Figma en el canal del equipo para que Ana y Pedro vean las pantallas antes de las entrevistas?
+Lucía|Sí, lo comparto ahora.
+Yo|Por mi parte: ayer cerré la lista de cambios de la tres punto dos y hablé con soporte para preparar las notas de la versión. Hoy reviso el código de Ana y preparo la subida a las tiendas para el jueves.
+Pedro|Una pregunta: ¿la tres punto dos lleva el carrito nuevo?
+Yo|No. El carrito nuevo va en la tres punto tres, a final de mes. En la tres punto dos va el inicio de sesión con Google y Apple y el arreglo de pagos.
+Pedro|Vale, entonces no tengo prisa con el carrito.
+Yo|Exacto. Resumen: yo renuevo el certificado de Apple esta mañana; Pedro abre la incidencia con la pasarela de pagos; Ana pregunta a legal por los textos de consentimiento; y Lucía comparte el Figma en el canal. Gracias a todos.

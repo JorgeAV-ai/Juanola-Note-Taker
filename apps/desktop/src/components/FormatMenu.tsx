@@ -1,5 +1,6 @@
 import { BubbleMenu, type Editor } from "@tiptap/react";
 import { Bold, Italic, Strikethrough, Underline } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 // Menú flotante al seleccionar texto (negrita, cursiva, subrayado, tachado).
 // El BubbleMenu de TipTap mueve su elemento fuera del árbol de React (a tippy);
@@ -7,12 +8,13 @@ import { Bold, Italic, Strikethrough, Underline } from "lucide-react";
 // contenedor y no ese elemento (si no: «removeChild… not a child» y la app
 // entera se desmonta).
 export function FormatMenu({ editor }: { editor: Editor | null }) {
+  const t = useT();
   if (!editor) return null;
   const items = [
-    { name: "bold", icon: <Bold className="size-[17px]" />, run: () => editor.chain().focus().toggleBold().run(), label: "Negrita" },
-    { name: "italic", icon: <Italic className="size-[17px]" />, run: () => editor.chain().focus().toggleItalic().run(), label: "Cursiva" },
-    { name: "underline", icon: <Underline className="size-[17px]" />, run: () => editor.chain().focus().toggleUnderline().run(), label: "Subrayado" },
-    { name: "strike", icon: <Strikethrough className="size-[17px]" />, run: () => editor.chain().focus().toggleStrike().run(), label: "Tachado" },
+    { name: "bold", icon: <Bold className="size-[17px]" />, run: () => editor.chain().focus().toggleBold().run(), label: t("note.bold") },
+    { name: "italic", icon: <Italic className="size-[17px]" />, run: () => editor.chain().focus().toggleItalic().run(), label: t("note.italic") },
+    { name: "underline", icon: <Underline className="size-[17px]" />, run: () => editor.chain().focus().toggleUnderline().run(), label: t("note.underline") },
+    { name: "strike", icon: <Strikethrough className="size-[17px]" />, run: () => editor.chain().focus().toggleStrike().run(), label: t("note.strike") },
   ];
   return (
     <div className="contents">

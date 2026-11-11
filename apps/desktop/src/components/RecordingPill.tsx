@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, ChevronUp, Copy, Languages, Mic, Minus, Pause, Play, Search, Square, X } from "lucide-react";
 import { events, ipc, MODELS_MISSING, type RecordingState, type SettingsAction } from "@/lib/ipc";
 import { useModels } from "@/state/models";
-import { LANGUAGES, saveLanguage, savedLanguage } from "@/lib/language";
+import { LANGUAGES, languageLabel, saveLanguage, savedLanguage } from "@/lib/language";
 import { cn } from "@/lib/utils";
+import { tBackend, useT } from "@/lib/i18n";
 import { useTranscript } from "@/state/transcript";
 
 // Zona inferior de la nota, como en Granola. Plegada: círculo con las barras
@@ -14,6 +15,7 @@ import { useTranscript } from "@/state/transcript";
 const autostarted = new Set<number>();
 
 export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId: string; autostart?: number; onStopped: (saved: number) => void; askBar: ReactNode }) {
+  const t = useT();
   const [state, setState] = useState<RecordingState | "idle">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [action, setAction] = useState<SettingsAction | null>(null);
@@ -118,7 +120,7 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
   // Barras: altura según el nivel (RMS → dB, -60..0).
   const db = 20 * Math.log10(Math.max(level, 1e-6));
   const h = Math.max(0, Math.min(1, (db + 60) / 60));
-  const label = state === "starting" ? "Preparando…" : state === "finishing" ? "Transcribiendo…" : state === "paused" ? "En pausa" : null;
+  const label = state === "starting" ? t("rec.preparing") : state === "finishing" ? t("rec.transcribing") : state === "paused" ? t("rec.paused") : null;
 
   const bars = (
     <span className={cn("bars", state === "recording" ? "level" : state === "paused" ? "idle" : live ? "" : "idle")}>
@@ -131,12 +133,12 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
   const toggle = (
     <button
       className="flex h-11 items-center gap-1.5 rounded-full pl-3 pr-2 hover:bg-hover"
-      title="Transcript"
-      aria-label="Transcript"
+      title={t("note.transcript")}
+      aria-label={t("note.transcript")}
       aria-expanded={open}
       onClick={() => setOpen((o) => !o)}
     >
-      {(state === "recording" || state === "paused") && <span className={cn("rec-diamond", state === "paused" && "paused")} title={state === "recording" ? "Grabando" : "En pausa"} />}
+      {(state === "recording" || state === "paused") && <span className={cn("rec-diamond", state === "paused" && "paused")} title={state === "recording" ? t("rec.recording") : t("rec.paused")} />}
       {bars}
       {open ? <ChevronDown className="size-4 text-ink-2" /> : <ChevronUp className="size-4 text-ink-2" />}
     </button>
@@ -146,29 +148,29 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
     state === "recording" || state === "paused" ? (
       <>
         {state === "recording" ? (
-          <button className="pill-btn flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title="Pausar" onClick={() => ipc.pauseRecording()}>
+          <button className="pill-btn flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title={t("rec.pause")} onClick={() => ipc.pauseRecording()}>
             <Pause className="size-[17px]" fill="currentColor" strokeWidth={0} />
-            <span className="sr-only">Pause</span>
+            <span className="sr-only">{t("rec.pause")}</span>
           </button>
         ) : (
-          <button className="pill-btn flex size-10 items-center justify-center rounded-full text-olive-ink hover:bg-hover" title="Reanudar" onClick={() => ipc.resumeRecording()}>
+          <button className="pill-btn flex size-10 items-center justify-center rounded-full text-olive-ink hover:bg-hover" title={t("rec.resume")} onClick={() => ipc.resumeRecording()}>
             <Play className="size-[17px]" fill="currentColor" strokeWidth={0} />
-            <span className="sr-only">Resume</span>
+            <span className="sr-only">{t("rec.resume")}</span>
           </button>
         )}
-        <button className="pill-btn stop flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title="Parar" onClick={stop}>
+        <button className="pill-btn stop flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title={t("rec.stop")} onClick={stop}>
           <Square className="size-4" fill="currentColor" strokeWidth={0} />
-          <span className="sr-only">Stop</span>
+          <span className="sr-only">{t("rec.stop")}</span>
         </button>
       </>
     ) : state === "starting" ? (
-      <button className="pill-btn stop flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title="Parar" onClick={stop}>
+      <button className="pill-btn stop flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title={t("rec.stop")} onClick={stop}>
         <Square className="size-4" fill="currentColor" strokeWidth={0} />
-        <span className="sr-only">Stop</span>
+        <span className="sr-only">{t("rec.stop")}</span>
       </button>
     ) : state === "finishing" ? null : (
       <button className="pill-btn h-10 rounded-full px-3.5 text-[15px] font-medium text-olive-ink hover:bg-hover" onClick={start}>
-        {lines.length ? "Resume" : "Start"}
+        {lines.length ? t("rec.resume") : t("rec.start")}
       </button>
     );
 
@@ -179,13 +181,13 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
         state === "error" && "error border-[#f1d3a8] bg-[#fdf6ea] text-[#8a4b0f] dark:border-[#6b4a1e] dark:bg-[#3a2e1c] dark:text-[#f3c98b]",
       )}
     >
-      {message}
+      {tBackend(message)}
       {action && (
         <button
           className="pill-msg-btn ml-2 inline-flex h-7 items-center rounded-full border border-line bg-surface px-3 text-[13px] text-ink hover:bg-hover"
           onClick={() => ipc.openPrivacySettings(action).catch((e) => setMessage(String(e)))}
         >
-          Abrir Ajustes
+          {t("common.openSettings")}
         </button>
       )}
     </div>
@@ -212,14 +214,14 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
     <div className="transcript-drawer flex max-h-[min(62vh,620px)] flex-col overflow-hidden rounded-[28px] border border-line bg-surface shadow-[0_12px_40px_rgba(0,0,0,0.10)]">
       <div className="flex h-12 shrink-0 items-center gap-1 px-3">
         {query === null ? (
-          <button className="flex size-8 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title="Buscar en el transcript" onClick={() => setQuery("")}>
+          <button className="flex size-8 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title={t("rec.searchTranscript")} onClick={() => setQuery("")}>
             <Search className="size-[17px]" />
           </button>
         ) : (
           <div className="flex h-8 flex-1 items-center gap-2 rounded-full bg-hover px-3">
             <Search className="size-4 text-muted" />
-            <input autoFocus className="min-w-0 flex-1 bg-transparent text-[14px] outline-none" placeholder="Buscar en el transcript" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <button className="text-muted hover:text-ink" aria-label="Cerrar búsqueda" onClick={() => setQuery(null)}>
+            <input autoFocus className="min-w-0 flex-1 bg-transparent text-[14px] outline-none" placeholder={t("rec.searchTranscript")} value={query} onChange={(e) => setQuery(e.target.value)} />
+            <button className="text-muted hover:text-ink" aria-label={t("rec.closeSearch")} onClick={() => setQuery(null)}>
               <X className="size-4" />
             </button>
           </div>
@@ -227,23 +229,23 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
         <span className="flex-1" />
         <button
           className="flex size-8 items-center justify-center rounded-full text-ink-2 hover:bg-hover"
-          title="Copy all"
-          onClick={() => navigator.clipboard.writeText(lines.map((l) => `${l.channel === "mic" ? "Me" : "Them"}: ${l.text}`).join("\n"))}
+          title={t("rec.copyAll")}
+          onClick={() => navigator.clipboard.writeText(lines.map((l) => `${l.channel === "mic" ? t("common.me") : t("common.them")}: ${l.text}`).join("\n"))}
         >
           <Copy className="size-[17px]" />
         </button>
-        <button className="flex size-8 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title="Minimizar" aria-label="Minimizar" onClick={() => setOpen(false)}>
+        <button className="flex size-8 items-center justify-center rounded-full text-ink-2 hover:bg-hover" title={t("rec.minimize")} aria-label={t("rec.minimize")} onClick={() => setOpen(false)}>
           <Minus className="size-[17px]" />
         </button>
       </div>
 
       <div className="bubbles flex min-h-[200px] flex-1 flex-col gap-2 overflow-auto px-5 pb-4">
         <p className="mb-2 flex items-center justify-center gap-1 text-center text-[13px] text-muted">
-          Pide siempre permiso antes de transcribir a otros <ChevronRight className="size-3.5" />
+          {t("rec.consent")} <ChevronRight className="size-3.5" />
         </p>
         {notice}
         {shown.length === 0 && (
-          <p className="empty py-6 text-center text-[14px] text-muted">{query ? "Nada coincide." : live ? "Escuchando…" : "Sin transcripción todavía."}</p>
+          <p className="empty py-6 text-center text-[14px] text-muted">{query ? t("rec.noMatch") : live ? t("rec.listening") : t("rec.noTranscript")}</p>
         )}
         {shown.map((l) => (
           <div
@@ -267,13 +269,13 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
         {controls}
         <span className="flex-1" />
         {mic && (
-          <span className="hidden items-center gap-1.5 px-2 text-[14px] text-ink-2 md:flex" title="Juanola graba del micrófono predeterminado (se cambia en Ajustes del Sistema › Sonido)">
+          <span className="hidden items-center gap-1.5 px-2 text-[14px] text-ink-2 md:flex" title={t("rec.micHint")}>
             <Mic className="size-4" /> {mic}
           </span>
         )}
-        <label className="relative flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-[14px] text-ink-2 hover:bg-hover" title="Idioma de la reunión">
+        <label className="relative flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-[14px] text-ink-2 hover:bg-hover" title={t("rec.meetingLanguage")}>
           <Languages className="size-4" />
-          {LANGUAGES.find(([v]) => v === language)?.[1]}
+          {languageLabel(LANGUAGES.find(([v]) => v === language) ?? LANGUAGES[0])}
           <ChevronDown className="size-3.5" />
           {/* El select invisible encima: el texto visible ocupa lo justo. */}
           <select
@@ -285,9 +287,9 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
               saveLanguage(e.target.value);
             }}
           >
-            {LANGUAGES.map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
+            {LANGUAGES.map((entry) => (
+              <option key={entry[0]} value={entry[0]}>
+                {languageLabel(entry)}
               </option>
             ))}
           </select>

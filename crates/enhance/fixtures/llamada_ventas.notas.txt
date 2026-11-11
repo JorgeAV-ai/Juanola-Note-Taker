@@ -1,0 +1,4 @@
+85 camiones, 3 almacenes
+**dudas con SAP**
+presupuesto 40k
+- [ ] enviar propuesta el viernes

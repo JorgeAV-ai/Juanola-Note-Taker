@@ -53,8 +53,8 @@ const notes: Note[] = [
 const modelsMissing = new URLSearchParams(location.search).get("models") === "missing";
 const models: ModelStatus[] = [
   { slot: "vad", name: "silero-vad", format: "mlx", repo: "mlx-community/silero-vad", size_mb: 2, dir: "/mock/vad", installed: true, partial_bytes: 0 },
-  { slot: "stt_streaming", name: "qwen3-asr-0.6b", format: "mlx", repo: "mlx-community/Qwen3-ASR-0.6B-4bit", size_mb: 710, dir: "/mock/stt", installed: !modelsMissing, partial_bytes: 0 },
-  { slot: "llm_main", name: "lfm3-1.7b", format: "gguf", repo: "LiquidAI/LFM3-1.7B-GGUF", size_mb: 1100, dir: "/mock/llm", installed: !modelsMissing, partial_bytes: 0 },
+  { slot: "stt_streaming", name: "qwen3-asr", format: "mlx", repo: "mlx-community/Qwen3-ASR-1.7B-4bit", size_mb: 1608, dir: "/mock/stt", installed: !modelsMissing, partial_bytes: 0 },
+  { slot: "llm_main", name: "lfm3-1.7b", format: "gguf", repo: "LiquidAI/LFM3-1.7B-GGUF", size_mb: 1846, dir: "/mock/llm", installed: !modelsMissing, partial_bytes: 0 },
 ];
 let installTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -89,6 +89,7 @@ const calendarEvents: CalendarEvent[] = [
 ];
 const eventOf = new Map<string, string>();
 let detection: DetectionSettings = { meetings: true, calendar_reminders: true };
+let glossary = "";
 const sampleNotice: MeetingNotice = {
   kind: new URLSearchParams(location.search).get("notice") === "calendar" ? "calendar" : "adhoc",
   title: new URLSearchParams(location.search).get("notice") === "calendar" ? "Standup de producto" : "Meeting detected",
@@ -168,7 +169,8 @@ export function installMockIpc() {
         case "reveal_data_dir":
           return null;
         case "create_note": {
-          const n: Note = { ...notes[0], id: crypto.randomUUID(), title: "", enhanced_doc: null, status: "draft" };
+          // Como el backend: un documento sin bloques, no `null`.
+          const n: Note = { ...notes[0], id: crypto.randomUUID(), title: "", raw_doc: { type: "doc", content: [] }, enhanced_doc: null, status: "draft" };
           notes.unshift(n);
           return n;
         }
@@ -281,6 +283,11 @@ export function installMockIpc() {
         }
         case "note_event":
           return calendarEvents.find((e) => e.id === eventOf.get(a.noteId as string)) ?? null;
+        case "stt_glossary":
+          return glossary;
+        case "set_stt_glossary":
+          glossary = a.glossary as string;
+          return null;
         case "detection_settings":
           return detection;
         case "set_detection_settings":

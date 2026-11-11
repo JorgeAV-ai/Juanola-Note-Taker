@@ -4,6 +4,7 @@ import { events, ipc, type CalendarEvent, type Note, MODELS_MISSING } from "@/li
 import { useModels } from "@/state/models";
 import { dayLabel, timeLabel } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { t as tr, tBackend, useT } from "@/lib/i18n";
 import { useTranscript } from "@/state/transcript";
 import { useLibrary } from "@/state/library";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ type Tab = "mine" | "enhanced";
 // «Ask anything». Al parar la grabación se generan las notas mejoradas; si el
 // usuario ya las había editado, se pregunta antes de sustituirlas.
 export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?: number; onTrashed: () => void }) {
+  const t = useT();
   const [note, setNote] = useState<Note | null>(null);
   const [tab, setTab] = useState<Tab>("mine");
   const [busy, setBusy] = useState(false);
@@ -60,7 +62,7 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
     const un = events.noteStatus((e) => {
       if (e.note_id !== id) return;
       setBusy(e.status === "enhancing");
-      if (e.status === "failed") setError(e.message ?? "Falló el enhance");
+      if (e.status === "failed") setError(e.message ?? tr("note.enhanceFailed"));
     });
     return () => {
       un.then((f) => f());
@@ -111,7 +113,7 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
     <div className="note relative mx-auto flex min-h-full max-w-[800px] flex-col px-12" data-note-id={id}>
       <input
         className="note-title mt-4 w-full bg-transparent font-serif text-[38px] font-normal leading-tight outline-none placeholder:text-faint"
-        placeholder="New note"
+        placeholder={t("note.newNote")}
         defaultValue={note.title}
         onChange={(e) => {
           const t = e.target.value;
@@ -126,34 +128,34 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
             <button
               className={cn("tab flex h-full items-center rounded-full px-3 text-ink-2 transition-colors", tab === "mine" && "active bg-surface text-ink shadow-sm")}
               onClick={() => setTab("mine")}
-              title="My notes"
-              aria-label="My notes"
+              title={t("nav.myNotes")}
+              aria-label={t("nav.myNotes")}
             >
               <AlignLeft className="size-[18px]" />
-              <span className="sr-only">My notes</span>
+              <span className="sr-only">{t("nav.myNotes")}</span>
             </button>
             <div className={cn("flex h-full items-center rounded-full transition-colors", tab === "enhanced" && "bg-surface shadow-sm")}>
               <button className={cn("tab flex h-full items-center gap-2 pl-3.5 pr-1 text-[15px]", tab === "enhanced" ? "active text-ink" : "text-ink-2")} onClick={() => setTab("enhanced")}>
                 <Sparkles className="size-[17px]" />
-                Enhanced
+                {t("note.enhanced")}
               </button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="enhance-menu flex h-full items-center pl-0.5 pr-3 text-ink-2" aria-label="Opciones de Enhanced" disabled={busy}>
+                  <button className="enhance-menu flex h-full items-center pl-0.5 pr-3 text-ink-2" aria-label={t("note.enhanceOptions")} disabled={busy}>
                     <ChevronDown className="size-4" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  <DropdownMenuItem title="Generate notes" onSelect={requestEnhance}>
-                    <Sparkles /> Generar de nuevo
+                  <DropdownMenuItem title={t("note.generate")} onSelect={requestEnhance}>
+                    <Sparkles /> {t("note.regenerate")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
         ) : (
-          <Button size="lg" title="Generate notes" onClick={requestEnhance} disabled={busy} className="text-[15px]">
-            <Sparkles /> Enhance notes
+          <Button size="lg" title={t("note.generate")} onClick={requestEnhance} disabled={busy} className="text-[15px]">
+            <Sparkles /> {t("note.enhance")}
           </Button>
         )}
 
@@ -163,7 +165,7 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
             {event && <span className="text-muted">{timeLabel(new Date(event.start))}</span>}
           </span>
           <span className="flex items-center gap-2" title={event ? attendeeNames(event) : undefined}>
-            <UsersRound className="size-[17px]" /> {event ? attendeeLabel(event) : "Me"}
+            <UsersRound className="size-[17px]" /> {event ? attendeeLabel(event) : t("common.me")}
           </span>
         </div>
 
@@ -171,23 +173,23 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
           <DropdownMenuTrigger asChild>
             <Button size="lg" className="note-folder text-[15px] font-normal text-ink-2" data-folder={folder ?? ""}>
               {folderName ? <Folder /> : <FolderPlus />}
-              {folderName ?? "Add to folder"}
+              {folderName ?? t("note.addToFolder")}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-[230px]">
-            <DropdownMenuLabel>Mover a</DropdownMenuLabel>
-            {folders.length === 0 && <div className="px-2.5 py-1.5 text-[13.5px] text-muted">Aún no hay carpetas: crea una con «Add folder».</div>}
+            <DropdownMenuLabel>{t("note.moveTo")}</DropdownMenuLabel>
+            {folders.length === 0 && <div className="px-2.5 py-1.5 text-[13.5px] text-muted">{t("note.noFolders")}</div>}
             {folders.map((f) => (
               <DropdownMenuItem key={f.id} data-folder-id={f.id} onSelect={() => moveTo(f.id)}>
                 <Folder /> <span className="flex-1 truncate">{f.name}</span>
-                {f.id === folder && <span className="text-[12px] text-muted">actual</span>}
+                {f.id === folder && <span className="text-[12px] text-muted">{t("note.current")}</span>}
               </DropdownMenuItem>
             ))}
             {folder && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => moveTo(null)}>
-                  <FolderMinus /> Quitar de la carpeta
+                  <FolderMinus /> {t("note.removeFromFolder")}
                 </DropdownMenuItem>
               </>
             )}
@@ -196,24 +198,24 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="icon" className="note-more size-10" aria-label="Más opciones">
+            <Button size="icon" className="note-more size-10" aria-label={t("note.more")}>
               <Ellipsis />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem destructive title="Mover a la papelera" onSelect={trash}>
-              <Trash2 /> Mover a la papelera
+            <DropdownMenuItem destructive title={t("note.moveToTrash")} onSelect={trash}>
+              <Trash2 /> {t("note.moveToTrash")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
       </div>
 
-      {error && <div className="note-error mb-4 rounded-xl border border-[#f1d3a8] bg-[#fdf6ea] px-4 py-2.5 text-[13.5px] text-[#8a4b0f] dark:border-[#6b4a1e] dark:bg-[#3a2e1c] dark:text-[#f3c98b]">{error}</div>}
+      {error && <div className="note-error mb-4 rounded-xl border border-[#f1d3a8] bg-[#fdf6ea] px-4 py-2.5 text-[13.5px] text-[#8a4b0f] dark:border-[#6b4a1e] dark:bg-[#3a2e1c] dark:text-[#f3c98b]">{tBackend(error)}</div>}
 
       <div className="flex-1">
         {tab === "mine" || !note.enhanced_doc ? (
-          <NoteEditor key={id} initial={note.raw_doc} onChange={(doc) => ipc.setNoteRawDoc(id, doc)} />
+          <NoteEditor key={`${id}-${t("note.writeNotes")}`} initial={note.raw_doc} onChange={(doc) => ipc.setNoteRawDoc(id, doc)} />
         ) : (
           <EnhancedView
             notes={note.enhanced_doc}
@@ -229,24 +231,24 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
         {busy && (
           <div className="enhancing mb-4 flex h-[52px] items-center gap-3 rounded-full bg-hover px-5 text-[15px] font-medium text-ink">
             <span className="licorice" aria-hidden="true"><i /></span>
-            Enhancing notes
+            {t("note.enhancing")}
           </div>
         )}
         <RecordingPill
           noteId={id}
           autostart={autostart}
-          onStopped={(saved) => (saved > 0 ? requestEnhance() : setError("No se ha transcrito nada."))}
-          askBar={<AskAnythingBar recipe="Write follow up email" onAsk={() => setError("El chat todavía no está conectado al modelo.")} />}
+          onStopped={(saved) => (saved > 0 ? requestEnhance() : setError(t("note.nothingTranscribed")))}
+          askBar={<AskAnythingBar recipe={t("note.followUp")} onAsk={() => setError(t("note.chatNotConnected"))} />}
         />
       </div>
 
       <AlertDialog open={confirm} onOpenChange={setConfirm}>
         <AlertDialogContent className="note-confirm">
-          <AlertDialogTitle>¿Generar las notas de nuevo?</AlertDialogTitle>
-          <AlertDialogDescription>Has editado las notas mejoradas. Si las generas de nuevo, se perderán tus cambios.</AlertDialogDescription>
+          <AlertDialogTitle>{t("note.regenTitle")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("note.regenDesc")}</AlertDialogDescription>
           <AlertDialogFooter>
-            <AlertDialogCancel>Mantener</AlertDialogCancel>
-            <AlertDialogAction onClick={enhanceNow}>Generar de nuevo</AlertDialogAction>
+            <AlertDialogCancel>{t("note.keep")}</AlertDialogCancel>
+            <AlertDialogAction onClick={enhanceNow}>{t("note.regenerate")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -254,12 +256,12 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
   );
 }
 
-const personName = (a: CalendarEvent["attendees"][number]) => (a.is_self ? "Me" : a.name || a.email.split("@")[0]);
+const personName = (a: CalendarEvent["attendees"][number]) => (a.is_self ? tr("common.me") : a.name || a.email.split("@")[0]);
 const attendeeNames = (e: CalendarEvent) => e.attendees.filter((a) => !a.declined).map(personName).join(", ");
 
 // «Me», «Ana», «Ana +3»: como Granola, los extra se colapsan en «+N».
 function attendeeLabel(e: CalendarEvent) {
   const others = e.attendees.filter((a) => !a.is_self && !a.declined);
-  if (others.length === 0) return "Me";
+  if (others.length === 0) return tr("common.me");
   return others.length === 1 ? personName(others[0]) : `${personName(others[0])} +${others.length - 1}`;
 }

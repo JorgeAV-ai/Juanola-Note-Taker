@@ -5,8 +5,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use crate::{Db, DbError};
 
 pub async fn get<T: DeserializeOwned>(db: &Db, key: &str) -> Result<Option<T>, DbError> {
-    let value: Option<String> =
-        sqlx::query_scalar("SELECT value FROM settings WHERE key = ?").bind(key).fetch_optional(db.pool()).await?;
+    let value: Option<String> = sqlx::query_scalar("SELECT value FROM settings WHERE key = ?").bind(key).fetch_optional(db.pool()).await?;
     Ok(value.and_then(|v| serde_json::from_str(&v).ok()))
 }
 

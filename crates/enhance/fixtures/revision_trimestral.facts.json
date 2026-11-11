@@ -1,0 +1,909 @@
+{
+ "_doc": "Hechos de revision_trimestral.txt. Mismo formato que reunion_producto.facts.json. La fecha de lanzamiento de la previsión de compras se corrige a mitad de reunión: la buena es el 12 de enero (no el 15 de diciembre).",
+ "facts": [
+  {
+   "id": "restaurantes_2310",
+   "all": [
+    [
+     "2310"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "crecimiento_14",
+   "all": [
+    [
+     "14"
+    ],
+    [
+     "restaurante",
+     "crec"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "mrr_186k",
+   "all": [
+    [
+     "186000",
+     "186 mil",
+     "186k"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "objetivo_190k",
+   "all": [
+    [
+     "190000",
+     "190 mil",
+     "190k"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "bajas_1_8",
+   "all": [
+    [
+     "1,8",
+     "1.8"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "logimenu_20_menos",
+   "all": [
+    [
+     "logimenu"
+    ],
+    [
+     "20"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "pedidos_1_2_millones",
+   "all": [
+    [
+     "1200000",
+     "1,2 millones",
+     "1.2 millones"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "puntualidad_93",
+   "all": [
+    [
+     "93"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "nps_47",
+   "all": [
+    [
+     "47"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "tickets_640",
+   "all": [
+    [
+     "640"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "lince_tercio",
+   "all": [
+    [
+     "lince"
+    ],
+    [
+     "tercio",
+     "1/3",
+     "33"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "app_71",
+   "all": [
+    [
+     "71"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "t_nuria_correo_afectados",
+   "task": true,
+   "all": [
+    [
+     "nuria"
+    ],
+    [
+     "correo",
+     "email"
+    ]
+   ]
+  },
+  {
+   "id": "caida_3_octubre",
+   "all": [
+    [
+     "3 de octubre"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "certificado_caducado",
+   "all": [
+    [
+     "certificado"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "afectados_380",
+   "all": [
+    [
+     "380"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "descuento_10_afectados",
+   "all": [
+    [
+     "10"
+    ],
+    [
+     "descuento",
+     "compens"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados",
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "t_alvaro_postmortem",
+   "task": true,
+   "all": [
+    [
+     "alvaro"
+    ],
+    [
+     "postmortem",
+     "post mortem",
+     "post-mortem",
+     "informe"
+    ]
+   ]
+  },
+  {
+   "id": "t_tomas_lince",
+   "task": true,
+   "all": [
+    [
+     "tomas"
+    ],
+    [
+     "lince",
+     "sincroniz"
+    ]
+   ]
+  },
+  {
+   "id": "t_tomas_estimacion_offline",
+   "task": true,
+   "all": [
+    [
+     "tomas"
+    ],
+    [
+     "sin conexion",
+     "offline"
+    ]
+   ]
+  },
+  {
+   "id": "panel_12_restaurantes",
+   "all": [
+    [
+     "panel"
+    ],
+    [
+     "12"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "piloto_oporto",
+   "all": [
+    [
+     "oporto"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "tierramar_64_locales",
+   "all": [
+    [
+     "tierramar"
+    ],
+    [
+     "64"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados",
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "tierramar_21k",
+   "all": [
+    [
+     "21000",
+     "21 mil",
+     "21k"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados",
+     "Métricas y estado"
+    ]
+   }
+  },
+  {
+   "id": "vence_31_enero",
+   "all": [
+    [
+     "31 de enero"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "informes_por_local",
+   "all": [
+    [
+     "informe"
+    ],
+    [
+     "local"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados",
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "t_nuria_confirma_reunion",
+   "task": true,
+   "all": [
+    [
+     "nuria"
+    ],
+    [
+     "marcos",
+     "tierramar",
+     "reunion"
+    ],
+    [
+     "confirm"
+    ]
+   ]
+  },
+  {
+   "id": "reunion_18_nov",
+   "all": [
+    [
+     "18 de noviembre"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados",
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "t_ines_analisis_tierramar",
+   "task": true,
+   "all": [
+    [
+     "ines"
+    ],
+    [
+     "analisis"
+    ]
+   ]
+  },
+  {
+   "id": "logimenu_25",
+   "all": [
+    [
+     "25"
+    ],
+    [
+     "logimenu",
+     "menos",
+     "descuento"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "descuento_8_dos_anos",
+   "all": [
+    [
+     "8"
+    ],
+    [
+     "2 años",
+     "dos años"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados",
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "t_direccion_descuento",
+   "task": true,
+   "all": [
+    [
+     "direccion"
+    ],
+    [
+     "descuento",
+     "8"
+    ]
+   ]
+  },
+  {
+   "id": "t_raul_prototipo",
+   "task": true,
+   "all": [
+    [
+     "raul"
+    ],
+    [
+     "prototipo"
+    ]
+   ]
+  },
+  {
+   "id": "deuda_tecnica_20",
+   "all": [
+    [
+     "20"
+    ],
+    [
+     "deuda"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Decisiones",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "portugues_aplazado",
+   "all": [
+    [
+     "portug"
+    ],
+    [
+     "primer trimestre",
+     "1 trimestre",
+     "1er trimestre",
+     "q1",
+     "enero"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Decisiones",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "presupuesto_145k",
+   "all": [
+    [
+     "145000",
+     "145 mil",
+     "145k"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "nube_9800",
+   "all": [
+    [
+     "9800"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "t_alvaro_limpieza_nube",
+   "task": true,
+   "all": [
+    [
+     "alvaro"
+    ],
+    [
+     "nube",
+     "instancia",
+     "limpieza"
+    ]
+   ]
+  },
+  {
+   "id": "nube_objetivo_8000",
+   "all": [
+    [
+     "8000",
+     "8 mil"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados",
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "feria_sin_stand",
+   "all": [
+    [
+     "visitante",
+     "sin stand"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "diseno_aplazado",
+   "all": [
+    [
+     "diseño",
+     "disenador",
+     "diseñador"
+    ],
+    [
+     "aplaz",
+     "primer trimestre",
+     "1 trimestre",
+     "q1"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "salario_55k",
+   "all": [
+    [
+     "55000",
+     "55 mil",
+     "55k"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Decisiones",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "t_alvaro_escribe_lucia",
+   "task": true,
+   "all": [
+    [
+     "lucia"
+    ],
+    [
+     "escrib",
+     "contact"
+    ]
+   ]
+  },
+  {
+   "id": "t_oferta_backend",
+   "task": true,
+   "all": [
+    [
+     "oferta"
+    ],
+    [
+     "backend"
+    ]
+   ]
+  },
+  {
+   "id": "becaria_600",
+   "all": [
+    [
+     "600"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Decisiones",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "t_ines_universidad",
+   "task": true,
+   "all": [
+    [
+     "ines"
+    ],
+    [
+     "universidad",
+     "practicas"
+    ]
+   ]
+  },
+  {
+   "id": "lanzamiento_12_enero",
+   "all": [
+    [
+     "12 de enero"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Decisiones",
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "prueba_cerrada_diciembre",
+   "all": [
+    [
+     "prueba"
+    ],
+    [
+     "diciembre"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "objetivo_197k",
+   "all": [
+    [
+     "197000",
+     "197 mil",
+     "197k"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "objetivo_bajas_1_5",
+   "all": [
+    [
+     "1,5",
+     "1.5"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "objetivo_app_80_75",
+   "all": [
+    [
+     "80"
+    ],
+    [
+     "75"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "cero_caidas_30_min",
+   "all": [
+    [
+     "30 minutos"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Métricas y estado",
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "base_conocimiento",
+   "all": [
+    [
+     "base de conocimiento"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados",
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "baja_grabaciones",
+   "all": [
+    [
+     "grabacion"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "cena_19_dic",
+   "all": [
+    [
+     "cena"
+    ],
+    [
+     "19 de diciembre"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Decisiones"
+    ]
+   }
+  },
+  {
+   "id": "comite_2_dic",
+   "all": [
+    [
+     "2 de diciembre"
+    ]
+   ],
+   "section": {
+    "semanal": [
+     "Temas tratados"
+    ]
+   }
+  },
+  {
+   "id": "t_alvaro_cuestionario",
+   "task": true,
+   "all": [
+    [
+     "alvaro"
+    ],
+    [
+     "cuestionario"
+    ]
+   ]
+  },
+  {
+   "id": "t_raul_reserva_cena",
+   "task": true,
+   "all": [
+    [
+     "raul"
+    ],
+    [
+     "reserv"
+    ]
+   ]
+  }
+ ],
+ "user_notes": {
+  "MRR 186k (obj 190k)": {
+   "semanal": [
+    "Métricas y estado"
+   ]
+  },
+  "Tierramar: 64 locales, 21k/mes, vence 31 ene": {
+   "semanal": [
+    "Métricas y estado",
+    "Temas tratados"
+   ]
+  },
+  "reunión Tierramar 18 nov": {
+   "semanal": [
+    "Temas tratados",
+    "Decisiones"
+   ]
+  },
+  "dto 8% + contrato 2 años, validar con dirección": {
+   "semanal": [
+    "Temas tratados",
+    "Decisiones"
+   ]
+  },
+  "Inés análisis uso x local vie 14": {
+   "semanal": [
+    "Próximos pasos"
+   ]
+  },
+  "previsión compras → 12 ene (no 15 dic)": {
+   "semanal": [
+    "Temas tratados",
+    "Decisiones"
+   ]
+  },
+  "backend sénior hasta 55k, diseño a Q1": {
+   "semanal": [
+    "Temas tratados",
+    "Decisiones"
+   ]
+  }
+ },
+ "empty": {}
+}

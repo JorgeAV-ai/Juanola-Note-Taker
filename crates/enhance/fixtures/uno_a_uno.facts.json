@@ -1,0 +1,32 @@
+{
+  "_doc": "Hechos del 1:1 ficticio (uno_a_uno.txt). Mismo formato que reunion_producto.facts.json. La plantilla 1on1 no tiene contenido para «Feedback»: debe quedar vacío.",
+  "facts": [
+    {"id": "tres_guardias", "all": [["3 guardias", "tres guardias"]], "section": {"1on1": ["Cómo está"]}},
+    {"id": "cansado", "all": [["cansad"]], "section": {"1on1": ["Cómo está"]}},
+    {"id": "mudanza_getafe", "all": [["getafe"]], "section": {"1on1": ["Cómo está"]}},
+    {"id": "vacaciones_22_dic", "all": [["22 de diciembre"]], "section": {"1on1": ["Cómo está", "Temas tratados", "Próximos pasos"]}},
+    {"id": "postgres_16", "all": [["postgres"]], "section": {"1on1": ["Temas tratados"]}},
+    {"id": "consultas_120", "all": [["120"]], "section": {"1on1": ["Temas tratados"]}},
+    {"id": "consultas_15_reescribir", "all": [["15"], ["consulta", "reescrib"]], "section": {"1on1": ["Temas tratados"]}},
+    {"id": "fecha_30_nov", "all": [["30 de noviembre"]], "section": {"1on1": ["Temas tratados", "Próximos pasos"]}},
+    {"id": "plan_b_13_dic", "all": [["13 de diciembre"]], "section": {"1on1": ["Temas tratados", "Próximos pasos"]}},
+    {"id": "cobertura_45", "all": [["45"]], "section": {"1on1": ["Temas tratados"]}},
+    {"id": "objetivo_60", "all": [["60"]], "section": {"1on1": ["Temas tratados"]}},
+    {"id": "curso_1500", "all": [["1500"]], "section": {"1on1": ["Temas tratados"]}},
+    {"id": "kubernetes", "all": [["kubernetes"]], "section": {"1on1": ["Temas tratados", "Próximos pasos"]}},
+    {"id": "senior_marzo", "all": [["marzo"]], "section": {"1on1": ["Temas tratados"]}},
+    {"id": "t_rotacion_plataforma", "task": true, "all": [["plataforma", "rotacion"]]},
+    {"id": "t_diego_plan_migracion", "task": true, "all": [["plan"], ["migracion"]]},
+    {"id": "t_diego_curso", "task": true, "all": [["inscrib", "curso"]]},
+    {"id": "t_documento_logros", "task": true, "all": [["logros"], ["15 de enero"]]},
+    {"id": "t_rrhh_criterios", "task": true, "all": [["recursos humanos", "rrhh"]]}
+  ],
+  "user_notes": {
+    "Diego cansado, 3 guardias este mes": {"1on1": ["Cómo está"]},
+    "migración Postgres: 30 nov o 13 dic": {"1on1": ["Temas tratados"]},
+    "curso Kubernetes 1500 €": {"1on1": ["Temas tratados"]},
+    "hablar con plataforma por la rotación": {"1on1": ["Próximos pasos"]},
+    "paso a senior en marzo": {"1on1": ["Temas tratados"]}
+  },
+  "empty": {"1on1": ["Feedback"]}
+}

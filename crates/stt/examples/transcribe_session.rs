@@ -4,6 +4,9 @@
 //! ```text
 //! target/release/examples/transcribe_session <mic.wav> <system.wav> <salida.json> [idioma|auto]
 //! ```
+//!
+//! Junto a la salida escribe `<salida>.probs.json`: el texto y la probabilidad
+//! de cada token de cada segmento. `JUANOLA_ASR_MODEL` cambia la carpeta del modelo (por defecto, el 1.7B de 4 bits).
 
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
@@ -26,14 +29,18 @@ fn main() -> anyhow::Result<()> {
         Some(l) => Some(l.to_owned()),
         None => Some("Spanish".to_owned()),
     };
-    let models = PathBuf::from(std::env::var_os("HOME").unwrap_or_default())
-        .join("Library/Application Support/dev.juanola.desktop/models");
+    let models = PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join("Library/Application Support/dev.juanola.desktop/models");
     let program = std::env::current_exe()?.parent().and_then(|p| p.parent()).unwrap().join("juanola-stt-worker");
     let mut w = SttWorker::spawn(&WorkerConfig {
         program,
-        model_dir: models.join("stt_streaming/qwen3-asr-0.6b-mlx"),
+        // `JUANOLA_ASR_MODEL` = otra carpeta de modelo (p. ej. qwen3-asr-1.7b-mlx).
+        model_dir: std::env::var_os("JUANOLA_ASR_MODEL")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| models.join("stt_streaming/qwen3-asr-1.7b-4bit-mlx")),
         vad_dir: models.join("vad/silero-vad-mlx"),
         language,
+        // `JUANOLA_ASR_CONTEXT` = archivo de texto para el prompt (nombres, términos).
+        context: std::env::var_os("JUANOLA_ASR_CONTEXT").map(std::fs::read_to_string).transpose()?,
     })?;
     let WorkerEvent::Ready { .. } = w.events().recv()? else { anyhow::bail!("el worker no arrancó") };
 
@@ -49,17 +56,21 @@ fn main() -> anyhow::Result<()> {
             }
         }
         i += BLOCK;
-        finals.extend(w.events().try_iter().filter_map(|e| e.as_transcript()).filter(|t| t.is_final));
+        finals.extend(w.events().try_iter().filter_map(final_with_probs));
     }
     w.finish();
-    while let Ok(ev) = w.events().recv_timeout(Duration::from_secs(30)) {
-        if let Some(t) = ev.as_transcript().filter(|t| t.is_final) {
-            finals.push(t);
-        }
+    // Hasta que el worker cierre stdout. Al volcar el audio de golpe, el VAD
+    // del atasco puede tardar más de medio minuto sin emitir nada.
+    while let Ok(ev) = w.events().recv_timeout(Duration::from_secs(600)) {
+        finals.extend(final_with_probs(ev));
     }
-    finals.retain(|t| !t.text.trim().is_empty());
-    finals.sort_by(|x, y| x.start.total_cmp(&y.start));
+    finals.retain(|(t, _)| !t.text.trim().is_empty());
+    finals.sort_by(|x, y| x.0.start.total_cmp(&y.0.start));
+    let (finals, probs): (Vec<_>, Vec<_>) = finals.into_iter().unzip();
     std::fs::write(&a[2], serde_json::to_string_pretty(&finals)?)?;
+    // Probabilidad de cada token, en el mismo orden que los segmentos.
+    let probs_path = format!("{}.probs.json", a[2].trim_end_matches(".json"));
+    std::fs::write(&probs_path, serde_json::to_string(&probs)?)?;
     let audio = n as f64 / 16_000.0;
     println!(
         "{} segmentos de {:.1} min de audio en {:.1}s ({:.0}x tiempo real) → {}",
@@ -70,4 +81,11 @@ fn main() -> anyhow::Result<()> {
         a[2]
     );
     Ok(())
+}
+
+/// Segmento final con sus tokens: `[[texto, probabilidad], …]`.
+fn final_with_probs(ev: WorkerEvent) -> Option<(juanola_stt::Transcript, Vec<(String, f32)>)> {
+    let t = ev.as_transcript().filter(|t| t.is_final)?;
+    let WorkerEvent::Segment { token_probs, token_texts, .. } = ev else { return None };
+    Some((t, token_texts.into_iter().zip(token_probs).collect()))
 }

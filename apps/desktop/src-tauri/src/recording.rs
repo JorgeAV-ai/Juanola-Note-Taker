@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 use juanola_audio_capture::{rms, AudioCapture, CaptureConfig, CpalCapture};
 use juanola_core_types::{Channel, Id, Segment};
 use juanola_db::{repo, Db};
+use juanola_stt::context::{parse_glossary, AsrContext};
 use juanola_stt::worker::{SttWorker, WorkerConfig, WorkerEvent};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
@@ -96,7 +97,6 @@ pub struct Paths {
 }
 
 impl Paths {
-
     /// El worker es un sidecar de Tauri (`bundle.externalBin`): va junto al
     /// ejecutable, en `Contents/MacOS` dentro del .app y en `target/<perfil>`
     /// con `tauri dev`. Lo genera `apps/desktop/scripts/build-sidecar.sh`.
@@ -232,6 +232,39 @@ impl Sink<'_> {
     }
 }
 
+/// Clave del glosario del usuario en `settings`: texto libre, un término por
+/// línea o separados por comas.
+pub const KEY_GLOSSARY: &str = "stt.glossary";
+
+/// Lo que se sabe de la reunión antes de oírla, para el prompt del STT: título,
+/// evento de calendario, notas ya escritas y glosario. Si algo falla, se graba
+/// sin contexto.
+fn asr_context(db: &Db, note_id: Id) -> Option<String> {
+    let ctx = tauri::async_runtime::block_on(async {
+        let note = repo::notes::get(db, note_id).await.ok().flatten()?;
+        let event = match &note.calendar_event_id {
+            Some(id) => repo::events::get(db, id).await.ok().flatten(),
+            None => None,
+        };
+        let glossary: String = repo::settings::get(db, KEY_GLOSSARY).await.ok().flatten().unwrap_or_default();
+        let notes =
+            juanola_enhance::pipelines::enhance::user_blocks(&note.raw_doc).into_iter().map(|b| b.text).collect::<Vec<_>>().join(". ");
+        Some(AsrContext {
+            title: note.title,
+            attendees: event
+                .as_ref()
+                .map(|e| e.attendees.iter().filter(|a| !a.declined).filter_map(|a| a.name.clone()).collect())
+                .unwrap_or_default(),
+            description: event.and_then(|e| e.description).unwrap_or_default(),
+            notes,
+            glossary: parse_glossary(&glossary),
+        })
+    })?;
+    let text = ctx.render();
+    tracing::info!(%note_id, chars = text.as_ref().map_or(0, |t| t.chars().count()), "contexto del STT");
+    text
+}
+
 fn run(
     app: &AppHandle,
     db: &Db,
@@ -274,6 +307,7 @@ fn run(
         model_dir: paths.stt_dir.clone(),
         vad_dir: paths.vad_dir.clone(),
         language,
+        context: asr_context(db, note_id),
     })
     .map_err(|e| e.to_string())?;
     match worker.events().recv_timeout(Duration::from_secs(120)) {
@@ -295,11 +329,9 @@ fn run(
     let mut frames = capture
         .start(CaptureConfig { mic_device: None, capture_mic, capture_system_audio: true, echo_cancellation: false })
         .map_err(|e| match e {
-            juanola_audio_capture::CaptureError::PermissionDenied(_) => {
-                Failure { message: MIC_DENIED.into(), action: Some("mic_settings") }
-            }
-            other => Failure::from(other.to_string()),
-        })?;
+        juanola_audio_capture::CaptureError::PermissionDenied(_) => Failure { message: MIC_DENIED.into(), action: Some("mic_settings") },
+        other => Failure::from(other.to_string()),
+    })?;
     emit_state(app, note_id, "recording", None);
 
     let (mut mic_acc, mut sys_acc) = (Vec::<f32>::new(), Vec::<f32>::new());
@@ -400,10 +432,22 @@ fn run(
         }
     }
     worker.finish();
-    while let Ok(ev) = worker.events().recv_timeout(Duration::from_secs(30)) {
-        sink.handle(ev);
+    // Los finales pendientes pueden tardar si el decode va por detrás: tope
+    // total (no por hueco) mientras el worker siga vivo.
+    let deadline = Instant::now() + Duration::from_secs(90);
+    loop {
+        let left = deadline.saturating_duration_since(Instant::now());
+        if left.is_zero() {
+            tracing::warn!("tope de espera de finales alcanzado");
+            break;
+        }
+        match worker.events().recv_timeout(Duration::from_secs(5).min(left)) {
+            Ok(ev) => sink.handle(ev),
+            Err(mpsc::RecvTimeoutError::Timeout) if worker.exit_status().is_none() => continue,
+            Err(_) => break,
+        }
     }
-    let _ = worker.wait();
+    let _ = worker.wait(Duration::from_secs(30));
     tracing::info!(saved = sink.saved, finals = sink.finals, partials = sink.partials, "transcripción terminada");
     Ok(sink.saved)
 }

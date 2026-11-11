@@ -61,10 +61,7 @@ impl Models {
 
     /// Carpeta del modelo de un slot.
     pub fn dir(&self, slot: &str) -> PathBuf {
-        self.plan()
-            .ok()
-            .and_then(|p| p.into_iter().find(|p| p.slot == slot).map(|p| p.dir))
-            .unwrap_or_else(|| self.root.join(slot))
+        self.plan().ok().and_then(|p| p.into_iter().find(|p| p.slot == slot).map(|p| p.dir)).unwrap_or_else(|| self.root.join(slot))
     }
 
     /// El fichero principal del modelo de un slot (el GGUF del LLM).
@@ -86,8 +83,15 @@ impl Models {
         self.cancel.store(false, Ordering::Relaxed);
         let me = self.clone();
         tauri::async_runtime::spawn(async move {
+            // Si `install_all` paniquea, `installing` no debe quedarse pegado.
+            struct Reset<'a>(&'a AtomicBool);
+            impl Drop for Reset<'_> {
+                fn drop(&mut self) {
+                    self.0.store(false, Ordering::SeqCst);
+                }
+            }
+            let _reset = Reset(&me.installing);
             let result = me.install_all(&app).await;
-            me.installing.store(false, Ordering::SeqCst);
             if let Err(e) = &result {
                 tracing::warn!(error = %e, "descarga de modelos");
             }
@@ -100,6 +104,7 @@ impl Models {
     }
 
     async fn install_all(&self, app: &AppHandle) -> Result<(), String> {
+        let mut failed = Vec::new();
         for planned in self.plan()? {
             if planned.status().installed {
                 continue;
@@ -107,16 +112,28 @@ impl Models {
             tracing::info!(slot = planned.slot, repo = planned.entry.repo, "descargando modelo");
             // Como mucho ~10 eventos por segundo, más el último.
             let mut last = Instant::now() - Duration::from_secs(1);
-            install::install(&planned, &self.cancel, |p| {
+            if let Err(e) = install::install(&planned, &self.cancel, |p| {
                 if p.done == p.total || last.elapsed() >= Duration::from_millis(100) {
                     last = Instant::now();
                     let _ = app.emit("models://progress", &p);
                 }
             })
             .await
-            .map_err(|e| e.to_string())?;
+            {
+                // Un modelo que no se puede instalar (p. ej. paquete no HF aún
+                // no implementado) no impide descargar el resto.
+                if self.cancel.load(Ordering::Relaxed) {
+                    return Err(e.to_string());
+                }
+                tracing::warn!(slot = planned.slot, error = %e, "no se pudo instalar un modelo");
+                failed.push(format!("{}: {e}", planned.slot));
+            }
         }
-        Ok(())
+        if failed.is_empty() {
+            Ok(())
+        } else {
+            Err(failed.join("; "))
+        }
     }
 }
 

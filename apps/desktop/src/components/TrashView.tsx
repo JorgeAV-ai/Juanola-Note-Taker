@@ -12,9 +12,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { NoteRow } from "@/components/NoteList";
+import { useT } from "@/lib/i18n";
 
 // Papelera: restaurar, o borrar para siempre (con confirmación: no se puede deshacer).
 export function TrashView() {
+  const t = useT();
   const [notes, setNotes] = useState<Note[]>([]);
   const [confirm, setConfirm] = useState<Note | null>(null);
   const reload = useLibrary((s) => s.reload);
@@ -36,9 +38,9 @@ export function TrashView() {
 
   return (
     <div className="trash mx-auto max-w-[860px] px-10 pb-16">
-      <h1 className="page-title mb-8 mt-6 font-serif text-[34px] font-normal leading-tight">Papelera</h1>
+      <h1 className="page-title mb-8 mt-6 font-serif text-[34px] font-normal leading-tight">{t("nav.trash")}</h1>
       {notes.length === 0 ? (
-        <p className="empty px-1 text-[14.5px] text-muted">La papelera está vacía.</p>
+        <p className="empty px-1 text-[14.5px] text-muted">{t("trash.empty")}</p>
       ) : (
         <ul className="m-0 list-none p-0">
           {notes.map((n) => (
@@ -48,10 +50,10 @@ export function TrashView() {
                 right={
                   <span className="row-actions flex items-center gap-2">
                     <Button size="sm" className="restore" onClick={() => restore(n.id)}>
-                      Restaurar
+                      {t("trash.restore")}
                     </Button>
                     <Button size="sm" variant="ghost" className="destroy" onClick={() => setConfirm(n)}>
-                      Borrar…
+                      {t("trash.delete")}
                     </Button>
                   </span>
                 }
@@ -62,12 +64,12 @@ export function TrashView() {
       )}
       <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
         <AlertDialogContent className="note-confirm">
-          <AlertDialogTitle>¿Borrar para siempre?</AlertDialogTitle>
-          <AlertDialogDescription>«{confirm?.title || "Untitled"}» se borrará con su transcripción. No se puede deshacer.</AlertDialogDescription>
+          <AlertDialogTitle>{t("trash.confirmTitle")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("trash.confirmDesc", { title: confirm?.title || t("common.untitled") })}</AlertDialogDescription>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction destructive onClick={() => confirm && destroy(confirm.id)}>
-              Borrar para siempre
+              {t("trash.deleteForever")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

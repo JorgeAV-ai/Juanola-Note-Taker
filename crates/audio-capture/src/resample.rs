@@ -22,16 +22,7 @@ impl MonoResampler {
         let inner = if input_rate == TARGET_SAMPLE_RATE {
             None
         } else {
-            Some(
-                Fft::<f32>::new(
-                    input_rate as usize,
-                    TARGET_SAMPLE_RATE as usize,
-                    CHUNK,
-                    1,
-                    FixedSync::Input,
-                )
-                .map_err(|e| e.to_string())?,
-            )
+            Some(Fft::<f32>::new(input_rate as usize, TARGET_SAMPLE_RATE as usize, CHUNK, 1, FixedSync::Input).map_err(|e| e.to_string())?)
         };
         let out_cap = inner.as_ref().map_or(0, |r| r.output_frames_max());
         Ok(Self { inner, pending: Vec::with_capacity(CHUNK * 2), out: vec![0.0; out_cap] })
@@ -54,8 +45,7 @@ impl MonoResampler {
             let input = &self.pending[consumed..consumed + need];
             let in_adapter = InterleavedSlice::new(input, 1, need).expect("input adapter");
             let out_len = self.out.len();
-            let mut out_adapter =
-                InterleavedSlice::new_mut(&mut self.out[..], 1, out_len).expect("output adapter");
+            let mut out_adapter = InterleavedSlice::new_mut(&mut self.out[..], 1, out_len).expect("output adapter");
             match r.process_into_buffer(&in_adapter, &mut out_adapter, None) {
                 Ok((n_in, n_out)) => {
                     consumed += n_in;

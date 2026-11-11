@@ -1,0 +1,79 @@
+# Comprobaciones en cada push y pull request: formato, clippy, tests y build
+# del frontend. Corre en macOS con Apple Silicon, la única plataforma que la
+# app soporta hoy (Core Audio, EventKit, Metal).
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**", "fase-**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Rust y frontend (macOS arm64)
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Rust stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Formato
+        run: cargo fmt --all --check
+
+      - uses: Swatinem/rust-cache@e9d7b9f1e587218970671bac74e5511ed9506e6a # v2
+
+      # El código de llama.cpp no está en git (181 MB); el script lo baja en el
+      # tag fijado y comprueba su SHA-256.
+      - name: Caché de llama.cpp
+        id: llama
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: third_party/llama-cpp-sys-2/llama.cpp
+          key: llama-cpp-${{ hashFiles('scripts/fetch-llama-cpp.sh') }}
+      - name: Bajar llama.cpp
+        if: steps.llama.outputs.cache-hit != 'true'
+        run: scripts/fetch-llama-cpp.sh
+
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 11
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/desktop/pnpm-lock.yaml
+
+      # Tauri incrusta el frontend al compilar, así que va antes que cargo.
+      - name: Frontend (tsc + vite)
+        working-directory: apps/desktop
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      # `tauri-build` exige que exista el sidecar de `bundle.externalBin` incluso
+      # para compilar; el de verdad (MLX) solo se construye en release.yml.
+      - name: Sidecar vacío para compilar
+        run: |
+          mkdir -p apps/desktop/src-tauri/binaries
+          touch "apps/desktop/src-tauri/binaries/juanola-stt-worker-$(rustc -vV | sed -n 's/^host: //p')"
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo test --workspace

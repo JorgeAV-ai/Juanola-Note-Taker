@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     use juanola_llm::{GenOptions, Message};
     let path = std::env::args().nth(1).map(std::path::PathBuf::from).unwrap_or_else(|| {
         std::path::PathBuf::from(std::env::var("HOME").unwrap())
-            .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q4km/LFM3-1.7B-Q4_K_M.gguf")
+            .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q8/LFM3-1.7B-Q8_0.gguf")
     });
     let t = std::time::Instant::now();
     let llm = LlamaCpp::load(&path, 8192)?;

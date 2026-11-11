@@ -1,0 +1,183 @@
+# 1:1 ficticio en francés para evaluar el enhance con reuniones largas (~30 min). Formato: Hablante|texto.
+# «Yo» es la responsable del equipo de diseño de una agencia de Lyon (canal del micrófono); Camille, diseñadora senior, conectada por videollamada desde casa.
+# Aquí sí hay feedback explícito en ambos sentidos. La fecha de entrega de Berthier se corrige a mitad de reunión: del 28 de noviembre al 5 de diciembre.
+Yo|Ah, te voilà ! Je commençais à me demander si tu avais oublié notre point.
+Camille|Non, non, pardon, j'ai eu un souci avec le lien de la visio, il me renvoyait sur la réunion de lundi dernier. Ça fait cinq minutes que je tourne en rond. Tu m'entends bien ?
+Yo|Très bien. Et je te vois aussi. Enfin, je vois surtout ton plafond.
+Camille|Attends... Voilà. C'est mieux ? Je suis dans la cuisine, Hugo fait la sieste dans le salon, donc je vais parler un peu moins fort que d'habitude.
+Yo|Pas de souci. Il a quel âge maintenant, Hugo ?
+Camille|Deux ans et demi. L'âge où il dit non à tout, avec beaucoup de conviction.
+Yo|Et vous avez passé un bon week-end ? Il faisait enfin beau.
+Camille|Oui, on est allés au parc de la Tête d'Or samedi, il voulait absolument voir les girafes. Quatre fois de suite. Et dimanche, on a enfin monté son nouveau lit, ce qui nous a pris l'après-midi entier, évidemment.
+Yo|Les meubles en kit, c'est toujours plus long que prévu.
+Camille|Toujours. Il restait trois vis à la fin, on ne sait toujours pas où elles devaient aller.
+Yo|Ah, je connais bien, la mienne est passée par là aussi. Bon. Je nous ai bloqué une demi-heure, si on déborde un peu ce n'est pas grave. Comme d'habitude, on commence par toi. Comment ça va, mais vraiment ?
+Camille|Honnêtement ? Je suis un peu crevée. Pas au bout du rouleau, hein, mais fatiguée. Ces trois dernières semaines, j'ai fait à peu près cinquante heures par semaine, et ça commence à se sentir.
+Yo|Cinquante heures, c'est beaucoup trop. Ça vient surtout de quoi ?
+Camille|De Berthier, principalement. Tu sais, la chocolaterie de la Croix-Rousse. On en est au septième aller-retour sur la page d'accueil. Sept versions de la même page, tu te rends compte ? Et à chaque fois, c'est le directeur marketing qui change d'avis après avoir montré les maquettes à son associé, ou à sa femme, ou à je ne sais pas qui.
+Yo|Monsieur Garnier, c'est ça ?
+Camille|Voilà, Garnier. Il est très sympathique en réunion, il dit oui à tout, et puis le lendemain je reçois un mail de deux pages avec des captures d'écran annotées en rouge. Le dernier, c'était pour changer la couleur du bouton d'achat, alors qu'on avait validé la charte ensemble il y a un mois.
+Yo|D'accord. Je sens que c'est un sujet qu'on va reprendre plus en détail tout à l'heure, parce qu'il y a aussi la question du budget. Mais là, sur toi, à part Berthier, qu'est-ce qui pèse ?
+Camille|L'organisation à la maison, surtout. Depuis septembre, Hugo est à la crèche, et la crèche ferme à dix-huit heures trente. Mon compagnon travaille à Villefranche, donc c'est moi qui fais les récupérations presque tous les soirs. Et du coup, quand une réunion client déborde à dix-huit heures, je pars en courant, et je finis le travail le soir à vingt-deux heures quand il dort.
+Yo|Ce qui explique les cinquante heures.
+Camille|En partie, oui. Ce n'est pas tant le volume que l'éparpillement. Je fais une heure le matin, sept heures au bureau, et deux heures le soir. Je n'ai jamais vraiment l'impression d'avoir fini.
+Yo|Je comprends. Est-ce qu'il y a quelque chose qui t'aiderait concrètement ? Je préfère qu'on parle de solutions plutôt que de se dire juste que c'est dur.
+Camille|Alors, j'y ai réfléchi. Ce qui m'aiderait vraiment, ce serait de passer en télétravail le mercredi. Le mercredi, la crèche a des horaires réduits, et je perds une heure et demie de transport pour rien. Si je suis à la maison ce jour-là, je gagne du temps et je peux bloquer la matinée pour la production pure, sans réunions.
+Yo|Ça me paraît raisonnable. Aujourd'hui l'accord de l'agence c'est un jour de télétravail par semaine, et tu le prends le vendredi, non ?
+Camille|Oui, le vendredi. Je pourrais basculer le vendredi sur le mercredi, mais l'idéal ce serait d'avoir les deux, au moins jusqu'à l'été.
+Yo|Deux jours, il faut que je voie avec Nadia aux ressources humaines, parce que ça sort de l'accord. Mais je pense que c'est défendable, surtout si c'est temporaire. Je lui en parle cette semaine et je te redis vendredi au plus tard.
+Camille|Merci, vraiment. Ça changerait beaucoup de choses.
+Yo|Et tes vacances de fin d'année, c'est calé ?
+Camille|Oui, je pose du vingt-trois décembre au trois janvier. C'est déjà dans le calendrier partagé.
+Yo|Parfait, je le valide tout à l'heure. Bon, attends, deux secondes, on frappe à ma porte.
+Julien|Pardon, je te dérange juste trente secondes. Tu as les codes du Figma de la brasserie ? Je n'arrive pas à me connecter à l'espace client.
+Yo|Je te les envoie sur Slack dans dix minutes, je suis en point avec Camille.
+Julien|Ah, salut Camille ! Pardon, je file.
+Camille|Salut Julien !
+Yo|Désolée. Où en étions-nous ? Ah oui. Avant de passer aux projets, d'autres choses qui te préoccupent ?
+Camille|Non, je crois que c'est l'essentiel. La fatigue, Berthier, et l'organisation. Ah si, peut-être une petite chose : j'ai l'impression que je suis sur trop de projets en même temps. Trois projets clients plus le design system, c'est beaucoup.
+Yo|Note bien, on va en parler dans la partie projets, parce que j'ai une proposition là-dessus. Allez, on attaque. On commence par Berthier, puisque c'est le gros morceau ?
+Camille|Allons-y.
+Yo|Alors, où en est-on exactement ? Pour rappel, la date de livraison des maquettes finales, c'est le vingt-huit novembre, c'est bien ça ?
+Camille|C'est ce qui est écrit dans le planning, oui, le vingt-huit novembre. Mais franchement, avec les allers-retours, je ne suis pas sûre de tenir. Il me reste la page produit, le tunnel de commande et la version mobile de la page d'accueil. Et il faut encore que Garnier valide cette fameuse septième version.
+Yo|Et côté budget ? Le forfait, c'était dix-huit mille euros, c'est ça ?
+Camille|Dix-huit mille euros, oui, pour la refonte complète du site. Et d'après le suivi des temps, on a déjà consommé à peu près quatre-vingts pour cent du budget. Quatre-vingts pour cent, alors qu'il reste encore un bon tiers des écrans à faire.
+Yo|Aïe. C'est bien ce que je craignais. Et les allers-retours, ils étaient prévus combien dans le devis ?
+Camille|Trois tours de corrections. On en est à sept.
+Yo|Bon. Là, clairement, ce n'est plus à toi de gérer ça. Je vais appeler Garnier moi-même, cette semaine, pour recadrer le périmètre. On lui explique que les trois tours sont dépassés et qu'à partir de maintenant, toute nouvelle demande fera l'objet d'un avenant.
+Camille|Ça me soulagerait énormément. Parce que moi, je suis dans une position un peu bizarre, je ne peux pas lui dire non, je suis la designer.
+Yo|Pour l'appel, tu peux m'envoyer la liste des demandes qu'il a faites depuis la validation de la charte ? Que j'aie des exemples précis.
+Camille|Oui, je te la fais ce soir. Il y en a une bonne vingtaine, je pense. Les boutons, la typographie des titres, l'ordre des catégories, les photos des ballotins...
+Yo|Une vingtaine, d'accord. Ça me donnera des arguments.
+Yo|Si, tu peux, et on en reparlera dans la partie retours, d'ailleurs. Mais pour l'instant, je prends l'appel. Et toi, de ton côté, tu continues sur la page produit et le tunnel, mais tu ne touches plus à la page d'accueil tant que je n'ai pas eu Garnier.
+Camille|D'accord. Je gèle la page d'accueil.
+Yo|Et côté développement, Thomas est au courant de tout ça ? Il attend tes fichiers pour l'intégration sur Shopify.
+Camille|Il sait qu'on a du retard, oui. Il m'a dit qu'il lui fallait au minimum dix jours ouvrés après la livraison des maquettes pour intégrer et tester. Donc si on livre en retard, c'est la mise en ligne qui glisse aussi.
+Yo|La mise en ligne, c'était prévu quand ?
+Camille|Avant les fêtes, évidemment. C'est une chocolaterie, la période de Noël représente presque quarante pour cent de leur chiffre d'affaires annuel. Garnier l'a répété à chaque réunion.
+Yo|Raison de plus pour qu'il arrête de changer d'avis sur la page d'accueil, non ?
+Camille|C'est exactement ce que je me dis à chaque fois. Mais bon, je n'ose pas le lui dire comme ça.
+Yo|On va le lui dire ensemble, avec les formes. Bon, sur Berthier, on reste sur le vingt-huit novembre pour l'instant, et je te tiens au courant après mon appel.
+Yo|Deuxième sujet, la Mutuelle Rhône Santé. L'application. Raconte-moi.
+Camille|Alors là, c'est le projet qui va bien. Enfin, qui va bien mais qui est gros. On a maquetté trente-quatre écrans pour l'instant, sur une quarantaine prévus. Le parcours de remboursement est terminé, l'espace adhérent aussi. Il reste la prise de rendez-vous et la messagerie avec les conseillers.
+Yo|Trente-quatre écrans, c'est bien. Et les tests utilisateurs, c'est quand ?
+Camille|Les tests sont prévus le dix-huit novembre, dans leurs locaux à Part-Dieu. On a prévu douze participants, des adhérents de plus de soixante ans pour la moitié, parce que c'est une grosse partie de leur public.
+Yo|Douze participants, on les a déjà recrutés ?
+Camille|Pas encore. Le client devait nous envoyer une liste d'adhérents volontaires et on ne l'a toujours pas. Si on ne l'a pas d'ici vendredi, je passe par le cabinet de recrutement qu'on avait utilisé pour la Métropole.
+Yo|Fais ça. Et d'ailleurs n'attends pas vendredi, relance-les dès demain et lance le recrutement de ton côté en parallèle, on n'a pas de marge. Le dix-huit novembre, c'est dans moins de dix jours.
+Camille|Oui, tu as raison. Je m'occupe du recrutement des participants dès demain matin.
+Yo|Tu m'entends toujours ? Ton image est figée.
+Camille|... allô ? ... tu m'entends ? Je crois que... c'est le wifi de...
+Yo|Camille ? Je t'ai perdue.
+Camille|Pardon, voilà, je suis revenue. C'est le wifi de la cuisine, il est capricieux. Je disais quoi ?
+Yo|Tu disais que tu t'occupais du recrutement dès demain.
+Camille|Voilà. Et pour la suite, après les tests, on a deux semaines pour intégrer les retours avant la remise du prototype final.
+Yo|Et le prototype final, c'est pour quand exactement ?
+Camille|Le treize décembre. Ensuite, c'est leur équipe interne qui développe, nous on reste en accompagnement à raison de deux jours par mois jusqu'en juin.
+Yo|D'accord. Et il y a des points de vigilance sur la Mutuelle ?
+Camille|Un seul, vraiment : les contrastes. Leur charte graphique impose un vert clair qui ne passe pas les critères d'accessibilité sur les boutons. J'ai proposé une variante plus foncée, mais leur service communication bloque. Ils trouvent que ça fait triste.
+Yo|Triste ?
+Camille|Oui, c'est le mot qu'ils ont utilisé. Pour un public de plus de soixante ans, avec parfois des problèmes de vue, c'est quand même un vrai sujet.
+Yo|Je suis d'accord avec toi. Prépare-moi deux slides avec la comparaison, la version actuelle et ta variante, avec le ratio de contraste, et je l'apporterai au comité de pilotage du vingt-cinq novembre. Ce genre d'arbitrage, il faut que ça remonte à la directrice digitale, pas que ça reste bloqué en communication.
+Camille|Parfait, je te fais ça pour la semaine prochaine.
+Yo|Bon, très bien. Troisième sujet, la brasserie Gaston. Et c'est là que j'ai ma proposition. Tu me disais que tu étais sur trop de projets. Je suis d'accord. Je propose qu'on passe la brasserie Gaston à Julien. C'est un petit projet, un site vitrine avec un module de réservation, il a le temps, et ça le fera monter en compétence.
+Camille|Honnêtement, ça me va très bien. J'ai fait le cadrage et les premières pistes graphiques, mais rien de très avancé. Il faudrait juste qu'on fasse une passation propre, une heure à peu près, pour que je lui explique les choix et le contexte. Le patron est un peu particulier, il veut absolument des photos de ses plats en grand.
+Yo|Tu peux organiser la passation avec Julien d'ici jeudi ? Comme ça il reprend le projet dès la semaine prochaine.
+Camille|Oui, jeudi après-midi, ça marche. Je lui envoie une invitation.
+Yo|Et le design system, Atlas, où en est-on ?
+Camille|Ça avance doucement. On a soixante pour cent des composants qui sont documentés et utilisés dans au moins un projet. L'objectif c'était cent pour cent à la fin de l'année, mais ça, je pense que c'est irréaliste.
+Yo|Qu'est-ce qui serait réaliste ?
+Camille|Quatre-vingt-cinq pour cent d'ici fin décembre, si je récupère du temps grâce à Gaston. Les quinze pour cent restants, ce sont les composants de data visualisation, et franchement on n'en a pas besoin avant le printemps.
+Yo|Ça me va. On vise quatre-vingt-cinq pour cent fin décembre, et on reporte la data visualisation au premier trimestre.
+Camille|Parfait.
+Yo|Ah, et il y a un dernier sujet projet que je voulais te mentionner, l'appel d'offres de la Métropole pour le portail des déchetteries.
+Camille|Celui dont tu parlais en réunion d'équipe ? Je croyais qu'on ne répondait pas.
+Yo|Finalement on répond. Le marché est estimé à soixante mille euros sur dix-huit mois, et on a de bonnes chances parce qu'on a déjà travaillé pour eux sur le site de la piscine municipale. La réponse est à déposer le vingt novembre.
+Camille|Et tu aurais besoin de quoi, de ma part ?
+Yo|Juste d'une planche de références et de deux ou trois pistes d'ambiance. Pas plus d'une journée de travail. C'est Sophie qui rédige le mémoire technique.
+Camille|Une journée, ça va. Je peux le faire la semaine prochaine, une fois que Gaston sera passé à Julien. Mais pas plus d'une journée, hein, sinon c'est la Mutuelle qui en pâtit.
+Yo|Promis. Si ça déborde, tu m'arrêtes.
+Camille|Et pour la piscine, on peut réutiliser les visuels du projet ? Le client avait été très content.
+Yo|Oui, j'ai déjà demandé leur accord, c'est bon.
+Yo|Au fait, petite parenthèse, tu vas à la Fête des Lumières cette année ?
+Camille|Avec un enfant de deux ans et demi ? Dans la foule de la place des Terreaux ? Je ne crois pas, non. Peut-être une illumination dans le quartier, si on en trouve une calme.
+Yo|J'y suis allée l'an dernier avec ma fille, on a mis quarante minutes pour traverser la passerelle. Elle a adoré, moi un peu moins.
+Camille|J'imagine. Bon, enfin, chacun son truc.
+Yo|Oui, bref, aucun intérêt. Revenons à nos moutons. Il y a aussi un point sur Léa, la stagiaire.
+Camille|Ah oui, elle arrive quand, déjà ?
+Yo|Le six janvier, pour six mois. Et j'aimerais que ce soit toi qui l'encadres. C'est une étudiante de l'école Émile Cohl, plutôt orientée illustration, mais avec un bon niveau en interface.
+Camille|Ça me fait plaisir. Mais du coup, il faut que je prévoie du temps pour elle. Les deux premières semaines, c'est quasiment un mi-temps d'encadrement.
+Yo|C'est pris en compte, c'est aussi pour ça que je te retire Gaston. Attends, je viens de recevoir un message de Sophie. Ah, c'est justement pour Berthier.
+Camille|Qu'est-ce qu'elle dit ?
+Yo|Elle dit que Berthier a décalé son comité de direction. Ils ne pourront valider les maquettes qu'après le comité, donc ils proposent qu'on décale la livraison au cinq décembre au lieu du vingt-huit novembre.
+Camille|Le cinq décembre ? Alors là, honnêtement, c'est une bonne nouvelle. Ça me donne une semaine de plus pour le tunnel de commande et la version mobile.
+Yo|Donc on corrige : la livraison des maquettes finales de Berthier, c'est le cinq décembre, et plus le vingt-huit novembre. Je confirme à Sophie.
+Camille|Super. Et ça me donne aussi le temps de préparer la présentation correctement.
+Yo|Bien. Maintenant, je voudrais qu'on passe à une partie qu'on n'a pas assez faite ces derniers mois : les retours. Dans les deux sens. Je commence, et après c'est ton tour, et je veux que tu sois franche avec moi.
+Camille|D'accord. Ça me fait un peu peur, mais d'accord.
+Yo|Il n'y a pas de quoi avoir peur, je commence par le positif, et il y en a beaucoup. D'abord, l'atelier de cadrage que tu as animé avec la Mutuelle en octobre. C'était excellent. Vraiment. Tu avais douze personnes autour de la table, des gens du métier, de l'informatique, de la direction, et tu as réussi à les faire converger sur trois parcours prioritaires en une matinée. Leur directrice digitale m'a appelée le lendemain pour me dire que c'était le meilleur atelier qu'ils avaient eu avec une agence.
+Camille|Ah oui ? Elle ne me l'a pas dit à moi.
+Yo|Eh bien je te le dis. Et deuxième chose, ta présentation au comité de la Mutuelle le mois dernier. Grâce à ta présentation, ils ont signé une extension de vingt-cinq mille euros pour la partie messagerie. Vingt-cinq mille euros, c'est directement lié à ton travail et à la qualité de ce que tu as montré.
+Camille|Merci. Ça me touche, vraiment.
+Yo|Et puis plus globalement, la qualité de tes maquettes, ta rigueur sur l'accessibilité, ta façon d'aider les juniors. Julien me dit souvent qu'il apprend beaucoup en relisant tes fichiers.
+Camille|C'est gentil.
+Yo|Maintenant, le point d'amélioration. Et c'est lié à Berthier. Je pense que tu aurais dû m'alerter beaucoup plus tôt. On est au septième tour de corrections, le devis en prévoyait trois, et je l'apprends aujourd'hui, avec quatre-vingts pour cent du budget consommé. Quand un client sort du périmètre, il faut que tu me le signales dès le premier tour en trop, pas au quatrième ou au cinquième.
+Camille|Oui. Tu as raison. Je ne voulais pas avoir l'air de me plaindre, ni de ne pas savoir gérer mon client.
+Yo|Je comprends, mais ce n'est pas se plaindre, c'est protéger le projet et te protéger toi. Et l'autre aspect, c'est que tu peux dire non toi-même, poliment, en disant par exemple : cette demande sort du périmètre du devis, je vais en parler avec ma responsable. Tu n'as pas à trancher, mais tu peux poser la limite.
+Camille|D'accord. Je note. Signaler dès qu'une demande sort du périmètre, et ne pas hésiter à poser la limite avec le client.
+Yo|Exactement. Et une petite suggestion en plus, qui va avec : tiens un petit tableau des demandes de modifications pour chaque client, avec la date et si c'était prévu ou non. Ça m'aidera à facturer les avenants.
+Camille|Ça, c'est facile, je peux le faire dans Notion.
+Yo|Et pendant qu'on y est, un dernier point, plus léger. Dans les réunions client, tu as tendance à présenter toutes les pistes au même niveau, sans dire laquelle tu recommandes. Avec un client comme Garnier, ça ouvre la porte aux hésitations. Je préférerais que tu présentes clairement ta recommandation, et ensuite les alternatives.
+Camille|C'est intéressant, je n'avais jamais vu les choses comme ça. J'ai toujours eu peur d'orienter trop le client.
+Yo|Tu es l'experte. Il te paie aussi pour ton avis. Essaie sur la prochaine présentation Berthier, et on fera le bilan ensemble.
+Camille|D'accord, je tente.
+Yo|Parfait. Voilà pour moi. À toi. Qu'est-ce que je pourrais faire mieux ?
+Camille|Alors... Il y a deux choses. La première, c'est nos points individuels. Tu en as annulé ou reporté trois sur les deux derniers mois. Je sais que tu es débordée, mais du coup, j'ai eu l'impression que je n'avais pas d'espace pour parler de Berthier, justement. C'est aussi pour ça que je ne t'ai pas alertée plus tôt.
+Yo|Aïe. C'est juste. Je ne m'en étais pas rendu compte, mais c'est vrai, et je suis désolée. C'est un retour important.
+Camille|Je ne dis pas ça pour te faire un reproche, hein.
+Yo|Non, non, c'est exactement ce que je veux entendre. Je m'engage à ne plus annuler nos points. Au pire, je les décale dans la même semaine, mais je ne les saute plus.
+Camille|Merci. Et la deuxième chose, c'est les priorités. Souvent, j'apprends le lundi matin, en réunion d'équipe, que les priorités de la semaine ont changé. Par exemple, il y a quinze jours, j'avais prévu toute ma semaine sur la Mutuelle, et le lundi à dix heures tu nous annonces que la priorité, c'est la proposition commerciale pour la Métropole. Ça casse toute mon organisation, surtout avec mes contraintes à la maison.
+Yo|Oui, je vois très bien. Le problème, c'est que moi-même j'ai souvent l'information de la direction le vendredi soir.
+Camille|Je sais bien que ça ne vient pas toujours de toi. Mais même quand tu sais que ça risque de bouger, tu pourrais nous prévenir, même avec une incertitude.
+Yo|Tu as raison. Je pensais vous protéger en attendant d'être sûre, mais en fait ça vous met devant le fait accompli.
+Camille|Justement, si tu l'as le vendredi, tu pourrais nous l'envoyer le vendredi ? Même un message de trois lignes, ça me suffirait pour anticiper.
+Yo|C'est faisable. Je vous enverrai les priorités de la semaine suivante chaque vendredi avant dix-sept heures. Je commence dès ce vendredi.
+Camille|Super. Voilà, c'est tout. Et sinon, sur le reste, je suis contente de travailler avec toi, je trouve que tu nous laisses de l'autonomie et tu nous défends bien face aux clients.
+Yo|Merci, ça me fait plaisir. Bon, on avance, il nous reste deux sujets : la formation et ton évolution.
+Camille|Oui, la formation. J'avais envoyé une demande pour la formation accessibilité, la certification RGAA.
+Yo|Je l'ai vue. Rappelle-moi les détails ?
+Camille|C'est une formation de trois jours, à Paris, fin janvier, les vingt-huit, vingt-neuf et trente janvier. Le coût, c'est mille deux cents euros, hors transport. Avec le train et l'hôtel, on doit être autour de mille six cents euros au total.
+Yo|Mille deux cents euros pour la formation, ça rentre dans le budget formation de l'équipe, il nous reste à peu près quatre mille euros pour l'année prochaine. Le transport, on le prend sur les frais de déplacement. Donc c'est validé. Tu peux t'inscrire à la formation RGAA dès maintenant.
+Camille|Génial, merci. Je m'inscris cette semaine, parce que les places partent vite.
+Yo|Et c'est cohérent avec ce qu'on veut, parce que les clients publics nous demandent de plus en plus la conformité RGAA. Tu pourras ensuite faire une petite session pour le reste de l'équipe.
+Camille|Avec plaisir. Une heure en février, par exemple, pendant le déjeuner d'équipe.
+Yo|Et au-delà de la formation, est-ce qu'il y a des choses que tu aimerais développer ? Des compétences, des sujets ?
+Camille|Oui, la facilitation d'ateliers, justement. Je me rends compte que c'est ce que j'aime le plus. Et peut-être un peu de motion design, parce qu'on nous en demande de plus en plus sur les applications et je me débrouille, mais sans vraie méthode.
+Yo|Pour le motion, il y a des formations en ligne qui ne coûtent pas grand-chose. Regarde ce qui existe et propose-moi quelque chose pour le deuxième semestre, on n'a plus de budget avant. Pour la facilitation, je pense que le meilleur apprentissage, c'est de continuer à animer. Je te mettrai sur les prochains ateliers de cadrage.
+Camille|Ça me va très bien.
+Yo|Très bien. Et le dernier sujet. Ton évolution. Tu m'avais dit lors de l'entretien annuel que tu voulais évoluer vers un poste de lead designer.
+Camille|Oui, toujours. C'est vraiment ce que je veux. Encadrer, porter la qualité sur plusieurs projets, travailler plus avec les clients en amont.
+Yo|Alors je vais être transparente avec toi. J'ai proposé ta candidature pour le poste de lead designer au comité des promotions. Le comité se réunit en avril. Je ne peux rien te promettre, mais j'ai bon espoir, et les retours de la Mutuelle vont beaucoup aider.
+Camille|Ah, c'est une super nouvelle. Et ça se passe comment, concrètement ?
+Yo|Attends, avant le comment, je veux préciser ce qu'on attend d'une lead designer chez nous, pour que tu ne sois pas surprise. Ce n'est pas seulement faire de beaux écrans. C'est encadrer deux ou trois designers, relire leur travail chaque semaine, être présente en avant-vente et tenir le budget des projets. Et justement, la partie budget, c'est ce qu'on a vu avec Berthier.
+Camille|Oui, j'ai bien compris le lien. Si je veux être lead, je dois apprendre à piloter le budget et à alerter.
+Yo|Exactement. Et je suis convaincue que tu vas y arriver, c'est juste une question d'habitude. D'ailleurs, à partir de maintenant, je vais te donner accès au suivi des temps de tous tes projets, pour que tu voies la consommation en direct.
+Camille|Ça, ça m'aiderait beaucoup. Aujourd'hui je ne vois que mes propres heures.
+Yo|Il faut que tu prépares un dossier de réalisations. Tes projets clés, les résultats, l'encadrement. Avec l'arrivée de Léa, ce sera un bon exemple. Le dossier est à rendre pour le quinze mars au plus tard.
+Camille|Le quinze mars, c'est noté. Je peux t'envoyer un premier jet avant, pour que tu me fasses des retours ?
+Yo|Oui, bien sûr. Envoie-moi un brouillon fin février et on le relit ensemble.
+Camille|Et sur la partie salaire, est-ce que tu as une idée ?
+Yo|La grille pour un lead designer chez nous, c'est une fourchette entre quarante-six mille et quarante-neuf mille euros brut par an. Aujourd'hui tu es à quarante-deux mille, donc ce serait une vraie évolution.
+Camille|Quarante-six à quarante-neuf mille. D'accord, c'est cohérent avec ce que j'avais en tête.
+Yo|Je préfère qu'on en parle maintenant pour qu'il n'y ait pas de surprise. Mais encore une fois, c'est le comité qui décide.
+Camille|Bien sûr. Merci de me le dire clairement.
+Yo|Bon, il nous reste cinq minutes. Je récapitule juste deux ou trois choses, pas tout. Moi, j'appelle Garnier cette semaine pour recadrer le périmètre de Berthier, et je vois avec Nadia pour le télétravail du mercredi. Toi, tu fais la passation de Gaston avec Julien jeudi.
+Camille|C'est ça. Et je n'oublie pas le recrutement pour les tests.
+Yo|Exactement. Est-ce qu'il y a autre chose dont tu voulais parler ?
+Camille|Peut-être juste une question sur Berthier. Avec le nouveau délai du cinq décembre, est-ce qu'on fait la présentation des maquettes en visio ou chez eux ?
+Yo|Chez eux, je pense. Avec un client comme Garnier, c'est mieux d'être dans la pièce. Et j'y viendrai avec toi, pour qu'il voie qu'on est deux à porter le projet.
+Camille|Ça me rassure. Merci.
+Yo|Et une dernière chose : prends soin de toi. Les cinquante heures, je ne veux plus les voir. Si tu sens que ça remonte, tu me le dis, d'accord ?
+Camille|D'accord. Promis. Et de ton côté, tu ne m'annules pas le prochain point !
+Yo|Promis aussi. On se voit dans deux semaines, même heure. Bonne fin de journée, et bon courage avec Hugo.
+Camille|Merci, à toi aussi. À bientôt !

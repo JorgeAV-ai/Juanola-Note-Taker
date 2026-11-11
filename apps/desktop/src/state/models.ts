@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { events, ipc, type ModelProgress, type ModelStatus } from "@/lib/ipc";
+import { t } from "@/lib/i18n";
+import type { Key } from "@/lib/strings";
 
 // Estado de los modelos locales y de su descarga. Lo comparten el diálogo de
 // descarga (que se abre solo si faltan) y Ajustes › Models.
@@ -60,7 +62,7 @@ export function initModels() {
   events.modelsDone((d) => {
     // Pausar no es un error: lo bajado se queda en `.part` y continúa después.
     const paused = d.error?.includes("cancelada");
-    useModels.setState({ installing: false, progress: null, error: d.ok || paused ? null : (d.error ?? "La descarga ha fallado.") });
+    useModels.setState({ installing: false, progress: null, error: d.ok || paused ? null : (d.error ?? t("models.failed")) });
     useModels.getState().refresh();
   });
   useModels
@@ -73,8 +75,8 @@ export function initModels() {
 }
 
 export const formatBytes = (n: number) => (n >= 1e9 ? `${(n / 1e9).toFixed(2)} GB` : `${Math.max(1, Math.round(n / 1e6))} MB`);
-export const SLOT_LABEL: Record<string, string> = {
-  vad: "Detección de voz",
-  stt_streaming: "Transcripción",
-  llm_main: "Notas mejoradas",
+export const SLOT_LABEL: Record<string, Key> = {
+  vad: "models.slot.vad",
+  stt_streaming: "models.slot.stt",
+  llm_main: "models.slot.llm",
 };

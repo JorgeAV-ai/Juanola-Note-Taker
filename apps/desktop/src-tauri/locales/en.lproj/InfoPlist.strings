@@ -1,0 +1,5 @@
+/* English permission texts (same as Info.plist; the folder marks English as a localization). */
+"NSMicrophoneUsageDescription" = "Juanola needs the microphone to transcribe your meetings on this Mac.";
+"NSAudioCaptureUsageDescription" = "Juanola captures system audio to transcribe the other participants.";
+"NSCalendarsUsageDescription" = "Juanola reads your calendar to show your upcoming meetings.";
+"NSCalendarsFullAccessUsageDescription" = "Juanola reads your calendar to show your upcoming meetings.";

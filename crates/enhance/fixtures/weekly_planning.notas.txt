@@ -1,0 +1,8 @@
+**incident Thu: 1,900 invoices wrong status, 312 bad reminders**
+## Pricing
+- Pro 19 -> 24 from Jan 15, grandfather 6 mo
+- team plan idea: $59/mo up to 5 seats
+- Corvex 2.4% vs 2.9%, saves ~140k/yr
+- [ ] send Leila offer by Tue
+- [ ] Tom postmortem Wed
+recurring invoices -> Dec 1 (not 26th)

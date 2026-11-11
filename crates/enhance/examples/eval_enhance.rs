@@ -2,22 +2,39 @@
 //!
 //! ```text
 //! cargo run --release -p juanola-enhance --example eval_enhance -- \
-//!   <segments.json> <facts.json> [notas.txt] [--runs N] [--variant nombre=itn|noitn[+detail<seg>|+nodetail][:prompt.md]]...
+//!   <segments.json> <facts.json> [notas.txt] [--runs N] [--variant nombre=itn|noitn[+detail<seg>|+nodetail][+gbnf][+tasks][+nopromote][+nocitelimit][+nofloor][+nonotes][+nosuffix][:prompt.md]]...
+//!   [--template 1on1|standup|semanal|entrevista|ventas|plantilla.json] [--title «Título de la reunión»] [--lang inglés] [--check]
 //! ```
+//! `segments.json` sale del STT o, sin audio, de `tools/script_to_segments.py`.
+//! El idioma del resumen (y de los títulos de la plantilla) es el que detecta la
+//! app en la transcripción; `--lang` lo fuerza. Los apartados de `section` en
+//! los hechos van en ese idioma.
+//! Las notas admiten `# título`, `- elemento`, `- [ ] tarea`, `- [x] hecha` y
+//! `**negrita**`; cada línea suelta es un párrafo.
 //! Métricas por ejecución:
 //! - cobertura: hechos presentes / hechos alcanzables (los que el transcript
 //!   contiene; si el STT se equivocó, el hecho no cuenta contra el LLM);
 //! - fidelidad: números de las viñetas de la IA que aparecen en el tramo citado;
 //! - estructura: secciones, temas duplicados y viñetas copiadas (8+ palabras
 //!   seguidas idénticas a la transcripción).
+//!
+//! Con `--template`, además (la clave de la plantilla es su nombre corto o el
+//! nombre del archivo sin extensión):
+//! - colocación: hechos cubiertos que están en el apartado esperado
+//!   (`"section": {"semanal": ["Decisiones"]}` en el hecho);
+//! - notas del usuario en su apartado (`"user_notes": {"texto": {"semanal": [...]}}`)
+//!   y notas perdidas;
+//! - apartados que debían quedar vacíos y se rellenaron (`"empty": {"1on1": ["Feedback"]}`);
+//! - viñetas en «Otros temas», apartados vacíos, reintentos y caídas a Auto.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::time::Instant;
 
-use juanola_core_types::{Channel, Citation, Note, NoteStatus, Segment};
-use juanola_enhance::itn::normalize_numbers;
-use juanola_enhance::pipelines::enhance::{enhance_with, EnhanceOptions};
+use juanola_core_types::{Channel, Citation, Note, NoteStatus, Segment, Template};
+use juanola_enhance::itn::normalize_numbers_lang;
+use juanola_enhance::pipelines::enhance::{enhance_with, EnhanceOptions, EnhanceReport};
+use juanola_enhance::templates;
 use juanola_enhance::{EnhanceInput, EnhancedNotes};
 use juanola_llm::backends::llamacpp::LlamaCpp;
 
@@ -32,6 +49,12 @@ struct Seg {
 #[derive(serde::Deserialize)]
 struct Facts {
     facts: Vec<Fact>,
+    /// Texto de la nota del usuario → plantilla → apartados aceptables.
+    #[serde(default)]
+    user_notes: HashMap<String, HashMap<String, Vec<String>>>,
+    /// Plantilla → apartados que deben quedar vacíos en esta reunión.
+    #[serde(default)]
+    empty: HashMap<String, Vec<String>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -40,18 +63,33 @@ struct Fact {
     #[serde(default)]
     task: bool,
     all: Vec<Vec<String>>,
+    /// Plantilla → apartados donde puede ir el hecho.
+    #[serde(default)]
+    section: HashMap<String, Vec<String>>,
 }
 
+/// Idioma de la reunión: el ITN se aplica como en el enhance (castellano e
+/// inglés), a la transcripción, a las viñetas y a los hechos por igual.
+static LANG: std::sync::OnceLock<&'static str> = std::sync::OnceLock::new();
+
 fn norm(s: &str) -> String {
-    let s = normalize_numbers(s).to_lowercase();
+    let lang = LANG.get().copied().unwrap_or(juanola_enhance::language::LANGUAGE_NAMES[0]);
+    let s = normalize_numbers_lang(s, lang);
+    // Comas de millar en inglés: 412,000 → 412000.
+    let s = if lang == juanola_enhance::language::LANGUAGE_NAMES[1] { drop_thousands_commas(&s) } else { s };
+    let s = s.to_lowercase();
     let s: String = s
         .chars()
         .map(|c| match c {
-            'á' => 'a',
-            'é' => 'e',
-            'í' => 'i',
-            'ó' => 'o',
-            'ú' | 'ü' => 'u',
+            'á' | 'à' | 'â' | 'ä' | 'ã' | 'å' => 'a',
+            'é' | 'è' | 'ê' | 'ë' => 'e',
+            'í' | 'ì' | 'î' | 'ï' => 'i',
+            'ó' | 'ò' | 'ô' | 'ö' | 'õ' => 'o',
+            'ú' | 'ù' | 'û' | 'ü' => 'u',
+            'ç' => 'c',
+            'ß' => 's',
+            // Apóstrofos tipográficos (l’équipe) como el recto.
+            '’' | '‘' => '\'',
             c => c,
         })
         .collect();
@@ -60,6 +98,22 @@ fn norm(s: &str) -> String {
     let mut out = String::new();
     for (i, c) in b.iter().enumerate() {
         let thousands = *c == '.'
+            && i > 0
+            && b[i - 1].is_ascii_digit()
+            && b.get(i + 1..i + 4).is_some_and(|w| w.iter().all(|d| d.is_ascii_digit()))
+            && !b.get(i + 4).is_some_and(|d| d.is_ascii_digit());
+        if !thousands {
+            out.push(*c);
+        }
+    }
+    out
+}
+
+fn drop_thousands_commas(s: &str) -> String {
+    let b: Vec<char> = s.chars().collect();
+    let mut out = String::with_capacity(s.len());
+    for (i, c) in b.iter().enumerate() {
+        let thousands = *c == ','
             && i > 0
             && b[i - 1].is_ascii_digit()
             && b.get(i + 1..i + 4).is_some_and(|w| w.iter().all(|d| d.is_ascii_digit()))
@@ -107,12 +161,30 @@ struct Score {
     copied: usize,
     secs: f64,
     missed: Vec<String>,
+    placed: usize,
+    placeable: usize,
+    misplaced: Vec<String>,
+    other_bullets: usize,
+    user_placed: usize,
+    user_expected: usize,
+    user_lost: usize,
+    filled_empty: Vec<String>,
 }
 
-fn score(notes: &EnhancedNotes, segs: &[Segment], facts: &[Fact], seg_norm: &[String], ngrams: &HashSet<Vec<String>>) -> Score {
+fn score(
+    notes: &EnhancedNotes,
+    segs: &[Segment],
+    facts: &[Fact],
+    seg_norm: &[String],
+    ngrams: &HashSet<Vec<String>>,
+    tkey: Option<&str>,
+) -> Score {
     let mut sc = Score::default();
-    let bullets: Vec<(String, bool)> =
-        notes.sections.iter().flat_map(|s| s.bullets.iter().map(move |b| (norm(&format!("{} {}", s.heading, b.text)), b.is_action_item))).collect();
+    let bullets: Vec<(String, bool)> = notes
+        .sections
+        .iter()
+        .flat_map(|s| s.bullets.iter().map(move |b| (norm(&format!("{} {}", s.heading, b.text)), b.is_action_item)))
+        .collect();
     for f in facts {
         // Alcanzable si 4 segmentos seguidos del transcript lo contienen.
         let reachable = (0..seg_norm.len()).any(|i| matches(f, &seg_norm[i..(i + 4).min(seg_norm.len())].join(" ")));
@@ -120,6 +192,24 @@ fn score(notes: &EnhancedNotes, segs: &[Segment], facts: &[Fact], seg_norm: &[St
             continue;
         }
         let hit = bullets.iter().any(|(t, task)| (!f.task || *task) && matches(f, t));
+        if let (true, Some(expected)) = (hit && !f.task, tkey.and_then(|k| f.section.get(k))) {
+            sc.placeable += 1;
+            let ok = notes
+                .sections
+                .iter()
+                .filter(|s| expected.iter().any(|e| e == &s.heading))
+                .any(|s| s.bullets.iter().any(|b| matches(f, &norm(&format!("{} {}", s.heading, b.text)))));
+            sc.placed += usize::from(ok);
+            if !ok {
+                let landed: Vec<&str> = notes
+                    .sections
+                    .iter()
+                    .filter(|s| s.bullets.iter().any(|b| matches(f, &norm(&format!("{} {}", s.heading, b.text)))))
+                    .map(|s| s.heading.as_str())
+                    .collect();
+                sc.misplaced.push(format!("{} → {}", f.id, landed.join(" + ")));
+            }
+        }
         if f.task {
             sc.tasks_reachable += 1;
             sc.tasks_ok += usize::from(hit);
@@ -170,6 +260,97 @@ fn score(notes: &EnhancedNotes, segs: &[Segment], facts: &[Fact], seg_norm: &[St
     sc
 }
 
+/// Notas del usuario en un Markdown mínimo → documento ProseMirror (TipTap).
+fn notes_doc(text: &str) -> serde_json::Value {
+    fn inline(t: &str) -> Vec<serde_json::Value> {
+        // `**negrita**` → marca bold; el resto, texto normal.
+        let mut out = Vec::new();
+        for (i, part) in t.split("**").enumerate() {
+            if part.is_empty() {
+                continue;
+            }
+            if i % 2 == 1 {
+                out.push(serde_json::json!({"type": "text", "text": part, "marks": [{"type": "bold"}]}));
+            } else {
+                out.push(serde_json::json!({"type": "text", "text": part}));
+            }
+        }
+        out
+    }
+    let mut content: Vec<serde_json::Value> = Vec::new();
+    for l in text.lines().map(str::trim).filter(|l| !l.is_empty()) {
+        let hashes = l.chars().take_while(|c| *c == '#').count();
+        if hashes > 0 {
+            content.push(serde_json::json!({"type": "heading", "attrs": {"level": hashes}, "content": inline(l[hashes..].trim())}));
+            continue;
+        }
+        let item = |ty: &str, attrs: serde_json::Value, t: &str| serde_json::json!({"type": ty, "attrs": attrs, "content": [{"type": "paragraph", "content": inline(t)}]});
+        let (list, node) = if let Some(t) = l.strip_prefix("- [ ] ") {
+            ("taskList", item("taskItem", serde_json::json!({"checked": false}), t))
+        } else if let Some(t) = l.strip_prefix("- [x] ") {
+            ("taskList", item("taskItem", serde_json::json!({"checked": true}), t))
+        } else if let Some(t) = l.strip_prefix("- ") {
+            ("bulletList", item("listItem", serde_json::json!({}), t))
+        } else {
+            content.push(serde_json::json!({"type": "paragraph", "content": inline(l)}));
+            continue;
+        };
+        match content.last_mut() {
+            Some(last) if last["type"] == list => last["content"].as_array_mut().unwrap().push(node),
+            _ => content.push(serde_json::json!({"type": list, "content": [node]})),
+        }
+    }
+    serde_json::json!({"type": "doc", "content": content})
+}
+
+/// Métricas que solo tienen sentido con plantilla.
+fn template_score(sc: &mut Score, notes: &EnhancedNotes, facts: &Facts, tkey: Option<&str>, user_notes: usize, lang: &str) {
+    let Some(k) = tkey else { return };
+    let other = juanola_enhance::language::localize_heading("Otros temas", lang);
+    sc.other_bullets =
+        notes.sections.iter().filter(|s| s.heading == other).map(|s| s.bullets.iter().filter(|b| !b.is_user_text).count()).sum();
+    let user: Vec<(&str, &str)> = notes
+        .sections
+        .iter()
+        .flat_map(|s| s.bullets.iter().filter(|b| b.is_user_text).map(move |b| (s.heading.as_str(), b.text.as_str())))
+        .collect();
+    sc.user_lost = user_notes.saturating_sub(user.len());
+    for (text, by_tpl) in &facts.user_notes {
+        let Some(expected) = by_tpl.get(k) else { continue };
+        sc.user_expected += 1;
+        sc.user_placed += usize::from(user.iter().any(|(h, t)| t == text && expected.iter().any(|e| e == h)));
+    }
+    let not_discussed = juanola_enhance::language::not_discussed(lang);
+    for h in facts.empty.get(k).into_iter().flatten() {
+        let filled = notes.sections.iter().any(|s| &s.heading == h && s.bullets.iter().any(|b| b.text != not_discussed));
+        if filled {
+            sc.filled_empty.push(h.clone());
+        }
+    }
+}
+
+fn print_template(sc: &Score, r: &EnhanceReport, pct: impl Fn(usize, usize) -> f64) {
+    println!(
+        "               plantilla: colocación {}/{} {:.0}% · otros temas {}/{} {:.0}% · vacíos {} · notas usuario {}/{} (perdidas {}) · rellenados {:?} · reintentos {} · caída {}",
+        sc.placed,
+        sc.placeable,
+        pct(sc.placed, sc.placeable),
+        sc.other_bullets,
+        sc.bullets,
+        pct(sc.other_bullets, sc.bullets),
+        r.empty_sections,
+        sc.user_placed,
+        sc.user_expected,
+        sc.user_lost,
+        sc.filled_empty,
+        r.template_retries,
+        r.template_fallback,
+    );
+    if !sc.misplaced.is_empty() {
+        println!("               fuera de su apartado: {}", sc.misplaced.join(", "));
+    }
+}
+
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
     let a: Vec<String> = std::env::args().skip(1).collect();
@@ -177,12 +358,29 @@ async fn main() -> anyhow::Result<()> {
     let facts: Facts = serde_json::from_str(&std::fs::read_to_string(&a[1])?)?;
     let notes_path = a.get(2).filter(|p| !p.starts_with("--"));
     let mut runs = 1u32;
+    let mut template_spec: Option<String> = None;
+    let mut lang_override: Option<String> = None;
+    let mut check = false;
+    let mut title = "Reunión semanal de producto".to_owned();
     let mut variants: Vec<(String, EnhanceOptions)> = Vec::new();
     let mut i = 2;
     while i < a.len() {
         match a[i].as_str() {
             "--runs" => {
                 runs = a[i + 1].parse()?;
+                i += 1;
+            }
+            "--title" => {
+                title = a[i + 1].clone();
+                i += 1;
+            }
+            "--template" => {
+                template_spec = Some(a[i + 1].clone());
+                i += 1;
+            }
+            "--check" => check = true,
+            "--lang" => {
+                lang_override = Some(a[i + 1].clone());
                 i += 1;
             }
             "--variant" => {
@@ -195,7 +393,29 @@ async fn main() -> anyhow::Result<()> {
                     mode.split('+').find_map(|m| m.strip_prefix("detail")).and_then(|v| v.parse().ok()).or(Some(240.0))
                 };
                 let itn = !mode.split('+').any(|m| m == "noitn");
-                variants.push((name.to_owned(), EnhanceOptions { itn, prompt, detail_chunk_secs, ..Default::default() }));
+                let markdown_grammar = mode.split('+').any(|m| m == "gbnf");
+                let detail_tasks = mode.split('+').any(|m| m == "tasks");
+                let has = |flag: &str| mode.split('+').any(|m| m == flag);
+                let promote_commitments = !has("nopromote");
+                let ablate = juanola_enhance::pipelines::enhance::Ablation {
+                    cite_limit: has("nocitelimit"),
+                    auto_floor: has("nofloor"),
+                    user_notes: has("nonotes"),
+                    language_suffix: has("nosuffix"),
+                };
+                variants.push((
+                    name.to_owned(),
+                    EnhanceOptions {
+                        itn,
+                        prompt,
+                        detail_chunk_secs,
+                        markdown_grammar,
+                        detail_tasks,
+                        promote_commitments,
+                        ablate,
+                        ..Default::default()
+                    },
+                ));
                 i += 1;
             }
             _ => {}
@@ -221,6 +441,37 @@ async fn main() -> anyhow::Result<()> {
             is_final: true,
         })
         .collect();
+    // Idioma del resumen: el que detecta la app, salvo `--lang español|inglés|…`.
+    let detected = juanola_enhance::language::summary_language(&segments);
+    let lang: &str = match &lang_override {
+        Some(l) => juanola_enhance::language::LANGUAGE_NAMES
+            .iter()
+            .find(|n| **n == l.as_str())
+            .copied()
+            .unwrap_or_else(|| panic!("idioma desconocido: {l}")),
+        None => detected,
+    };
+    println!("idioma: {lang} (detectado: {detected})");
+    LANG.set(lang).ok();
+    let template: Option<(String, Template)> = match &template_spec {
+        None => None,
+        Some(spec) => {
+            let id = match spec.as_str() {
+                "1on1" => Some(templates::ONE_ON_ONE),
+                "standup" => Some(templates::STAND_UP),
+                "semanal" => Some(templates::WEEKLY_TEAM),
+                "entrevista" => Some(templates::CUSTOMER_INTERVIEW),
+                "ventas" => Some(templates::SALES_CALL),
+                _ => None,
+            };
+            let t = match id {
+                Some(id) => templates::builtin_template(id, lang).unwrap(),
+                None => serde_json::from_str(&std::fs::read_to_string(spec)?)?,
+            };
+            let key = std::path::Path::new(spec).file_stem().unwrap().to_string_lossy().into_owned();
+            Some((key, t))
+        }
+    };
     let seg_norm: Vec<String> = segments.iter().map(|s| norm(&s.text)).collect();
     let mut ngrams = HashSet::new();
     for s in &seg_norm {
@@ -228,14 +479,48 @@ async fn main() -> anyhow::Result<()> {
             ngrams.insert(g.to_vec());
         }
     }
+    if check {
+        // Sin modelo: qué hechos no aparecen en ninguna ventana de 4 segmentos
+        // (con la misma normalización que la evaluación) y duración.
+        let dur = segments.last().map_or(0.0, |s| s.end) / 60.0;
+        println!(
+            "{} segmentos, {dur:.1} min, {} hechos ({} tareas)",
+            segments.len(),
+            facts.facts.len(),
+            facts.facts.iter().filter(|f| f.task).count()
+        );
+        let mut bad = 0;
+        for f in &facts.facts {
+            if !(0..seg_norm.len()).any(|i| matches(f, &seg_norm[i..(i + 4).min(seg_norm.len())].join(" "))) {
+                println!("  inalcanzable: {} {:?}", f.id, f.all);
+                bad += 1;
+            }
+        }
+        if let Some((k, t)) = &template {
+            let heads: Vec<&str> = t.structure.iter().map(|s| s.heading.as_str()).collect();
+            for f in &facts.facts {
+                for h in f.section.get(k).into_iter().flatten() {
+                    if !heads.contains(&h.as_str()) {
+                        println!("  apartado desconocido en {}: «{h}» (la plantilla tiene {heads:?})", f.id);
+                        bad += 1;
+                    }
+                }
+            }
+        }
+        println!("{}", if bad == 0 { "OK".to_owned() } else { format!("{bad} problemas") });
+        return Ok(());
+    }
     let notes_txt = notes_path.map(std::fs::read_to_string).transpose()?.unwrap_or_default();
-    let raw_doc = serde_json::json!({"type": "doc", "content": notes_txt.lines().filter(|l| !l.trim().is_empty())
-        .map(|l| serde_json::json!({"type": "paragraph", "content": [{"type": "text", "text": l}]})).collect::<Vec<_>>()});
+    let raw_doc = notes_doc(&notes_txt);
+    let user_notes = juanola_enhance::pipelines::enhance::user_blocks(&raw_doc)
+        .into_iter()
+        .filter(|b| !matches!(b.kind, juanola_enhance::pipelines::enhance::BlockKind::Heading(_)))
+        .count();
     let now = chrono::Utc::now();
     let note = Note {
         id: note_id,
         workspace_id: uuid::Uuid::nil(),
-        title: "Reunión semanal de producto".into(),
+        title: title.clone(),
         raw_doc,
         enhanced_doc: None,
         template_id: None,
@@ -245,21 +530,35 @@ async fn main() -> anyhow::Result<()> {
         updated_at: now,
         trashed_at: None,
     };
-    let input = EnhanceInput { note: &note, segments: &segments, template: None, summary_language: "español", user_profile: "" };
+    let tkey = template.as_ref().map(|(k, _)| k.as_str());
+    let input = EnhanceInput {
+        note: &note,
+        segments: &segments,
+        template: template.as_ref().map(|(_, t)| t),
+        summary_language: lang,
+        user_profile: "",
+    };
+    if let Some((k, t)) = &template {
+        println!("plantilla: {} ({k})", t.name);
+    }
     let gguf = std::env::var("JUANOLA_GGUF").map(PathBuf::from).unwrap_or_else(|_| {
         PathBuf::from(std::env::var("HOME").unwrap())
-            .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q4km/LFM3-1.7B-Q4_K_M.gguf")
+            .join("Library/Application Support/dev.juanola.desktop/models/llm/lfm3-1.7b-q8/LFM3-1.7B-Q8_0.gguf")
     });
     println!("modelo: {}", gguf.file_name().unwrap().to_string_lossy());
     let llm = LlamaCpp::load(&gguf, 32_768)?;
 
-    println!("{:<14} {:>4} {:>9} {:>7} {:>10} {:>5} {:>4} {:>8} {:>6}", "variante", "run", "cobertura", "tareas", "nºs fieles", "secc", "dup", "copiadas", "s");
+    println!(
+        "{:<14} {:>4} {:>9} {:>7} {:>10} {:>5} {:>4} {:>8} {:>6}",
+        "variante", "run", "cobertura", "tareas", "nºs fieles", "secc", "dup", "copiadas", "s"
+    );
     for (name, base) in &variants {
         for r in 0..runs {
             let opts = EnhanceOptions { seed: Some(1234 + r), ..base.clone() };
             let t = Instant::now();
-            let (notes, _) = enhance_with(&llm, &input, &opts).await?;
-            let mut sc = score(&notes, &segments, &facts.facts, &seg_norm, &ngrams);
+            let (notes, report) = enhance_with(&llm, &input, &opts).await?;
+            let mut sc = score(&notes, &segments, &facts.facts, &seg_norm, &ngrams, tkey);
+            template_score(&mut sc, &notes, &facts, tkey, user_notes, lang);
             sc.secs = t.elapsed().as_secs_f64();
             let pct = |a: usize, b: usize| if b == 0 { 0.0 } else { 100.0 * a as f64 / b as f64 };
             println!(
@@ -279,6 +578,11 @@ async fn main() -> anyhow::Result<()> {
                 sc.secs
             );
             println!("               faltan: {}", sc.missed.join(", "));
+            // Las tareas acertadas no dicen nada si entran muchas que no lo son.
+            println!("               tareas escritas: {} (en el guion: {})", report.action_items, sc.tasks_reachable);
+            if tkey.is_some() {
+                print_template(&sc, &report, pct);
+            }
             std::fs::write(std::env::temp_dir().join(format!("juanola_eval_{name}_{r}.json")), serde_json::to_string_pretty(&notes)?).ok();
         }
     }

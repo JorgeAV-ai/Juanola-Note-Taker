@@ -1,0 +1,205 @@
+# Llamada comercial ficticia en portugués de Brasil para evaluar el enhance (~30 min). Formato: Hablante|texto.
+# «Yo» vende FrotaViva, un software de gestión de flotas de motos de reparto (canal del micrófono).
+# Ricardo Teixeira es director de operaciones de Vai Rápido Entregas (São Paulo); Juliana Okamoto, la responsable financiera, llega tarde.
+Yo|Oi, Ricardo, bom dia! Tá me ouvindo bem?
+Ricardo|Bom dia! Tô te ouvindo, sim. Só um segundo que eu vou fechar a porta aqui da sala, que o pessoal do despacho fala alto pra caramba.
+Yo|Fica tranquilo. Aproveitando, como é que tá o trânsito aí na Mooca hoje? Eu vi que choveu forte de madrugada.
+Ricardo|Nem me fala. Choveu, alagou um trecho da Radial Leste e metade dos meninos chegou atrasada no galpão. Dia de chuva pra gente é sempre assim, a operação começa já correndo atrás do prejuízo.
+Yo|Imagino. E a Juliana, vai conseguir entrar?
+Ricardo|Vai, ela me mandou mensagem agora dizendo que tá saindo de outra reunião com o banco e entra em uns cinco minutinhos. Se você quiser, a gente pode ir começando e depois eu resumo pra ela.
+Yo|Perfeito, vamos começar então. Só pra situar: a ideia de hoje é eu entender melhor como vocês trabalham, onde dói mais, e no final a gente vê se faz sentido seguir com uma proposta e talvez um piloto. Pode ser?
+Ricardo|Pode ser, sim.
+Yo|Então me conta um pouco da Vai Rápido. Eu sei o básico pelo site, mas prefiro ouvir de você.
+Ricardo|Beleza. A Vai Rápido Entregas existe desde 2017. A gente começou fazendo entrega de farmácia aqui na Zona Leste e hoje atende farmácia, restaurante e uns três ou quatro e-commerces de médio porte. A maior parte do volume ainda é farmácia, uns sessenta por cento.
+Yo|E o tamanho da frota hoje?
+Ricardo|Hoje a gente tem trezentas motos. Dessas, umas cento e vinte são próprias, da empresa, e o resto é moto do próprio entregador, que recebe um valor de aluguel por mês. E a gente tem trezentos e quarenta entregadores, porque tem gente que trabalha meio período e divide moto em turno.
+Yo|Entendi. Trezentas motos, trezentos e quarenta entregadores. E vocês operam com quantos galpões?
+Ricardo|Três bases. A principal é aqui na Mooca, tem uma em Santo Amaro e uma menorzinha em Guarulhos, que a gente abriu no começo do ano por causa de um cliente de e-commerce.
+Yo|E como é que vocês fazem a gestão disso hoje? Quem sabe onde está cada moto, quem tá em manutenção, essas coisas?
+Ricardo|Olha, vou ser sincero contigo: é muito na mão. A gente tem um sistema próprio de pedidos, que chama Pegasus, que o nosso time de TI fez. O pedido entra no Pegasus, o despachante olha e distribui. Mas a parte da moto em si, do entregador na rua, é tudo grupo de WhatsApp e planilha.
+Yo|Grupo de WhatsApp por base?
+Ricardo|Por base e por turno. Tem uns doze grupos. O despachante manda no grupo "quem tá perto da Paulista?", alguém responde, e assim vai. E a manutenção é numa planilha do Google que o encarregado da oficina atualiza quando lembra.
+Yo|E rastreador nas motos, vocês têm algum?
+Ricardo|Só nas motos próprias, aquele rastreador básico de seguradora, que serve mais pra roubo. Não integra com nada, não dá relatório que preste. Nas motos dos entregadores não tem nada, a gente depende do celular deles.
+Yo|Tá. E o que mais pesa no bolso hoje? Onde você sente que tá perdendo dinheiro?
+Ricardo|Três coisas. Primeiro, atraso. Hoje a gente tem dezoito por cento das entregas atrasadas em relação ao prazo que o cliente prometeu pro consumidor final. Pra farmácia isso é sério, porque às vezes é remédio de uso contínuo.
+Yo|Dezoito por cento é bastante.
+Ricardo|É muito. A gente já perdeu um cliente grande no ano passado por causa disso, uma rede de farmácia com quarenta lojas. Segundo, combustível. A gente reembolsa combustível pra todo mundo e isso dá uns 180 mil reais por mês. E eu tenho certeza que tem desperdício ali, rota ruim, gente que dá volta, gente que, bom, abastece o carro da família também, a gente sabe que acontece.
+Yo|Clássico. E o terceiro?
+Ricardo|Moto parada. Toda semana tem umas vinte e cinco motos paradas por problema mecânico que dava pra ter evitado. Troca de óleo atrasada, pneu careca, corrente. E moto parada é entregador sem trabalhar e cliente esperando.
+Yo|Vinte e cinco por semana, de trezentas, dá quase dez por cento da frota fora de circulação.
+Ricardo|Exatamente. Em semana ruim passa disso.
+Juliana|Oi, gente, desculpa o atraso! Consegui sair. Bom dia.
+Yo|Bom dia, Juliana! Tudo bem? Imagina, a gente acabou de começar.
+Juliana|Tudo, tudo. Reunião com banco nunca termina na hora, né. Ricardo, onde vocês estão?
+Ricardo|Eu tava contando da operação, das trezentas motos, do Pegasus, e dos três problemas: atraso, combustível e moto parada.
+Juliana|Ah, o combustível. Esse é o meu preferido.
+Yo|Pois é, o Ricardo falou em 180 mil por mês. Juliana, só pra eu entender seu papel: você cuida do financeiro como um todo?
+Juliana|Isso, eu sou a gerente financeira. Cuido de contas a pagar, reembolso dos entregadores, orçamento, e tudo que é contrato com fornecedor passa por mim antes de ir pro Marcelo assinar.
+Yo|O Marcelo é o...
+Juliana|O Marcelo Andrade, nosso CEO e sócio fundador.
+Yo|Ótimo, depois a gente volta nisso. Ricardo, e qual seria o objetivo de vocês pro ano que vem? Se você tivesse que colocar um número.
+Ricardo|Eu queria baixar o atraso de dezoito pra oito por cento até o fim do primeiro semestre de 2027. É o que os clientes estão pedindo no contrato novo, inclusive. Um dos e-commerces colocou multa se passar de dez.
+Juliana|E no combustível, eu coloquei no orçamento uma meta de reduzir doze por cento. Se a gente conseguir doze por cento de 180 mil, já são mais de vinte mil por mês.
+Yo|Faz sentido. Oito por cento de atraso e doze por cento a menos de combustível. São metas bem concretas, gosto disso, porque dá pra medir no piloto.
+Ricardo|E a moto parada, se cair pela metade eu já fico feliz.
+Yo|Anotado. Deixa eu contar rapidinho como a FrotaViva funciona, e aí vocês me interrompem à vontade, tá? A gente tem três partes. Um rastreador de telemetria que vai na moto, que é pequeno, liga direto na bateria da moto. Um aplicativo pro entregador, que mostra a rota, as entregas do dia e os alertas de manutenção. E um painel pra operação e pro financeiro, com mapa ao vivo, relatórios de atraso, consumo por moto e o calendário de manutenção preventiva.
+Ricardo|O rastreador vai em todas, inclusive nas motos dos entregadores?
+Yo|Essa é a recomendação, sim. Sem o rastreador a gente consegue a localização pelo celular, mas aí perde a telemetria: quilometragem real, rotação, frenagem brusca, que é o que alimenta a manutenção preventiva.
+Ricardo|Hum. Isso aí vai dar discussão, mas a gente volta nisso.
+Yo|Com certeza, é uma das coisas que eu quero conversar hoje.
+Ricardo|Então deixa eu já jogar a primeira dúvida, que é a que mais me preocupa. O Pegasus. Tudo nasce no Pegasus. Se eu tiver que fazer o despachante digitar pedido em dois lugares, esquece, ninguém vai usar.
+Yo|Totalmente. Ninguém deveria digitar nada duas vezes. Me conta um pouco do Pegasus: ele é feito em quê, ele tem API?
+Ricardo|Aí você me pegou. Quem sabe disso é o Felipe, nosso coordenador de TI. Eu sei que ele é web, que roda na nuvem, e que a integração com os aplicativos de restaurante ele fez por API. Agora o detalhe técnico eu não sei.
+Yo|Tá ótimo, isso já ajuda. A FrotaViva tem uma API REST aberta e também trabalha com webhook. O jeito mais comum de integrar é assim: quando o pedido é criado ou despachado no Pegasus, ele dispara um webhook pra gente com o endereço e o prazo, e a gente devolve pra ele, também por webhook, a posição da moto e o status da entrega. Coletado, a caminho, entregue.
+Ricardo|E isso precisa de muito desenvolvimento do nosso lado?
+Yo|Depende de como o Pegasus tá montado, mas nos clientes que têm sistema próprio costuma levar umas duas semanas de um desenvolvedor, às vezes um pouco mais. A gente dá um ambiente de testes, um sandbox, e o nosso time de integração acompanha junto.
+Ricardo|Duas semanas do Felipe é complicado, ele tá sozinho praticamente. Mas se tiver gente de vocês junto, talvez dê.
+Yo|Tem, sim. Inclusive, faço uma sugestão: eu te mando ainda hoje a documentação da API e o acesso ao sandbox, e o Felipe dá uma olhada com calma. Você me passa o contato dele?
+Ricardo|Passo, te mando o e-mail dele pelo WhatsApp logo depois da call.
+Yo|Combinado. Eu mando a documentação e o acesso pro Felipe amanhã de manhã, no máximo.
+Juliana|Posso fazer uma pergunta mais de... Ai, desculpa, meu cachorro resolveu latir agora. Peraí que eu vou mutar.
+Ricardo|É o Biscoito, ele participa de todas as reuniões da Juliana.
+Yo|Ha, sem problema. Aqui em casa é o vizinho com a furadeira, toda segunda-feira, religiosamente.
+Ricardo|Rapaz, furadeira é pior. Aqui no prédio da minha mãe tem um que reforma o apartamento faz dois anos. Dois anos! Eu nem sei mais o que ele pode estar fazendo lá dentro. Ela já reclamou com o síndico umas dez vezes.
+Yo|Já deve ter construído uma piscina.
+Ricardo|Só pode. Bom, enfim.
+Juliana|Voltei. Desculpa. Então, a minha pergunta é sobre dados. Porque a gente teve um problema sério no ano passado, um entregador entrou com processo dizendo que a gente monitorava ele fora do horário. Não ganhou, mas deu uma dor de cabeça enorme com o jurídico. Como é que fica a LGPD nisso tudo?
+Yo|Ótima pergunta, e é a que eu mais ouço de empresa de entrega. Algumas coisas. Primeiro, o rastreamento na FrotaViva é configurável por turno. Vocês cadastram o expediente de cada entregador e fora do turno a localização simplesmente não é coletada. A moto própria da empresa pode ficar rastreada vinte e quatro horas por causa de roubo, mas a moto do entregador, fora do turno, fica invisível.
+Juliana|Isso é automático ou alguém tem que lembrar de desligar?
+Yo|Automático. O próprio entregador vê no aplicativo quando tá sendo rastreado, aparece um ícone verde, e quando o turno termina o ícone fica cinza. Isso ajuda muito na confiança, inclusive.
+Juliana|E onde ficam guardados esses dados?
+Yo|Todos os dados ficam armazenados em servidores no Brasil, na região de São Paulo da nossa nuvem. Nada sai do país. E a gente guarda o histórico de localização por noventa dias, depois disso ele é anonimizado e fica só o dado agregado pros relatórios.
+Juliana|Noventa dias. Tá. E vocês assinam um contrato de tratamento de dados com a gente? Porque o nosso jurídico vai pedir isso com certeza.
+Yo|Assinamos. A gente tem um acordo de tratamento de dados padrão, que já passou pelo jurídico de vários clientes, e um relatório de impacto à proteção de dados que vocês podem usar como base pro de vocês. Eu posso mandar os dois pra você até quarta-feira.
+Juliana|Seria ótimo. Aí eu já encaminho pra doutora Camila, que é a nossa advogada. Ela vai querer ler com calma, ela é bem chata com isso. No bom sentido.
+Yo|No bom sentido, sempre. Eu prefiro advogado chato no começo do que problema depois.
+Ricardo|Agora, falando de entregador. Juliana, esse é o ponto que eu falei pra você ontem.
+Juliana|O da resistência?
+Ricardo|É. Olha, eu vou ser bem direto. Os entregadores vão reclamar. Muitos deles já desconfiam de qualquer coisa que a empresa coloca, acham que é pra vigiar e pra descontar do pagamento. Quando a gente colocou o aplicativo de ponto, no ano passado, uns trinta pediram pra sair na primeira semana.
+Yo|Trinta é bastante.
+Ricardo|É, e entregador bom é difícil de achar. Então se eu chegar no galpão falando "agora vai ter rastreador na sua moto", eu tenho medo de perder gente.
+Yo|Entendo perfeitamente, e é legítimo. O que a gente viu funcionar em outros clientes é mudar o jeito de apresentar. O rastreador não entra como fiscal, entra como benefício. Três coisas que pesam pro entregador: primeiro, a manutenção preventiva avisa antes de a moto quebrar, e moto parada é dinheiro que ele não ganha. Segundo, o reembolso de combustível passa a ser calculado pela quilometragem real, sem ele ter que guardar nota fiscal e mandar foto. Terceiro, em caso de roubo, a moto dele também fica protegida durante o turno.
+Ricardo|O negócio da nota fiscal eles odeiam mesmo. Isso pode ajudar.
+Juliana|E pra mim também, porque conferir nota é um inferno. Tem uma pessoa no meu time que só faz isso.
+Ricardo|Mas tem outra reclamação que eu já sei que vai vir: bateria do celular e plano de dados. O cara já usa o aplicativo de rota, o WhatsApp, o aplicativo de ponto. Se o de vocês comer bateria, ele vai desinstalar.
+Yo|O nosso aplicativo foi feito pensando nisso. Como a localização vem do rastreador da moto e não do GPS do celular, o consumo de bateria é bem baixo. Nos testes, fica em torno de três a quatro por cento de bateria num turno de oito horas. E o consumo de dados é pequeno, uns cinquenta megas por mês.
+Ricardo|Três a quatro por cento? Duvido.
+Yo|Pode duvidar, é por isso que o piloto existe. Você mede no celular dos seus próprios entregadores.
+Ricardo|Justo.
+Yo|E uma coisa que ajuda muito é o treinamento. A gente faz uma conversa presencial no galpão, de uns vinte minutos, em cada turno, explicando o que é coletado e o que não é, mostrando o ícone, respondendo pergunta. Eu mesmo costumo ir.
+Ricardo|Isso aí eu acho importante. Se vier alguém de fora explicar, e não o chefe, eles escutam mais.
+Juliana|Bom, já que a gente tá falando de dúvida, deixa eu colocar a minha mais incômoda na mesa.
+Yo|Por favor.
+Juliana|A gente já recebeu proposta de outra empresa. A MotoTrack. Não sei se você conhece.
+Yo|Conheço, sim.
+Juliana|Eles cobram dezenove reais por moto por mês. Com rastreador incluso. E o vendedor deles me disse que instala tudo em duas semanas.
+Yo|Entendi. Dezenove por moto. Posso te fazer umas perguntas sobre essa proposta, sem querer falar mal de ninguém?
+Juliana|Pode.
+Yo|A proposta da MotoTrack inclui o aplicativo do entregador ou é só o rastreador com o mapa?
+Juliana|Hum. Ricardo, você lembra?
+Ricardo|Pelo que eu vi na demo, é rastreador e mapa. Tinha um relatório de quilometragem, mas aplicativo pro entregador não tinha, não.
+Yo|E a integração com o Pegasus?
+Ricardo|Eles falaram que exportam planilha. Integração automática não tinha.
+Yo|Então, sendo bem honesto com vocês: se o problema fosse só saber onde a moto tá, a MotoTrack resolve e é mais barata. Mas o que vocês me contaram é atraso, combustível e moto parada. Pra mexer em atraso vocês precisam do pedido do Pegasus conversando com a posição da moto. Pra mexer em combustível vocês precisam do reembolso por quilometragem. E pra moto parada, da manutenção preventiva pelo aplicativo. Isso a gente faz e eles, até onde eu sei, não fazem.
+Juliana|Tá, mas a diferença de preço é grande.
+Yo|É, vamos falar de número então. A nossa tabela pra esse plano completo, com rastreador, aplicativo e painel, fica em trinta e dois reais por moto por mês.
+Juliana|Trinta e dois contra dezenove. Quase o dobro.
+Yo|Entendo a reação. Mas pensa assim: se a gente entregar os doze por cento de combustível que você colocou como meta, só isso já são uns vinte e um mil por mês. A diferença entre nós e a MotoTrack, nas trezentas motos, fica bem abaixo disso.
+Juliana|Se entregar.
+Yo|Se entregar. Por isso o piloto, e por isso eu quero medir com os números de vocês e não com os meus.
+Ricardo|E esse valor tem taxa de instalação?
+Yo|Tem uma taxa de implantação, que cobre a instalação dos rastreadores nas três bases, a integração com o Pegasus e o treinamento. Fica em 15 mil reais, pagos uma vez só.
+Juliana|Quinze mil. Tá. E qual é o orçamento que vocês costumam... Na verdade, deixa eu falar o meu, que é mais fácil. Pra 2027 eu tenho aprovado 120 mil reais por ano pra tecnologia de frota. Isso inclui tudo: rastreador, software, o que for. Passar disso eu não consigo sem voltar pra diretoria.
+Yo|Cento e vinte mil por ano. Ótimo saber, obrigado pela transparência.
+Juliana|E tem mais uma coisa. O Marcelo detesta contrato longo. Se vier contrato de três anos, ele nem lê.
+Yo|A gente trabalha com contrato de doze meses, renovação anual. Não tem fidelidade de três anos.
+Juliana|Doze meses, bom.
+Ricardo|E o piloto, como é que funcionaria?
+Yo|A proposta é a gente fazer um piloto com trinta motos, numa base só, durante três semanas. Sem custo de mensalidade no piloto. Vocês só pagam a implantação se decidirem seguir.
+Ricardo|Trinta motos numa base. Eu faria na Mooca, que é a maior e onde o atraso é pior.
+Yo|Pode ser. E quando vocês conseguiriam começar?
+Ricardo|Se for rápido, dia dezesseis de novembro, segunda que vem. Eu já separo as motos essa semana.
+Yo|Dezesseis de novembro. Eu consigo levar a equipe de instalação.
+Juliana|Gente, eu vou ter que... a minha internet tá... vocês tão me ouvindo?
+Ricardo|Tá cortando, Ju.
+Juliana|...então eu acho que... e o preço...
+Yo|Juliana, você travou. Acho que caiu.
+Ricardo|Caiu. Ela tá no escritório do banco, o Wi-Fi de lá é horrível. Já já ela volta.
+Yo|Tranquilo. Enquanto isso, Ricardo, deixa eu te perguntar sobre as motos do piloto. Você escolheria entregadores de que tipo?
+Ricardo|Eu ia misturar. Uns veteranos, que têm moral com o resto do pessoal, e uns mais novos. Se os veteranos gostarem, o resto vem atrás.
+Yo|Excelente estratégia. A gente sempre fala que o piloto é tanto técnico quanto político.
+Ricardo|É bem isso. Tem o Seu Josué, que trabalha com a gente desde o começo, todo mundo escuta ele. Se ele topar, metade do problema tá resolvido.
+Juliana|Voltei, voltei. Desculpa, troquei pro 4G. O que eu perdi?
+Ricardo|Piloto de trinta motos na Mooca, três semanas, começando dia dezesseis.
+Juliana|Tá. Eu tava falando do preço quando caiu.
+Yo|Antes de você continuar, Juliana, eu preciso corrigir uma coisa que eu falei. Eu te passei o valor errado. Os trinta e dois reais são a tabela cheia, pra frota pequena. Pra frota acima de duzentas e cinquenta motos, que é o caso de vocês, o valor por moto é vinte e nove reais por mês. Desculpa, eu olhei a linha errada da tabela.
+Juliana|Ah, então é vinte e nove. Melhor assim, erro a favor do cliente eu aceito.
+Yo|Esse eu aceito também. Então fica vinte e nove reais por moto por mês. Nas trezentas motos, dá oito mil e setecentos por mês, ou cento e quatro mil e quatrocentos por ano.
+Juliana|Cento e quatro e quatrocentos. Cabe nos cento e vinte, mas aí a implantação de 15 mil estoura um pouco no primeiro ano.
+Yo|Sobre isso, eu consigo uma condição: se o contrato for assinado até vinte de dezembro, a gente dá cinquenta por cento de desconto na implantação. Ou seja, ela cai pra sete mil e quinhentos.
+Juliana|Aí fecha. Cento e quatro e quatrocentos mais sete e quinhentos dá menos de cento e doze. Cabe.
+Ricardo|Uma coisa sobre o piloto, que eu me lembrei agora. O Felipe vai precisar de tempo pra testar a integração no sandbox antes da gente começar, não vai?
+Yo|O ideal é que sim. Pelo menos o básico, o pedido chegando.
+Ricardo|Então dia dezesseis não dá. Ele não vai ter visto nada até lá. Vamos jogar o começo do piloto pra vinte e três de novembro, que dá uma semana pra ele.
+Yo|Vinte e três de novembro, fechado. Fica melhor pra todo mundo. E três semanas a partir do dia vinte e três terminam lá pelo dia onze de dezembro.
+Juliana|Hum, mas a Black Friday é dia vinte e sete. A operação vai estar uma loucura.
+Ricardo|Melhor ainda. Se funcionar na Black Friday, funciona em qualquer dia.
+Yo|Concordo com o Ricardo. É um teste de estresse de graça.
+Juliana|Vocês que estão falando. Eu é que vou ver o reembolso de combustível daquela semana.
+Yo|Aliás, sobre o combustível: pra eu montar o cálculo de retorno direitinho, eu precisaria dos números reais de vocês dos últimos meses. Combustível, manutenção, quantas motos paradas. Juliana, você conseguiria me mandar uma planilha com isso?
+Juliana|Consigo. Eu tenho isso fechado até outubro. Te mando até segunda-feira, dia dezesseis.
+Yo|Perfeito. Com isso eu coloco na proposta o retorno estimado com os números de vocês.
+Ricardo|Agora uma pergunta que eu sempre esqueço de fazer: essas motos dos entregadores, se o cara sai da empresa, o rastreador fica com ele?
+Yo|Boa. O rastreador é de vocês, em comodato com a gente. Quando o entregador sai, a oficina tira o equipamento, leva uns quinze minutos, e ele vai pra outra moto. A gente não cobra reinstalação.
+Ricardo|Tá ótimo. Porque a rotatividade aqui é alta, uns cinco, seis por cento por mês.
+Yo|Normal pro setor. Juliana, me ajuda a entender o processo de decisão. Quem precisa dizer sim pra isso andar?
+Juliana|Então. Eu e o Ricardo a gente recomenda, mas quem assina é o Marcelo. E qualquer contrato acima de cinquenta mil por ano tem que passar na reunião de diretoria, que é mensal.
+Yo|E quando é a próxima?
+Juliana|A próxima é dia catorze de dezembro. Depois dela, só em janeiro, lá pro dia vinte.
+Yo|Catorze de dezembro. O piloto termina dia onze, então dá pra levar os resultados das três semanas pra essa reunião.
+Ricardo|Fica apertado, mas dá. A gente leva os números do piloto direto pro Marcelo.
+Yo|E aí, se a diretoria aprovar no dia catorze, a gente assina até o dia vinte, que entra no desconto da implantação, e começa a instalar nas outras duas bases logo no começo de janeiro. A ideia seria estar com as trezentas motos rodando até o fim de janeiro.
+Juliana|Pra mim faz sentido, até porque o orçamento de 2027 começa a valer em janeiro. Se a primeira mensalidade cair em janeiro, fica tudo no ano certo.
+Yo|Ótimo. E o Marcelo, ele chegou a ver alguma coisa da FrotaViva?
+Juliana|Nada ainda. E ele é do tipo que quer ver funcionando, não gosta de slide.
+Yo|Então eu proponho uma demonstração curta pra ele, de uns trinta minutos, com o painel ao vivo. Pode ser na semana do piloto, que aí ele já vê as motos de vocês no mapa.
+Ricardo|Isso é bom. Ele vai adorar ver as motos da Mooca andando na tela.
+Yo|Eu agendo a demonstração com o Marcelo para o dia vinte e seis de novembro, uma quinta. Juliana, você me ajuda com a agenda dele?
+Juliana|Ajudo. Dia vinte e seis de manhã ele costuma estar livre. Eu confirmo com a secretária dele e te aviso.
+Yo|Fechado. Deixa eu voltar um pouquinho num ponto, Ricardo, pra eu não esquecer: as trinta motos do piloto. Você consegue me mandar a lista com placa e nome do entregador?
+Ricardo|Consigo. Te mando até quarta-feira, dia dezoito, porque eu ainda tenho que conversar com o Seu Josué e com o pessoal.
+Yo|Quarta, dia dezoito, tá ótimo, dá tempo de a equipe de instalação se programar.
+Ricardo|Voltando um pouco na MotoTrack, porque eu sei que o Marcelo vai perguntar. Se ele falar "por que não o mais barato", qual é a resposta curta?
+Yo|A resposta curta é: o mais barato mostra onde a moto está; a FrotaViva ajuda a moto a chegar no horário e a gastar menos. E tem uma coisa que eu não falei ainda, que é o suporte. A gente tem suporte em português, por telefone e WhatsApp, das seis da manhã à meia-noite, todos os dias, porque entrega não para no domingo.
+Ricardo|Isso é importante. Domingo à noite é nosso pico de restaurante.
+Juliana|E a MotoTrack, o suporte é só por e-mail, se eu não me engano. Eu lembro que achei estranho.
+Yo|Não vou comentar o suporte deles, mas vale vocês perguntarem. E outra: no painel, vocês conseguem ver o custo de combustível por entregador, por base e por cliente. Juliana, isso te ajuda a saber, por exemplo, se aquele e-commerce de Guarulhos dá lucro ou não.
+Juliana|Nossa, isso eu queria muito. Hoje eu não tenho a menor ideia de quanto custa atender Guarulhos. Acho que dá prejuízo, mas não consigo provar.
+Ricardo|Eu também acho que dá. Aquela base é longe de tudo.
+Yo|Então já é uma pergunta pra gente responder com os dados do piloto ou logo depois.
+Juliana|Deixa eu só tirar uma dúvida de pagamento. A mensalidade é por moto ativa ou por moto cadastrada? Porque moto parada na oficina eu não quero pagar.
+Yo|Por moto ativa no mês. Se a moto ficou o mês inteiro sem rodar, ela não entra na fatura.
+Juliana|Ah, isso é bom. A MotoTrack cobrava por equipamento instalado.
+Yo|E o pagamento é mensal, por boleto, com vencimento no dia dez.
+Juliana|Boleto, dia dez. Tá bom.
+Ricardo|E o treinamento dos entregadores? Você falou que faz no galpão.
+Yo|Isso. Pro piloto, eu vou pessoalmente no galpão da Mooca fazer o treinamento com os entregadores no dia vinte e três, nos dois turnos, o da manhã e o da tarde. Você só me diz o horário de troca de turno.
+Ricardo|A troca é ao meio-dia. Se você chegar às onze e meia, pega os dois.
+Yo|Onze e meia, dia vinte e três, na Mooca. Combinado.
+Ricardo|E já que você vai estar lá, dá pra falar um pouco da questão do reembolso por quilometragem? Isso é o que vai convencer eles.
+Yo|Com certeza, vou levar um exemplo de cálculo com um entregador fictício.
+Juliana|Deixa eu fazer um resumo rápido do que eu anotei, pra ver se não perdi nada com a internet. Você manda o acordo de tratamento de dados e o relatório de impacto até quarta. Eu mando a planilha de custos até segunda. E o Felipe recebe a documentação amanhã.
+Yo|Exato. E tem mais uma da minha parte: eu mando a proposta comercial revisada, já com os vinte e nove reais por moto e o desconto da implantação, até sexta-feira, dia treze.
+Juliana|Sexta, dia treze. Ótimo. E eu, assim que receber o contrato de tratamento de dados, mando pra doutora Camila revisar. Ela costuma levar uma semana.
+Yo|Uma semana tá ótimo, cabe antes da diretoria.
+Ricardo|Eu só fico um pouco preocupado com o Felipe. Vou falar com ele hoje à tarde pra ele já reservar tempo na agenda pra testar o sandbox.
+Yo|Ótimo. Se ele travar em qualquer coisa, pode me chamar direto, ou o nosso time de integração.
+Ricardo|Uma última coisa, só curiosidade: vocês têm cliente em São Paulo do nosso tamanho?
+Yo|Temos dois em São Paulo com mais de duzentas motos, e um em Campinas com cento e oitenta. Se quiserem, eu peço pra um deles conversar com vocês. Normalmente o pessoal de operação adora trocar figurinha.
+Ricardo|Ia ser bom. Principalmente sobre a resistência dos entregadores. Quero ouvir de quem já passou por isso.
+Yo|Vou ver qual dos dois tá mais disponível e te passo o contato.
+Juliana|Gente, eu tenho que correr pra próxima. Obrigada, viu? Gostei bastante da conversa, principalmente da parte de dados.
+Yo|Eu que agradeço, Juliana. Fica de olho no e-mail que até quarta chega a documentação.
+Ricardo|Valeu, obrigado. Te mando o contato do Felipe agora.
+Yo|Obrigado, Ricardo. Bom dia pra vocês e boa sorte com a chuva aí na Mooca.

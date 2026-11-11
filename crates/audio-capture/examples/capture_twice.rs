@@ -15,7 +15,8 @@ fn main() -> anyhow::Result<()> {
     let (sessions, secs) = (a.first().copied().unwrap_or(3), a.get(1).copied().unwrap_or(6));
     for n in 1..=sessions {
         let mut cap = CpalCapture::new();
-        let mut rx = cap.start(CaptureConfig { mic_device: None, capture_mic: true, capture_system_audio: true, echo_cancellation: false })?;
+        let mut rx =
+            cap.start(CaptureConfig { mic_device: None, capture_mic: true, capture_system_audio: true, echo_cancellation: false })?;
         let t = Instant::now();
         let (mut mic_n, mut sys_n, mut mic_p, mut sys_p) = (0usize, 0usize, 0f32, 0f32);
         while t.elapsed() < Duration::from_secs(secs) {

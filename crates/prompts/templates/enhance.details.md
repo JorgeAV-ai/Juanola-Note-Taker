@@ -2,7 +2,9 @@ Fragmento de la transcripción de una reunión (de {{from}} a {{to}}). Cada lín
 
 {{transcript}}
 
-Lista en {{language}} los datos concretos más importantes de este fragmento (como mucho 12): cifras, porcentajes, precios, fechas, nombres, decisiones y compromisos.
-- Una viñeta `- ` por dato, en una frase corta y con el valor exacto.
+{{tasks}} un apartado `## Datos` con los datos concretos más importantes del fragmento (como mucho 12): cifras, porcentajes, precios, fechas, nombres y decisiones.
+
+Todo en {{language}}:
+- Una viñeta `- ` por dato o tarea, en una frase corta y con el valor exacto.
 - Al final de cada viñeta, entre corchetes, el número de la línea de donde sale, por ejemplo [12].
-- Solo datos que aparezcan en el fragmento. Nada de títulos ni de introducción.
+- Solo lo que aparezca en el fragmento. Nada de introducción.

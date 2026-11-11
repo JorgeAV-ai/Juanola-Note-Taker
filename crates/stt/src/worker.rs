@@ -47,6 +47,10 @@ pub fn write_frame(w: &mut impl Write, channel: Channel, samples: &[f32]) -> std
     w.write_all(&buf)
 }
 
+/// Máximo de muestras por trama (un minuto; lo normal son ~10 ms): un `n`
+/// corrupto en el stream no puede pedir una reserva gigante.
+const MAX_FRAME_SAMPLES: usize = 16_000 * 60;
+
 /// Lee una trama; `Ok(None)` al cerrarse la entrada.
 pub fn read_frame(r: &mut impl Read) -> std::io::Result<Option<(Channel, Vec<f32>)>> {
     let mut head = [0u8; 5];
@@ -55,9 +59,11 @@ pub fn read_frame(r: &mut impl Read) -> std::io::Result<Option<(Channel, Vec<f32
         Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(None),
         Err(e) => return Err(e),
     }
-    let channel = channel_from_byte(head[0])
-        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "canal desconocido"))?;
+    let channel = channel_from_byte(head[0]).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "canal desconocido"))?;
     let n = u32::from_le_bytes([head[1], head[2], head[3], head[4]]) as usize;
+    if n > MAX_FRAME_SAMPLES {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("trama de {n} muestras excede el tope")));
+    }
     let mut bytes = vec![0u8; n * 4];
     r.read_exact(&mut bytes)?;
     let samples = bytes.as_chunks::<4>().0.iter().map(|b| f32::from_le_bytes(*b)).collect();
@@ -81,6 +87,16 @@ pub enum WorkerEvent {
         language: Option<String>,
         /// Tiempo de decodificación de este tramo.
         decode_ms: u64,
+        /// Probabilidad del token menos seguro del texto (ver
+        /// `AsrOutput::token_probs`); sirve para decidir si se revisa la frase.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        confidence: Option<f32>,
+        /// Probabilidad de cada token; solo en los finales.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        token_probs: Vec<f32>,
+        /// Texto de cada token (mismo orden que `token_probs`); solo en los finales.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        token_texts: Vec<String>,
     },
     Error {
         message: String,
@@ -90,13 +106,13 @@ pub enum WorkerEvent {
 impl WorkerEvent {
     pub fn as_transcript(&self) -> Option<Transcript> {
         match self {
-            WorkerEvent::Segment { channel, start, end, text, is_final, .. } => Some(Transcript {
+            WorkerEvent::Segment { channel, start, end, text, is_final, confidence, .. } => Some(Transcript {
                 channel: *channel,
                 start: *start,
                 end: *end,
                 text: text.clone(),
                 is_final: *is_final,
-                confidence: None,
+                confidence: *confidence,
             }),
             _ => None,
         }
@@ -111,6 +127,8 @@ pub struct WorkerConfig {
     pub vad_dir: PathBuf,
     /// Nombre en inglés ("Spanish"); `None` = detección automática.
     pub language: Option<String>,
+    /// Contexto para el prompt del modelo (nombres, términos); `None` = sin él.
+    pub context: Option<String>,
 }
 
 /// Cliente: lanza el worker, le envía audio y recibe eventos.
@@ -125,10 +143,11 @@ impl SttWorker {
         let mut cmd = Command::new(&cfg.program);
         cmd.arg("--model").arg(&cfg.model_dir).arg("--vad").arg(&cfg.vad_dir);
         cmd.arg("--language").arg(cfg.language.as_deref().unwrap_or("auto"));
+        if let Some(c) = cfg.context.as_deref().filter(|c| !c.trim().is_empty()) {
+            cmd.arg("--context").arg(c);
+        }
         cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::inherit());
-        let mut child = cmd
-            .spawn()
-            .map_err(|e| SttError::Backend(format!("no se pudo lanzar {}: {e}", cfg.program.display())))?;
+        let mut child = cmd.spawn().map_err(|e| SttError::Backend(format!("no se pudo lanzar {}: {e}", cfg.program.display())))?;
         let stdin = child.stdin.take().map(std::io::BufWriter::new);
         let stdout = child.stdout.take().ok_or_else(|| SttError::Backend("sin stdout".into()))?;
         let (tx, events) = mpsc::channel();
@@ -137,9 +156,8 @@ impl SttWorker {
             .spawn(move || {
                 for line in BufReader::new(stdout).lines() {
                     let Ok(line) = line else { break };
-                    let ev = serde_json::from_str::<WorkerEvent>(&line).unwrap_or_else(|e| WorkerEvent::Error {
-                        message: format!("línea no válida del worker ({e}): {line}"),
-                    });
+                    let ev = serde_json::from_str::<WorkerEvent>(&line)
+                        .unwrap_or_else(|e| WorkerEvent::Error { message: format!("línea no válida del worker ({e}): {line}") });
                     if tx.send(ev).is_err() {
                         break;
                     }
@@ -151,9 +169,7 @@ impl SttWorker {
 
     pub fn send(&mut self, channel: Channel, samples: &[f32]) -> Result<(), SttError> {
         let w = self.stdin.as_mut().ok_or_else(|| SttError::Backend("worker cerrado".into()))?;
-        write_frame(w, channel, samples)
-            .and_then(|_| w.flush())
-            .map_err(|e| SttError::Backend(format!("el worker no acepta audio: {e}")))
+        write_frame(w, channel, samples).and_then(|_| w.flush()).map_err(|e| SttError::Backend(format!("el worker no acepta audio: {e}")))
     }
 
     /// Estado de salida si el proceso ya terminó.
@@ -170,9 +186,21 @@ impl SttWorker {
         self.stdin = None;
     }
 
-    pub fn wait(&mut self) -> std::io::Result<std::process::ExitStatus> {
+    /// Espera la salida del hijo como mucho `timeout`; si se pasa, lo mata y
+    /// devuelve su estado (un fallo de Metal puede dejar el proceso colgado).
+    pub fn wait(&mut self, timeout: std::time::Duration) -> std::io::Result<std::process::ExitStatus> {
         self.finish();
-        self.child.wait()
+        let deadline = std::time::Instant::now() + timeout;
+        loop {
+            if let Some(s) = self.child.try_wait()? {
+                return Ok(s);
+            }
+            if std::time::Instant::now() >= deadline {
+                let _ = self.child.kill();
+                return self.child.wait();
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
     }
 }
 
@@ -215,10 +243,14 @@ mod tests {
             is_final: false,
             language: Some("Spanish".into()),
             decode_ms: 120,
+            confidence: Some(0.42),
+            token_probs: vec![],
+            token_texts: vec![],
         };
         let s = serde_json::to_string(&ev).unwrap();
         assert!(s.starts_with(r#"{"event":"segment","channel":"mic""#), "{s}");
+        assert!(!s.contains("token_probs"), "{s}");
         let back: WorkerEvent = serde_json::from_str(&s).unwrap();
-        assert!(back.as_transcript().is_some());
+        assert_eq!(back.as_transcript().unwrap().confidence, Some(0.42));
     }
 }

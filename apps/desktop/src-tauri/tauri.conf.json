@@ -23,7 +23,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self' ipc: http://ipc.localhost; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: asset: https://asset.localhost; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost ws://localhost:* http://localhost:*"
     },
     "macOSPrivateApi": true
   },
@@ -39,7 +39,17 @@
     ],
     "macOS": {
       "minimumSystemVersion": "13.0",
-      "entitlements": "entitlements.plist"
+      "entitlements": "entitlements.plist",
+      "files": {
+        "Resources/en.lproj/InfoPlist.strings": "locales/en.lproj/InfoPlist.strings",
+        "Resources/es.lproj/InfoPlist.strings": "locales/es.lproj/InfoPlist.strings"
+      },
+      "dmg": {
+        "background": "dmg/background.tiff",
+        "windowSize": { "width": 660, "height": 428 },
+        "appPosition": { "x": 165, "y": 215 },
+        "applicationFolderPosition": { "x": 495, "y": 215 }
+      }
     },
     "externalBin": [
       "binaries/juanola-stt-worker"

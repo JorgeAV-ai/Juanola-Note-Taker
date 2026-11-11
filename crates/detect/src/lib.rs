@@ -283,10 +283,12 @@ impl MicWatcher {
                 continue;
             }
             seen.push(app.bundle_id.clone());
-            let t = self
-                .tracks
-                .entry(app.bundle_id.clone())
-                .or_insert_with(|| Track { app: app.clone(), since: now, last_seen: now, announced: false });
+            let t = self.tracks.entry(app.bundle_id.clone()).or_insert_with(|| Track {
+                app: app.clone(),
+                since: now,
+                last_seen: now,
+                announced: false,
+            });
             t.last_seen = now;
             let min_on = if is_known(&u.bundle_id) { self.cfg.min_on } else { self.cfg.min_on_unknown };
             if !t.announced && now.saturating_sub(t.since) >= min_on {

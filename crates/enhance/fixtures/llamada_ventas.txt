@@ -1,0 +1,36 @@
+# Llamada de ventas ficticia para evaluar plantillas (~5 min). Formato: Hablante|texto.
+# «Yo» vende Rutario, un programa de planificación de rutas (canal del micrófono).
+# Patricia es directora de operaciones de Logística Norte; Raúl lleva sistemas.
+Yo|Buenas tardes, Patricia, Raúl. Gracias por el tiempo. La idea de hoy es entender cómo planificáis ahora las rutas y ver si Rutario os encaja. ¿Me contáis un poco cómo trabajáis?
+Patricia|Claro. Somos Logística Norte, hacemos distribución de alimentación a supermercados. Tenemos ochenta y cinco camiones y tres almacenes, en Bilbao, Vitoria y Santander.
+Yo|¿Y cómo hacéis hoy la planificación de rutas?
+Patricia|Con hojas de Excel. Cada almacén tiene un planificador que prepara las rutas del día siguiente a mano. Les lleva unas cuatro horas cada tarde.
+Yo|Cuatro horas al día por almacén es mucho tiempo. ¿Qué es lo que más os duele de ese sistema?
+Patricia|Los retrasos. Ahora mismo el doce por ciento de las entregas llegan tarde a la ventana que nos pide el supermercado, y dos de nuestros clientes grandes ya nos han amenazado con penalizaciones. Además, cuando un conductor se pone enfermo, rehacer las rutas es un caos.
+Yo|Entiendo. ¿Y qué objetivo os habéis marcado?
+Patricia|Bajar los retrasos por debajo del cinco por ciento antes del verano y que la planificación no dependa de una sola persona por almacén.
+Yo|Eso es justo lo que hace Rutario. Calcula las rutas del día en unos minutos teniendo en cuenta las ventanas de entrega, y si cambia algo, como un conductor de baja, las recalcula al momento. Raúl, ¿qué sistemas usáis?
+Raúl|Usamos SAP para los pedidos y la facturación. Esa es mi principal duda: si no se integra bien con SAP, no nos sirve. No quiero que nadie copie pedidos a mano.
+Yo|Es una pregunta razonable. Tenemos un conector con SAP que ya usan seis clientes. Lee los pedidos cada quince minutos y devuelve las entregas confirmadas.
+Raúl|¿Funciona con nuestra versión? Tenemos SAP S/4HANA, pero con bastantes campos personalizados.
+Yo|Con campos personalizados hay que configurar el mapeo. Normalmente son dos o tres días de trabajo de nuestro equipo técnico. Para confirmarlo necesitaríamos ver vuestra documentación de la API.
+Raúl|Os la puedo mandar. La otra duda es dónde se guardan los datos. Por contrato con algunos clientes, los datos tienen que estar en servidores en Europa.
+Yo|Están en Europa, en Fráncfort y en Dublín. Os mando el anexo de protección de datos con la propuesta.
+Patricia|Yo tengo otra preocupación, que son los conductores. Algunos llevan veinte años haciendo las mismas rutas y no les va a gustar que una aplicación les diga por dónde ir. Ya tuvimos resistencia cuando pusimos los terminales para firmar las entregas.
+Yo|Es lo más habitual. Lo que mejor funciona es empezar con un almacén y con los conductores que más ganas tengan. Y la aplicación del conductor deja que el conductor cambie el orden de paradas si conoce un atajo.
+Patricia|Eso me gusta. También os digo que estamos viendo a otro proveedor, Ruteo360, que nos ha dado un precio más bajo.
+Yo|Lo conozco. Es más barato, pero no tiene conector con SAP; tendríais que exportar los pedidos a mano cada día. Si queréis, os paso el contacto de un cliente que vino de Ruteo360 y os cuenta su experiencia.
+Patricia|Sí, eso nos vendría bien.
+Yo|Hablemos de números. ¿Tenéis un presupuesto pensado?
+Patricia|Tenemos aprobados cuarenta mil euros para este proyecto el año que viene, incluyendo la puesta en marcha.
+Yo|Nuestro precio es de treinta y cinco euros por vehículo al mes. Con ochenta y cinco camiones, son unos treinta y cinco mil setecientos euros al año. La puesta en marcha con el conector de SAP serían cuatro mil euros. Si firmáis antes de fin de año, os aplicamos un diez por ciento de descuento el primer año.
+Patricia|Se nos va un poco, pero con el descuento entraría. ¿Cuánto tardaríais en ponerlo en marcha?
+Yo|Unas seis semanas desde la firma. Si empezamos en enero, el primer almacén estaría funcionando a mediados de febrero.
+Patricia|Nos encajaría empezar por Vitoria, que es el almacén más pequeño. La decisión final la toma nuestro consejero delegado, Íñigo Etxeberria. Él querría ver una propuesta por escrito y una demostración.
+Yo|Perfecto. ¿Quién más participa en la decisión?
+Patricia|Raúl por la parte técnica y yo por operaciones. Pero quien firma es Íñigo.
+Yo|Entendido. Entonces, para cerrar: yo os envío la propuesta con precios, el descuento y el anexo de protección de datos el viernes. Raúl, tú me mandas la documentación de la API de SAP para que confirmemos el mapeo.
+Raúl|Te la mando mañana.
+Yo|Y yo os paso el contacto del cliente que vino de Ruteo360. Además, os propongo una demostración para los jefes de tráfico y algunos conductores de Vitoria.
+Patricia|Bien. Yo intento cerrar una reunión con Íñigo para la semana del dos de diciembre y te confirmo la fecha.
+Yo|Perfecto. Muchas gracias a los dos.

@@ -1,0 +1,9 @@
+**Vai Rápido: 300 motos, atraso 18%**
+## Objeções
+- integração c/ Pegasus (falar c/ Felipe)
+- LGPD: rastreio só no turno
+- MotoTrack R$ 19/moto
+- orçamento 120k/ano, decide Marcelo
+- [ ] mandar proposta sexta
+- [ ] doc API p/ Felipe amanhã
+piloto 30 motos, começa 23/11

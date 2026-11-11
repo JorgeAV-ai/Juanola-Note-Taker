@@ -17,8 +17,15 @@ pub struct GenOptions {
     pub temperature: Option<f32>,
     /// JSON Schema que la salida debe cumplir (GBNF en llama.cpp, response_format en OpenAI).
     pub json_schema: Option<serde_json::Value>,
+    /// Gramática GBNF (raíz `root`) que la salida debe cumplir; solo llama.cpp.
+    /// Si también hay `json_schema`, gana este.
+    pub grammar: Option<String>,
     /// Semilla del muestreo; `None` = fija (resultados reproducibles).
     pub seed: Option<u32>,
+    /// Cierra cada cita `[n, m, …]` (y la línea) en cuanto lleva este número
+    /// de referencias. Un modelo pequeño se queda a veces enumerando líneas
+    /// (`[96, 97, 98, …]`) hasta agotar el tope de tokens; solo llama.cpp.
+    pub max_refs: Option<usize>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -33,11 +40,17 @@ pub enum LlmError {
 pub trait ChatModel: Send + Sync {
     fn context_window(&self) -> usize;
     async fn complete(&self, msgs: &[Message], opts: &GenOptions) -> Result<String, LlmError>;
-    fn stream<'a>(
-        &'a self,
-        msgs: &'a [Message],
-        opts: &'a GenOptions,
-    ) -> BoxStream<'a, Result<String, LlmError>>;
+    /// Varias generaciones independientes. Por defecto, una tras otra y en
+    /// orden; un backend local puede generarlas a la vez (llama.cpp las
+    /// decodifica en un mismo lote, que cuesta casi lo mismo que una sola).
+    async fn complete_many(&self, reqs: &[(Vec<Message>, GenOptions)]) -> Result<Vec<String>, LlmError> {
+        let mut out = Vec::with_capacity(reqs.len());
+        for (msgs, opts) in reqs {
+            out.push(self.complete(msgs, opts).await?);
+        }
+        Ok(out)
+    }
+    fn stream<'a>(&'a self, msgs: &'a [Message], opts: &'a GenOptions) -> BoxStream<'a, Result<String, LlmError>>;
 }
 
 pub mod chat_format;

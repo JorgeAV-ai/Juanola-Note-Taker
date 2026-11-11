@@ -98,6 +98,7 @@ pub async fn set_note_enhanced_doc(state: State<'_, AppState>, id: Id, doc: Enha
 
 #[tauri::command]
 pub async fn trash_note(state: State<'_, AppState>, id: Id) -> Res<()> {
+    // `start_recording` ya valida la nota: la carrera queda cubierta.
     let recording = state.recording.lock().map_err(e)?.as_ref().is_some_and(|a| a.note_id == id);
     if recording {
         return Err("Para la grabación antes de borrar la nota.".into());
@@ -174,7 +175,16 @@ pub async fn list_segments(state: State<'_, AppState>, note_id: Id) -> Res<Vec<S
 // --------------------------------------------------------------- grabación
 
 #[tauri::command]
-pub fn start_recording(app: AppHandle, state: State<'_, AppState>, note_id: Id, language: Option<String>) -> Res<()> {
+pub async fn start_recording(app: AppHandle, state: State<'_, AppState>, note_id: Id, language: Option<String>) -> Res<()> {
+    if state.stopping.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err("la grabación anterior aún está parando".into());
+    }
+    // Grabar en una nota que no existe o está en la papelera guardaría
+    // segmentos que nunca se ven (la FK los tira en silencio).
+    let note = repo::notes::get(&state.db, note_id).await.map_err(e)?.ok_or("la nota no existe")?;
+    if note.trashed_at.is_some() {
+        return Err("la nota está en la papelera: restáurala antes de grabar".into());
+    }
     let mut slot = state.recording.lock().map_err(e)?;
     if let Some(active) = slot.as_ref() {
         return Err(format!("ya hay una grabación en curso (nota {})", active.note_id));
@@ -211,7 +221,12 @@ pub async fn stop_recording(state: State<'_, AppState>) -> Res<usize> {
     };
     tracing::info!(note_id = %active.note_id, "stop_recording");
     state.detection.set_origin(detect::Origin::None);
-    tauri::async_runtime::spawn_blocking(move || active.stop()).await.map_err(e)?
+    // El slot ya está libre pero la sesión sigue terminando: `stopping`
+    // impide que `start_recording` solape otra captura mientras tanto.
+    state.stopping.store(true, std::sync::atomic::Ordering::Relaxed);
+    let result = tauri::async_runtime::spawn_blocking(move || active.stop()).await.map_err(e);
+    state.stopping.store(false, std::sync::atomic::Ordering::Relaxed);
+    result?
 }
 
 // ------------------------------------------------------------------ enhance
@@ -230,10 +245,7 @@ async fn llm(state: &AppState) -> Res<Arc<LlamaCpp>> {
         return Ok(m.clone());
     }
     let path = state.gguf();
-    let model = tauri::async_runtime::spawn_blocking(move || LlamaCpp::load(&path, 32_768).map(Arc::new))
-        .await
-        .map_err(e)?
-        .map_err(e)?;
+    let model = tauri::async_runtime::spawn_blocking(move || LlamaCpp::load(&path, 32_768).map(Arc::new)).await.map_err(e)?.map_err(e)?;
     *slot = Some(model.clone());
     Ok(model)
 }
@@ -242,6 +254,10 @@ async fn llm(state: &AppState) -> Res<Arc<LlamaCpp>> {
 /// transcripción, y las guarda en `enhanced_doc`.
 #[tauri::command]
 pub async fn enhance_note(app: AppHandle, state: State<'_, AppState>, id: Id) -> Res<EnhancedNotes> {
+    // De uno en uno: dos enhances a la vez (misma nota o no) compiten por la
+    // GPU y pisan el estado Enhancing/Ready del otro.
+    static LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+    let _guard = LOCK.lock().await;
     let set = |status: NoteStatus, message: Option<String>| {
         let _ = app.emit("note://status", NoteStatusEvent { note_id: id, status, message });
     };
@@ -279,9 +295,13 @@ pub async fn enhance_note(app: AppHandle, state: State<'_, AppState>, id: Id) ->
 // ------------------------------------------------------------------- otros
 
 #[tauri::command]
-pub fn list_audio_devices() -> Vec<juanola_audio_capture::AudioDevice> {
-    use juanola_audio_capture::AudioCapture;
-    juanola_audio_capture::CpalCapture::new().list_input_devices().unwrap_or_default()
+pub async fn list_audio_devices() -> Res<Vec<juanola_audio_capture::AudioDevice>> {
+    tauri::async_runtime::spawn_blocking(|| {
+        use juanola_audio_capture::AudioCapture;
+        juanola_audio_capture::CpalCapture::new().list_input_devices().unwrap_or_default()
+    })
+    .await
+    .map_err(e)
 }
 
 // --------------------------------------------------- calendario y detección
@@ -291,9 +311,8 @@ pub fn list_audio_devices() -> Vec<juanola_audio_capture::AudioDevice> {
 #[tauri::command]
 pub async fn coming_up() -> Res<Vec<CalendarEvent>> {
     let now = chrono::Utc::now();
-    let events = tauri::async_runtime::spawn_blocking(move || detect::calendar_events(now, now + chrono::Duration::days(30)))
-        .await
-        .map_err(e)?;
+    let events =
+        tauri::async_runtime::spawn_blocking(move || detect::calendar_events(now, now + chrono::Duration::days(30))).await.map_err(e)?;
     Ok(juanola_calendar::coming_up(events, now))
 }
 
@@ -303,23 +322,30 @@ pub fn calendar_access() -> Access {
 }
 
 /// Diagnóstico para el autotest: calendarios visibles y eventos del último y
-/// el próximo mes (sin filtrar).
+/// el próximo mes (sin filtrar). Datos privados: solo con el autotest activo.
 #[tauri::command]
-pub fn calendar_diagnostics() -> Vec<String> {
-    #[cfg(target_os = "macos")]
-    {
-        let now = chrono::Utc::now();
-        let mut out: Vec<String> =
-            juanola_calendar::eventkit::calendars().into_iter().map(|(_, t, s)| format!("calendario: {t} ({s})")).collect();
-        let events = juanola_calendar::eventkit::events(now - chrono::Duration::days(30), now + chrono::Duration::days(30));
-        out.push(format!("eventos ±30 días (sin todo el día): {}", events.len()));
-        out.extend(events.iter().rev().take(5).map(|e| format!("  {} · {} · {} asist.", e.start, e.title, e.attendees.len())));
-        out
+pub async fn calendar_diagnostics() -> Res<Vec<String>> {
+    if !autotest_enabled() {
+        return Ok(Vec::new());
     }
-    #[cfg(not(target_os = "macos"))]
-    {
-        Vec::new()
-    }
+    tauri::async_runtime::spawn_blocking(|| {
+        #[cfg(target_os = "macos")]
+        {
+            let now = chrono::Utc::now();
+            let mut out: Vec<String> =
+                juanola_calendar::eventkit::calendars().into_iter().map(|(_, t, s)| format!("calendario: {t} ({s})")).collect();
+            let events = juanola_calendar::eventkit::events(now - chrono::Duration::days(30), now + chrono::Duration::days(30));
+            out.push(format!("eventos ±30 días (sin todo el día): {}", events.len()));
+            out.extend(events.iter().rev().take(5).map(|e| format!("  {} · {} · {} asist.", e.start, e.title, e.attendees.len())));
+            out
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            Vec::new()
+        }
+    })
+    .await
+    .map_err(e)
 }
 
 /// Pide el permiso de calendario y espera la respuesta (hasta 2 min).
@@ -343,13 +369,15 @@ async fn note_for_event(state: &AppState, event: &CalendarEvent) -> Res<Note> {
         return Ok(n);
     }
     let ws = repo::workspaces::ensure_personal(&state.db).await.map_err(e)?;
-    let n = repo::notes::create(&state.db, ws, &event.title).await.map_err(e)?;
-    repo::notes::set_calendar_event(&state.db, n.id, Some(&event.id)).await.map_err(e)?;
-    repo::notes::get(&state.db, n.id).await.map_err(e)?.ok_or_else(|| "la nota no existe".into())
+    repo::notes::create_for_event(&state.db, ws, &event.title, &event.id).await.map_err(e)
 }
 
 #[tauri::command]
 pub async fn open_event_note(state: State<'_, AppState>, event: CalendarEvent) -> Res<Note> {
+    // El evento llega del webview: no envenenar la caché con ids arbitrarios.
+    if event.id.trim().is_empty() || event.id.len() > 256 || event.provider.trim().is_empty() || event.provider.len() > 64 {
+        return Err("evento no válido".into());
+    }
     note_for_event(&state, &event).await
 }
 
@@ -361,6 +389,17 @@ pub async fn note_event(state: State<'_, AppState>, note_id: Id) -> Res<Option<C
         Some(id) => repo::events::get(&state.db, &id).await.map_err(e),
         None => Ok(None),
     }
+}
+
+/// Glosario del usuario para la transcripción (texto tal cual lo escribió).
+#[tauri::command]
+pub async fn stt_glossary(state: State<'_, AppState>) -> Res<String> {
+    Ok(repo::settings::get(&state.db, crate::recording::KEY_GLOSSARY).await.map_err(e)?.unwrap_or_default())
+}
+
+#[tauri::command]
+pub async fn set_stt_glossary(state: State<'_, AppState>, glossary: String) -> Res<()> {
+    repo::settings::set(&state.db, crate::recording::KEY_GLOSSARY, &glossary).await.map_err(e)
 }
 
 #[tauri::command]
@@ -447,18 +486,24 @@ pub fn simulate_detection(app: AppHandle, kind: String) -> Res<()> {
 /// Abre el panel de privacidad de Ajustes del Sistema que corresponde a `kind`
 /// (`"mic_settings"` o `"audio_capture_settings"`).
 #[tauri::command]
-pub fn open_privacy_settings(kind: String) -> Res<()> {
+pub async fn open_privacy_settings(kind: String) -> Res<()> {
     let pane = match kind.as_str() {
         "mic_settings" => "Privacy_Microphone",
         "audio_capture_settings" => "Privacy_ScreenCapture",
         "calendar_settings" => "Privacy_Calendars",
         other => return Err(format!("ajuste desconocido: {other}")),
     };
-    std::process::Command::new("open")
-        .arg(format!("x-apple.systempreferences:com.apple.preference.security?{pane}"))
-        .status()
-        .map_err(e)
-        .and_then(|s| if s.success() { Ok(()) } else { Err(format!("open terminó con {s}")) })
+    let out = tauri::async_runtime::spawn_blocking(move || {
+        std::process::Command::new("open").arg(format!("x-apple.systempreferences:com.apple.preference.security?{pane}")).status()
+    })
+    .await
+    .map_err(e)?
+    .map_err(e)?;
+    if out.success() {
+        Ok(())
+    } else {
+        Err(format!("open terminó con {out}"))
+    }
 }
 
 /// Error de pintado del frontend (lo captura su ErrorBoundary): al log.
@@ -476,8 +521,9 @@ pub fn mic_permission_status() -> juanola_audio_capture::Permission {
 
 /// Abre la carpeta de datos de Juanola en Finder.
 #[tauri::command]
-pub fn reveal_data_dir(state: State<'_, AppState>) -> Res<()> {
-    std::process::Command::new("open").arg(&state.data_dir).status().map_err(e)?;
+pub async fn reveal_data_dir(state: State<'_, AppState>) -> Res<()> {
+    let dir = state.data_dir.clone();
+    tauri::async_runtime::spawn_blocking(move || std::process::Command::new("open").arg(dir).status()).await.map_err(e)?.map_err(e)?;
     Ok(())
 }
 
@@ -508,9 +554,28 @@ pub fn autotest_config() -> Option<String> {
     autotest_enabled().then(|| std::env::var("JUANOLA_AUTOTEST").unwrap_or_default())
 }
 
+/// Variable de entorno para el autotest (`None` fuera de él).
+#[tauri::command]
+pub fn autotest_env(key: String) -> Option<String> {
+    autotest_enabled().then(|| std::env::var(key).ok()).flatten()
+}
+
 #[tauri::command]
 pub fn autotest_log(line: String) {
-    tracing::info!(target: "autotest", "{line}");
+    if autotest_enabled() {
+        // Sin saltos de línea: no se pueden falsificar líneas de log.
+        tracing::info!(target: "autotest", "{}", line.replace('\n', " "));
+    }
+}
+
+/// Reproduce con `afplay` el WAV de `JUANOLA_AUTOTEST_AUDIO` por la salida del
+/// sistema y vuelve al terminar (modo `context`).
+#[tauri::command]
+pub async fn autotest_play() -> Res<()> {
+    let path = std::env::var_os("JUANOLA_AUTOTEST_AUDIO").filter(|_| autotest_enabled()).ok_or("falta JUANOLA_AUTOTEST_AUDIO")?;
+    tauri::async_runtime::spawn_blocking(move || std::process::Command::new("afplay").arg(path).status().map_err(e).map(|_| ()))
+        .await
+        .map_err(e)?
 }
 
 /// Reproduce `text` con `say` por la salida del sistema y vuelve al terminar.

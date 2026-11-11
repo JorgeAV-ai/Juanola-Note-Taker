@@ -1,0 +1,447 @@
+# Reunión semanal ficticia de equipo (~60 min, en inglés) en Tallybook, software de facturación para autónomos. Formato: Hablante|texto.
+# «Yo» es el engineering manager que conduce. Equipo: Priya (backend lead, EE. UU.), Marcus (frontend, Reino Unido, llega tarde), Hannah (producto, Reino Unido), Tom (SRE, Reino Unido, se le corta el audio), Aisha (datos, EE. UU.), Sophie (diseño, EE. UU.).
+# A mitad de reunión entran dos invitados de ventas: Rachel (Head of Sales) y Ben (account executive). La fecha de lanzamiento de facturas recurrentes se corrige: primero 26 de noviembre, al final 1 de diciembre.
+Yo|Morning, everyone. Or afternoon, for the London crowd. Can you all hear me okay?
+Hannah|Loud and clear. Afternoon from a very rainy London.
+Priya|Morning. I can hear you fine. I'm still on my first coffee, so be gentle.
+Yo|Noted. Aisha, Sophie, are you both there?
+Aisha|Yep, I'm here.
+Sophie|Here. Sorry, my camera's being weird, I'll just leave it off for now.
+Yo|No worries. Tom, I see you joined but you're on mute.
+Tom|Sorry, sorry. Got it. Hi all. I'm on the train, so if I drop out, that's why.
+Yo|Fair enough. Marcus messaged me that he's running about ten minutes late, he had a dentist appointment. So we'll start without him. How was everyone's weekend? Anything exciting?
+Hannah|I finally went to that ramen place in Shoreditch that everyone's been raving about. Honestly, overrated. The queue was an hour and the broth was fine. Just fine.
+Priya|That's the worst. When the hype is bigger than the food.
+Aisha|I spent the whole weekend trying to assemble a bookshelf. It's still not finished. There are three screws left over and I have no idea where they go.
+Sophie|That's normal. The leftover screws are a feature.
+Yo|Ha. Okay, let's get going, we've got a packed agenda today. Quick overview so everyone knows what's coming. First, numbers and project status. Then the incident from Thursday, which Tom will walk us through. Then the roadmap for the rest of the month. Around the half hour, Rachel and Ben from sales are joining us for the pricing discussion. After that, the decision on the payment provider, a bit on hiring, and we wrap up. Sound good?
+Priya|Sounds good. Do we really need to decide on the payment provider today? I thought that was next week.
+Yo|I'd like to, yes. Finance wants an answer before the end of the month and I don't want to push it again. But let's see how far we get.
+Priya|Okay.
+Yo|Aisha, do you want to start us off with the numbers?
+Aisha|Sure. Let me share my screen. Can you see the dashboard?
+Yo|Yes, we can see it.
+Aisha|Great. So, headline numbers for last week. We're at twenty-three thousand four hundred paying accounts. That's up from twenty-three thousand one hundred the week before, so a net gain of about three hundred, which is decent for November.
+Hannah|Is that net of cancellations?
+Aisha|Yes, that's net. Gross new paying accounts were a bit over seven hundred. New signups, so trials, were up eleven percent week over week, mostly from the blog post about invoicing for freelancers in the UK, which did really well on organic search.
+Yo|Nice. And revenue?
+Aisha|Monthly recurring revenue is at four hundred and twelve thousand dollars. Last month we closed at three hundred and ninety-eight thousand, so we're trending in the right direction.
+Priya|That's the highest we've ever been, right?
+Aisha|It is, yes. The not so great news is churn. Monthly churn came in at three point one percent. The target for the quarter is two point five percent, so we're still quite a bit above where we want to be.
+Yo|Do we know where it's coming from?
+Aisha|Partly. A lot of it is people on the Starter plan who signed up for a single project, sent two or three invoices, and left. That's kind of expected. But I'm also seeing more cancellations from Pro accounts than usual, and some of them mention the incident from Thursday in the cancellation survey.
+Yo|Okay, we'll get to Thursday in a minute. Can you dig deeper into the Pro cancellations? Break it down by cohort, signup month, plan, country, that kind of thing.
+Aisha|Yeah, I can have a churn breakdown by cohort ready by Friday.
+Yo|Perfect, Friday works. What else?
+Aisha|Net promoter score for October came in at fifty-two, which is up from forty-eight in September. Support tickets were at one thousand two hundred and forty last week, which is high. Normally we're around nine hundred. Again, a lot of that is Thursday.
+Hannah|And the app store rating?
+Aisha|Still four point six on iOS. Android is four point four. No real change there.
+Yo|Good. One more thing I wanted to ask about. The automatic payment reminders that we launched in October. How's adoption?
+Aisha|Thirty-eight percent of active accounts have turned on automatic reminders. Which is honestly better than we expected. Hannah's target was thirty percent by the end of the year.
+Hannah|I'll take it. And the accounts that use reminders get paid on average six days faster. That's the number I want to put in the marketing material.
+Yo|Six days faster is a great headline. Let's make sure we can back it up before marketing runs with it.
+Aisha|It's solid. It's based on about four thousand accounts over eight weeks. I can write it up properly.
+Yo|Great. Okay, project status. Priya, recurring invoices first?
+Priya|Sure. So recurring invoices. The backend is basically done. The scheduler is in place, the templates are in place, and we've got the retry logic for failed card payments. What's left is mostly the edge cases around time zones, like when an invoice is set to go out on the thirty-first and the month only has thirty days, and the email templates.
+Yo|Are we still on track for the twenty-sixth of November?
+Priya|For now, yes. It's tight, but yes. The plan is to launch on November twenty-sixth, which is the Wednesday before Thanksgiving, so not ideal for the US team, but it works.
+Hannah|We already told a few beta customers it would be before the end of November, so I'd really like to keep that.
+Yo|Okay, we'll keep the twenty-sixth for now. Next, Making Tax Digital.
+Priya|That's the VAT returns project for the UK. It's about seventy percent done. We've got the connection to the HMRC sandbox working and we can submit a test return end to end. What's left is the accountant view and the error handling, because HMRC's error messages are, let's say, creative.
+Tom|Creative is a nice word for it.
+Priya|Very nice word for it.
+Yo|And mobile?
+Sophie|I can take that one, since Marcus isn't here yet. Version four point two of the mobile app went out on Tuesday. It has the new invoice editor and the photo receipt capture. Crash rate is under half a percent, which is good. We had one bug with the date picker on older Android phones, and Marcus has a fix ready.
+Yo|How many people are using the receipt capture so far?
+Sophie|In the first five days, about two thousand one hundred receipts were uploaded. Which is more than I expected for something we didn't really announce. People seem to find it on their own.
+Hannah|We'll announce it properly in the newsletter next week, once Marcus's fix is out. I don't want to send a lot of new Android users straight into the date picker bug.
+Yo|Makes sense. Any feedback on the new invoice editor?
+Sophie|Mostly positive. The main complaint is that the tax field moved, and people can't find it. I'm going to try a small label change before we do anything bigger.
+Priya|That was my fault, actually. I asked for the tax field to move because of the VAT work.
+Sophie|It's fine, it's the right place for it long term. People just need a little help.
+Hannah|Could we add one of those little tooltips the first time someone opens the editor? Like, the tax field is now here.
+Sophie|Yes, that's exactly the kind of thing I had in mind. It's cheap, and we can remove it after a month.
+Yo|Okay, good. And the web app, Priya, anything worth mentioning on the backend apart from the big projects?
+Priya|We upgraded the database to the new version last weekend. No problems, no downtime, which I'm very happy about. And we closed about thirty bugs from the backlog, mostly small stuff that support had been asking for.
+Yo|Thirty bugs, nice. Support will be happy.
+Yo|Great. So, overall, recurring invoices on track but tight, Making Tax Digital at seventy percent, mobile four point two shipped. Anything I'm missing?
+Hannah|Expense tracking. We haven't touched it in three weeks.
+Yo|Right. Let's park that for the roadmap discussion, because I think we need to make a call on it.
+Marcus|Hi, sorry, sorry. I'm here. The dentist was running late. Did I miss anything important?
+Yo|Hey Marcus. Welcome. We did the numbers and the project status. Sophie covered mobile for you. Short version, four point two is out, crash rate is fine, and your date picker fix is ready.
+Marcus|Yeah, the date picker fix is ready, it just needs a review. I'll get it into the next patch release, four point two point one, probably on Thursday.
+Yo|Great. Okay, let's move to the incident. Tom, can you walk us through what happened on Thursday?
+Tom|Yeah, sure. So, on Thursday afternoon, UK time, around three fifteen, our payment webhook queue started backing up. Basically, when a client pays an invoice through the payment provider, the provider sends us a webhook, and we use that to mark the invoice as paid. Those webhooks were piling up in the queue and not being processed.
+Hannah|And customers were seeing invoices as unpaid that were actually paid.
+Tom|Exactly. In total, one thousand nine hundred invoices were showing the wrong status. They'd been paid, but in Tallybook they still looked unpaid.
+Priya|And the worst part was the reminders.
+Tom|Yeah. Because the invoices still looked unpaid, the automatic reminders kicked in. Three hundred and twelve customers had overdue reminders sent to their clients for invoices that had already been paid.
+Sophie|Oh no. That's really embarrassing for a freelancer. Imagine your client paid you and then gets an angry email saying they're late.
+Tom|Yeah, we got some very unhappy emails. The whole thing lasted ninety-four minutes from the first alert until the queue was fully drained.
+Yo|Ninety-four minutes. And what was the root cause?
+Tom|So the root cause was a configuration change. On Wednesday we deployed a change to the worker configuration, and it accidentally halved the number of queue workers, from sixteen to eight. Under normal load that's fine, you don't notice. But Thursday afternoon is one of our busiest times, lots of people paying invoices at the end of the week, and eight workers just couldn't keep up.
+Priya|And the change was reviewed?
+Tom|It was reviewed, but the diff was in a shared config file, and the line that changed the worker count wasn't obvious. It looked like a refactor. Nobody caught it, including me.
+Yo|Okay. I want to be clear that this isn't about blaming anyone. It was a process gap. What did we do to fix it?
+Tom|So, first, we rolled back the config and went back to sixteen workers. The queue drained in about twenty minutes after that. Then Priya wrote a script to recheck all the invoices against the provider's records, and that fixed the status on all nineteen hundred.
+Priya|Yeah, the script is in the repo if anyone wants to look at it. It's not pretty, but it worked.
+Yo|And the customers who had wrong reminders sent?
+Hannah|Support sent a personal apology to all three hundred and twelve. Some of them were pretty angry. A couple of them said they were going to leave.
+Yo|I think we should do more than an apology email. What do people think about giving them a free month?
+Hannah|I'd support that. It's the right thing to do, and honestly, at about nineteen dollars a month for most of them, it's not a lot of money.
+Aisha|Roughly six thousand dollars in total, if all of them are on Pro. Probably less.
+Yo|Okay, let's do it. The three hundred and twelve affected customers get one month free. Hannah, can support handle that?
+Hannah|Yes, I'll make sure support applies the credit this week.
+Yo|Great. Tom, what about making sure it doesn't happen again?
+Tom|So, three things. One, we need an alert on queue depth. Right now we only alert on errors, and there were no errors, just a growing queue. I want to alert if the queue goes over five thousand messages for more than five minutes. Two, the worker count should be in its own config file with a clear owner, so changes are obvious in review. And three, we should load test the webhook path before deploys on Wednesdays and Thursdays.
+Yo|The alert sounds like the most important one. Can you get that in this week?
+Tom|Yes, I'll have the queue depth alert set up by Wednesday.
+Yo|And the postmortem?
+Tom|I'll write the full postmortem and share it by Wednesday as well. Then we can review it in Friday's engineering sync.
+Yo|Perfect. Anything else on the incident?
+Marcus|Just one question. Did we lose any webhooks? Like, were any payments never recorded at all?
+Tom|No, nothing was lost. The provider retries webhooks for up to three days, and our queue was durable. It was just slow. Everything got processed in the end.
+Marcus|Okay, good. That's a relief.
+Priya|One thing I'd add. The reminders should really check the payment status with the provider right before sending, not just rely on our database. It's an extra API call, but it would have prevented the whole reminder mess.
+Yo|That's a good point. Is that a big change?
+Priya|Not huge. Maybe two or three days of work. But it's going to compete with recurring invoices.
+Yo|Let's come back to that in the roadmap, because everything is competing with recurring invoices right now.
+Tom|Sorry, can you, I think I, my train just went into a tunnel. Did I miss anything after the postmortem?
+Yo|Not much, Tom. Priya suggested that reminders check the payment status with the provider before sending. We'll discuss it in the roadmap.
+Tom|Okay, got it. Sorry, the connection here is terrible. I'll try to stay on.
+Sophie|Can I just say something about the incident page? I looked at our status page on Thursday and it took forty minutes before we posted anything there. A lot of people were on Twitter asking what was going on.
+Tom|That's fair. We were focused on fixing it and nobody was assigned to communications.
+Yo|Okay, so let's add that to the postmortem. For any incident, someone owns the status page within fifteen minutes. Tom, can you include that as an action item?
+Tom|Yep, will do.
+Yo|Great. Thanks, Tom. That was a rough afternoon and you all handled it well. Let's move on.
+Hannah|Before we do, a quick tangent. Did anyone see that the coffee machine on the fourth floor finally got fixed? I know half of you are remote, but it's genuinely the best news of the week in the London office.
+Marcus|Is it the one that only made hot water?
+Hannah|That's the one. It now makes coffee. Sort of. It's very weak.
+Marcus|So, hot water with ambition.
+Hannah|Exactly.
+Yo|Okay, I'm glad the coffee situation is improving. Moving on.
+Yo|So, the roadmap for the rest of the month. Hannah, do you want to lead this one?
+Hannah|Sure. So we've got about three and a half weeks of real work before the December slowdown. I see four big things on the table. Recurring invoices, which we already talked about. Making Tax Digital for the UK. Multi-currency invoicing. And expense tracking. Plus now Priya's reminder fix.
+Yo|And we can't do all of them.
+Hannah|We definitely can't do all of them. So my proposal is this. Recurring invoices ships first, that's non-negotiable, our customers have been asking for it for a year. Making Tax Digital goes to a beta group of UK accountants. Multi-currency starts, but only for euro invoices. And expense tracking moves to January.
+Priya|I'm fine with that. Honestly, expense tracking needs a proper design phase anyway.
+Sophie|Yeah, I haven't even started the research for expense tracking. Moving it to January is a relief, to be honest.
+Yo|Okay. Any objections to pushing expense tracking to January?
+Marcus|No objection from me.
+Yo|Good, so that's decided. Expense tracking moves to January. Hannah, tell us more about the Making Tax Digital beta.
+Hannah|So the idea is to invite two hundred UK accountants who already use Tallybook with their clients. We give them early access to the VAT return submission. They're a great test group, because they'll find every weird case, and they're vocal.
+Yo|When would the beta start?
+Hannah|I'd like the beta live by December fifteenth. That gives us time to collect feedback before the January VAT deadline, which is when lots of freelancers file.
+Priya|December fifteenth is doable if the accountant view is ready. That's the part I'm less sure about.
+Marcus|The accountant view is mostly frontend, right? I can help with that once the date picker fix is out.
+Priya|That would be great. Mostly it's a table of clients with their VAT status and a submit button. The tricky part is permissions.
+Yo|Okay, so Marcus helps Priya's team with the accountant view after the mobile patch. Hannah, can you prepare the list of the two hundred accountants?
+Hannah|Yes. I'll pull the list together with customer success by the end of next week.
+Yo|Great. And multi-currency?
+Hannah|So multi-currency is the one sales has been asking about the most. Rachel's going to talk about it when she joins, but the short version is we've lost deals because freelancers in the UK and Ireland bill clients in euros, and we only support one currency per account.
+Marcus|For the euro invoices, what do we actually need? Is it just the currency symbol on the PDF, or do we need exchange rates as well?
+Hannah|For the first version, the invoice is in euros, the payment is in euros, and the reports show a converted total in the home currency using the rate on the invoice date. No fancy hedging or anything.
+Marcus|Okay, that's manageable. The invoice templates need some work, the number formatting is different, commas and dots and all that. I can start on the euro invoice templates next week.
+Priya|One question on the euro invoices. What about rounding? When we convert to the home currency for the reports, do we round per line or on the total? Accountants care about this a lot.
+Hannah|Good question. I don't know. I'll check with a couple of the accountants in the beta.
+Priya|Okay. Because if we get it wrong, the VAT numbers won't match, and that's exactly the kind of thing that gets people angry.
+Marcus|And the invoice numbering? Do euro invoices share the same sequence as the normal ones?
+Hannah|Same sequence. In the UK the invoice numbers have to be sequential, and it doesn't matter what currency they're in.
+Marcus|Okay, that makes my life easier.
+Sophie|I'll need to update the designs for the invoice editor too, there's a currency selector we never built.
+Yo|Okay. Let's talk about dates. Code freeze for the end of the year is December eighteenth, same as last year. After that, only bug fixes until January fifth.
+Tom|Can we make that a real freeze this year? Last year we had three "small" deploys after the freeze and one of them broke login.
+Yo|Yes. A real freeze. Anything after December eighteenth needs my sign off and Tom's.
+Tom|Thank you.
+Yo|And then Priya's point about the reminders. The check with the provider before sending a reminder. I think that has to happen, given Thursday. Priya, you said two or three days?
+Priya|Two or three days, yes. If we do it now, it pushes recurring invoices a bit. If we do it after recurring invoices, it's early December.
+Hannah|I'd rather not leave the reminders as they are for another month. If we have another queue problem, we'll send another wave of wrong reminders.
+Tom|With the queue depth alert, we'd at least catch it faster.
+Hannah|Faster, but it would still happen.
+Yo|Let me think about it. My instinct is that the reminder check is more important than launching recurring invoices on a specific day. But let's hear about the payment provider first, because that affects Priya's team as well, and then decide.
+Priya|Agreed. The payment provider decision changes everything for my team, honestly.
+Yo|One more roadmap item, and then sales should be joining. The UK holidays. Hannah, Tom and Marcus, when are you all off?
+Hannah|I'm off from December nineteenth.
+Tom|Me too. Nineteenth through January second.
+Marcus|I'm taking the week between Christmas and New Year, so from the twenty-second.
+Yo|Okay, that works with the freeze. On the US side, Priya and I are around until the twenty-third. Aisha, Sophie?
+Aisha|I'm off the whole week of Thanksgiving, actually. So November twenty-third to the twenty-ninth.
+Yo|Oh, good to know. That's launch week for recurring invoices.
+Aisha|Yeah, sorry. I can set up the launch dashboard before I leave, so you can see adoption numbers without me.
+Yo|That would help, thanks. Can you have the launch dashboard ready by the twentieth?
+Aisha|Sure, the twentieth is fine.
+Sophie|I'm around for Thanksgiving but off from December twentieth.
+Yo|Okay. I'll put everything in the team calendar. Oh, and one last thing on the roadmap. The team offsite. We talked about doing one in January.
+Hannah|Lisbon! Please say Lisbon.
+Yo|Lisbon is the front runner, yes. Somewhere between the US and the UK, and cheaper than most places. But I don't have budget approval yet, so don't book anything.
+Marcus|I'm already practising my Portuguese.
+Yo|Okay, that's the roadmap. Ah, I see Rachel and Ben in the waiting room. Let me let them in.
+Rachel|Hi everyone. Thanks for having us.
+Ben|Hello, hello. Hope we're not interrupting anything juicy.
+Yo|Not at all, we just finished the roadmap. Welcome, both of you. For anyone who hasn't met them, Rachel runs sales, and Ben is one of our account executives, based in Manchester. So, pricing. Hannah, do you want to frame it?
+Hannah|Sure. So right now we have three plans. Starter at nine dollars a month, Pro at nineteen, and Business at thirty-nine. We haven't changed prices in over two years, and in that time we've added reminders, the mobile app, receipt capture, and soon recurring invoices and Making Tax Digital. My proposal is to raise the Pro plan from nineteen to twenty-five dollars.
+Rachel|Twenty-five feels like a lot in one go. That's more than a thirty percent increase.
+Hannah|It's about thirty-one percent, yes. But our competitors are all between twenty-four and thirty for an equivalent plan.
+Rachel|I know, and I agree we should raise it. But from what I hear on calls, the jump matters more than the final number. Freelancers are very price sensitive, and a lot of them pay for this out of their own pocket. Ben, what are you hearing?
+Ben|Same thing, honestly. When I mention pricing, the first question is always, will my price go up? People really hate surprises. If we go to twenty-five and existing customers see a thirty percent increase, we're going to get a lot of angry tickets.
+Yo|What if existing customers keep their current price for a while?
+Rachel|That's what I was going to suggest. Grandfather existing customers for six months. New customers pay the new price right away, existing ones keep nineteen dollars for six months and then move up.
+Aisha|I ran some numbers on that last week, actually. If we raise Pro to twenty-five with no grandfathering, we'd expect churn to spike for two or three months. With six months of grandfathering, the spike is much smaller, and we still get most of the revenue in the second half of next year.
+Yo|Do you have a figure for the revenue impact?
+Aisha|Roughly, in the scenario with grandfathering, we'd add around thirty-five thousand dollars of monthly recurring revenue by the end of next year. But that's a rough model. I'd want to redo it with the final price.
+Yo|Okay. Rachel, what about the price itself? Twenty-five or something lower?
+Rachel|I'd go with twenty-four. It sounds silly, but twenty-four reads very differently from twenty-five in the market. Twenty-five is a round number, people compare it against the bigger players. Twenty-four looks like we thought about it.
+Hannah|I can live with twenty-four. I care more about doing it at all.
+Priya|From an engineering point of view, it doesn't matter. Changing a price in the billing system is easy. Grandfathering is a bit more work, we need a flag per account, but it's fine.
+Yo|Okay. So the proposal on the table is, Pro goes from nineteen to twenty-four dollars, existing customers are grandfathered for six months. Starter and Business stay the same for now. Any objections?
+Ben|Can I ask about Starter? I get asked about a free plan almost every week. Have we ever thought about a free tier?
+Hannah|We've talked about it a few times. The problem is support cost. Free users send almost as many tickets as paying ones.
+Aisha|We looked at it last year, actually. If we launched a free plan with three invoices a month, the model said we'd get a lot more signups but the conversion to paid would drop, and support tickets would go up by about forty percent.
+Ben|Forty percent more tickets, ouch.
+Rachel|I'm not pushing for a free plan. I just think the fourteen-day trial is too short for some freelancers. They might not send an invoice in their first two weeks.
+Hannah|That's a fair point. What would you want, thirty days?
+Rachel|Thirty days would be great. Or at least twenty-one.
+Yo|Let's not decide the trial length today. It's a good question, but I'd want to see the data first. Aisha, is that something you could look at after the churn work?
+Aisha|Yes, I can look at it, but not before December. I'm full until Thanksgiving.
+Yo|That's fine, it's not urgent. Let's park the trial length for December. Back to the price change.
+Sophie|What about annual plans? Right now the annual discount is fifteen percent.
+Hannah|I'd keep the annual discount at fifteen percent. If anything, the price increase is a good reason to push people to annual plans.
+Rachel|Agreed, keep it at fifteen.
+Yo|Okay. Then that's the decision. Pro goes to twenty-four dollars a month for new customers, existing customers keep nineteen dollars for six months, and the annual discount stays at fifteen percent. When does it take effect?
+Hannah|I'd say January fifteenth. After the holidays, after the code freeze, and before the tax season rush in the UK.
+Rachel|January fifteenth works for sales.
+Yo|Great. January fifteenth it is. Hannah, can you draft the announcement email to customers?
+Hannah|Yes. I'll have a draft of the pricing announcement by November twentieth, so legal and support can review it.
+Yo|Sophie, the pricing page will need a refresh as well, right?
+Sophie|Yes. And I'd like to redesign it anyway, it's very cluttered. I'll do mockups for the new pricing page by the end of next week.
+Yo|Great. And Aisha, can you redo the revenue model with twenty-four dollars and the six months of grandfathering?
+Aisha|Yes, I'll update the model by Thursday.
+Yo|Okay. Now, Rachel, you mentioned a team plan in your email.
+Rachel|Yes, this is the bigger thing for us. We're seeing a lot of small agencies. Design studios, little marketing shops, a group of three or four freelancers who share clients. Right now they each buy a separate Pro account, which is clunky, or they don't buy at all.
+Ben|I've got a good example. Brightwave, a creative agency here in Manchester. They work with about a hundred and twenty freelancers. They want one account where the agency manages all the invoices, and each freelancer has their own login. Right now we can't really offer that.
+Yo|How many deals like that are in the pipeline?
+Rachel|We've got fourteen agency deals in the pipeline right now, worth about eighty-six thousand dollars in annual recurring revenue. That's not huge, but it's growing fast. Two months ago it was four deals.
+Hannah|What price did you have in mind for a team plan?
+Rachel|We tested a few numbers with prospects. Fifty-nine dollars a month for up to five seats seems to land well. And then something like nine dollars per extra seat.
+Priya|Multi-user accounts are a big change in the backend, though. Right now one account is one user. Permissions, roles, who can see which client. That's months, not weeks.
+Rachel|I understand. I'm not asking for it this month. I just want it on the roadmap, so I can tell prospects it's coming.
+Yo|Let's be careful with that. I don't want sales promising dates we can't hit. Priya, could we do a rough estimate?
+Priya|I can do a rough sizing, but not before the end of the month. My team is completely full.
+Yo|Okay. Let's say team plan is a candidate for the first quarter, no promises, no dates. Hannah, can you write a short one-pager on the team plan so we can discuss it properly in December?
+Hannah|Sure. I'll write the one-pager on the team plan for the first December planning session.
+Rachel|That works for me. Thank you.
+Ben|Can I mention one more thing? We lost six deals last month, and four of those were because of multi-currency. Freelancers in Ireland who bill in euros and get paid in euros. They just went with a competitor.
+Hannah|Yes, that's exactly why multi-currency is on the roadmap this month. The first version only does euro invoices.
+Ben|Euro is enough for most of them, honestly. If we can tell them it's coming, I can probably bring back at least two of those deals.
+Yo|When do we think euro invoicing will be live, Marcus?
+Marcus|Hard to say. The templates I can do in a week or two. But the payment side depends on Priya's team, and they're busy.
+Priya|And it depends on which payment provider we pick, which is the next topic.
+Yo|Right. Let's not give a date for multi-currency until we've made the provider decision. Ben, can you send me the list of those lost deals, with the reason for each one?
+Ben|Sure. And for Brightwave, I'll ask them how many seats they'd actually need on day one. A hundred and twenty is the total, but maybe they'd start with twenty.
+Yo|That would be useful. Rachel, can you also send us the full list of the fourteen agency deals? Just company name, size, and what they need.
+Rachel|Yes, I'll send the list of agency deals tomorrow.
+Yo|Great. Anything else from sales before we move on?
+Rachel|One small thing. Could someone from the team join a customer call now and then? Prospects love talking to an engineer. It builds trust.
+Marcus|I'd be happy to do that, actually. I like talking to customers.
+Rachel|Amazing. I'll put you on a call next week, Marcus.
+Yo|Great. Rachel, Ben, you're welcome to stay for the payment provider discussion, since it affects sales as well.
+Rachel|We'll stay. I'm curious about this one.
+Yo|Okay, the payment provider. Quick background for Rachel and Ben. Today we process all card payments through PayStream. They charge us two point nine percent plus thirty cents per transaction. We've been talking to Corvex Payments for about two months, and they've offered two point four percent plus twenty cents. Priya's team has done a technical evaluation, and finance has done the numbers. Priya?
+Priya|So, technically, Corvex is good. Their API is cleaner than PayStream's, honestly. Their webhooks are signed and ordered, which would have helped on Thursday. They support euro and pound payouts natively, which we need for multi-currency. And their dashboard is better for support.
+Yo|What about the risks?
+Priya|The biggest risk is the saved cards. We have about eighteen thousand saved cards on file with PayStream, mostly for automatic payments and recurring invoices. We can't just copy them over, they have to be migrated through a secure token transfer between the two providers. That's a process that takes a few weeks, and PayStream has to cooperate.
+Tom|And they won't be thrilled to help us leave.
+Priya|No. But they're obligated to, it's in the contract.
+Yo|How long would the whole migration take?
+Priya|We estimate ten weeks. Two weeks to build the integration, four weeks of testing in the sandbox, the token migration, and then two weeks of running both providers in parallel before we switch fully.
+Aisha|And the savings?
+Yo|Finance estimates we'd save about one hundred and forty thousand dollars a year in processing fees at our current volume. More as we grow.
+Rachel|That's a lot of money. That's almost two salaries.
+Yo|It is. The other date that matters is our PayStream contract. It renews on March thirty-first. If we don't give notice before then, we're locked in for another year.
+Hannah|So if the migration takes ten weeks, we'd need to start by mid-January at the latest.
+Priya|More or less. But I'd rather start earlier, because there's always something.
+Marcus|Does the migration change anything for the frontend? Like the checkout page that clients see when they pay an invoice?
+Priya|Yes, the payment form changes. Corvex has its own embedded form. It's actually nicer, but we'd need to restyle it and test it on mobile.
+Sophie|I'd want to look at that. The current checkout is one of the few parts of the product people compliment.
+Rachel|From the customer side, does anything change? Like, do freelancers get paid out faster or slower?
+Priya|Slightly faster, actually. PayStream pays out in three business days. Corvex pays out in two in the UK and the US. That's something sales can mention once it's live.
+Ben|Faster payouts is a great line for freelancers. Cash flow is everything for them.
+Rachel|Absolutely. Half of my calls are about cash flow in one way or another.
+Hannah|We should be careful with the messaging, though. During the migration some people will be on PayStream and some on Corvex, so payout times will be different for a while.
+Priya|True. During the two weeks of running in parallel, it'll be a mix.
+Yo|Okay, so no messaging about payout speed until the migration is done. Let's keep it simple.
+Tom|And from an ops point of view, I'd want a full runbook for the switch day, with a rollback plan if something goes wrong. Switching payment providers is not something I want to improvise.
+Priya|That will be part of the migration plan. Rollback included.
+Tom|Great. Then I'm happy.
+Yo|Noted. Okay, so the options are, one, stay with PayStream and renegotiate, two, move to Corvex. Does anyone think we should stay?
+Tom|I'll play devil's advocate. PayStream has been stable for us for four years. Thursday wasn't their fault, it was ours. Switching providers is the kind of project that eats a team for a quarter.
+Priya|That's fair. But we asked PayStream for a better rate twice this year, and they said no both times.
+Yo|They did. Their best offer was two point eight percent, which is almost nothing.
+Tom|Okay, then I'm convinced. I just wanted someone to say it out loud.
+Yo|Good, thanks Tom. So, my proposal. We move to Corvex Payments. But we do it in phases. Phase one is UK customers only, starting with new accounts, so we don't touch saved cards at first. Phase two is the US and the saved card migration. We give PayStream notice well before March thirty-first.
+Priya|I like the phased approach. UK first also lines up with the euro and pound payouts for multi-currency.
+Hannah|And for sales, that means multi-currency could launch on Corvex directly, so we don't build it twice.
+Ben|That's music to my ears.
+Yo|Okay. Any objections to going with Corvex, phased, UK first?
+Aisha|No objection. Just make sure we track payment failure rates before and after. If Corvex declines more cards, the savings disappear quickly.
+Yo|Good point. Aisha, can you set up a baseline of current payment failure rates on PayStream, so we can compare?
+Aisha|Yes. I'll do it after the revenue model, so probably early next week.
+Yo|Great. So that's decided. We go with Corvex, in phases, UK first. I'll talk to finance tomorrow and get the Corvex contract reviewed by legal. I'd like to have it signed by the end of November.
+Rachel|Is there anything about Corvex we shouldn't say to customers yet?
+Yo|Please don't mention it to customers at all until the contract is signed. Internally only.
+Rachel|Understood.
+Yo|Priya, can you write the technical migration plan for Corvex? Phases, timeline, the token migration, rollback.
+Priya|Yes. I'll have the Corvex migration plan ready by November twenty-fifth.
+Priya|But, and this is the important part, I have to be honest about recurring invoices. If my team is doing the Corvex integration, the reminder check, and recurring invoices, the twenty-sixth isn't realistic anymore. I was already nervous about it before today.
+Yo|Okay. What would be realistic?
+Priya|If we do the reminder check first, which I think we should, recurring invoices could launch on December first. That's the Monday after Thanksgiving. It's actually a better day, because the US team will be back and Aisha will be around for the numbers.
+Aisha|I'd definitely prefer to be around for the launch.
+Hannah|December first. I told the beta customers before the end of November.
+Priya|I know. Sorry.
+Hannah|No, it's fine. It's three working days. I'd rather launch it properly. I'll tell the beta customers the new date.
+Yo|Okay, so let's correct what we said earlier. Recurring invoices launches on December first, not November twenty-sixth. And the reminder check with the provider goes in first, before recurring invoices. Everyone okay with that?
+Marcus|Fine with me.
+Tom|Makes sense. And a Monday launch is much better for on-call than a Wednesday before a holiday.
+Yo|Good. Priya, can you update the release plan for recurring invoices with the new date?
+Priya|Sure, I'll update the release plan today.
+Rachel|Okay, I think that's our cue. Thanks for letting us join, this was really useful.
+Ben|Cheers, everyone. Marcus, I'll send you the call invite.
+Marcus|Sounds good, Ben.
+Yo|Thanks, Rachel, thanks, Ben. See you next week.
+Yo|Okay, it's just us again. Let's do hiring. We have two open roles right now, a senior backend engineer and a QA engineer. Priya, the senior backend role first.
+Priya|So, for the senior backend role, we've had sixty-four applicants so far. We did phone screens with twelve of them, and four went through the full loop. One candidate really stood out, Leila. She has eight years of experience, most of it in payments, which given everything we just discussed is perfect timing.
+Tom|I did her systems design interview. She was excellent. She asked about idempotency in our webhook handling before I even brought it up.
+Marcus|I did the pairing session. Very calm, very clear. She also pointed out a bug in the exercise that we didn't know about.
+Yo|Ha, we should fix that exercise. Okay, so everyone who interviewed her is a strong yes?
+Priya|Strong yes from all four interviewers.
+Yo|Great. What about compensation? What is she asking for?
+Priya|She's asking for one hundred and seventy thousand. The band for the role tops out at one hundred and sixty-five thousand.
+Yo|I talked to HR about this yesterday. We can't go over the band, but we can add a signing bonus. My plan is to offer one hundred and sixty-five thousand base, plus a ten thousand dollar signing bonus.
+Priya|I think she'd accept that. She mentioned she cared more about the work than the last few thousand.
+Yo|Okay. I'll send Leila the offer by Tuesday. Priya, can you give her a call before that, just to say how excited we are? It makes a difference.
+Priya|Of course. I'll call her tomorrow.
+Yo|Now, the QA role. Honestly, I've been going back and forth on this one. With the price change, the Corvex migration, and the hiring budget for next year still not approved, I think we should put the QA role on hold until January.
+Marcus|That worries me a bit. We don't have anyone dedicated to testing, and we're about to do a payment migration.
+Yo|I know. That's the trade-off. What I'd suggest is that we put the money into Leila's signing bonus and some contractor hours for testing the Corvex migration, and reopen the QA role in January when the budget is approved.
+Tom|Contractor testing for the migration is a good idea. We did that for the mobile launch and it worked well.
+Marcus|Okay. As long as the payment migration gets proper testing, I'm fine with that.
+Yo|It will. So, decision. The QA role is on hold until January, and we bring in a contractor for the Corvex testing. I'll look for a testing contractor this week.
+Hannah|Can I raise something about the interview process? Leila told me in her final chat that our process felt long. Five rounds plus a take-home is a lot, especially for senior people who have other offers.
+Priya|She's not the first person to say that. We lost a candidate in September because another company made an offer while we were still scheduling round four.
+Yo|What do people suggest?
+Priya|Drop the take-home completely, and merge the two technical rounds into one longer session. That gets us to four rounds.
+Tom|I'd be okay with that, as long as the systems design round stays separate. That's where you really see seniority.
+Yo|Okay. Let's go from five rounds to four, no take-home, systems design stays separate. Priya, can you update the interview guide?
+Priya|Yes, I'll update the interview guide by next Monday.
+Yo|One more thing on hiring. Callum, the new frontend developer in London, starts on November thirtieth. Marcus, you'll be his onboarding buddy, right?
+Marcus|Yes, I'm his buddy. I've already set up his first week. Laptop, accounts, a small starter ticket.
+Yo|Great. Wait, sorry, is it the thirtieth? The thirtieth is a Sunday.
+Hannah|It's Monday the first of December. The thirtieth was the original date, then he asked to move it.
+Yo|Right, so Callum starts on December first, same day as the recurring invoices launch. Busy Monday.
+Marcus|He'll get to see a launch on his first day. Great introduction.
+Yo|Ha, yes. Okay, a couple of smaller things before we finish. On-call. Tom, how's the rotation looking after Thursday?
+Tom|So, right now we have five people in the rotation. Me, Priya, Marcus, and two people from the platform team. Each person does one week every five weeks. After Thursday, I think we need a second person on call during the busy hours, Thursday and Friday afternoons UK time, at least until the alerts are better.
+Priya|I'm not sure we have the people for that. My team is already stretched.
+Tom|It doesn't have to be a full second rotation. Just someone reachable for a few hours.
+Yo|Let's try it for four weeks and see. Tom, can you put a proposal in the on-call channel?
+Tom|Yep, I'll post it in the on-call channel tomorrow.
+Yo|Next, the security audit. As a reminder, we're doing our SOC 2 audit in the first quarter. The auditors want evidence of access reviews every quarter, and we missed the last one.
+Tom|That's on me, sorry. I'll do the access review this month.
+Yo|Thanks. Let's say by the end of November, before the freeze gets in the way.
+Tom|By the end of November, yes.
+Sophie|Sorry, can I bring up something totally unrelated? Is anyone else's laptop fan going crazy since the last operating system update? Mine sounds like a jet engine every time I open the design tool.
+Marcus|Mine too. I think it's the indexing thing after the update. It calms down after a day or two.
+Sophie|It's been four days.
+Marcus|Then maybe it doesn't calm down. Try restarting.
+Sophie|I did. Three times.
+Yo|Let's take that to the IT channel, Sophie. They might know.
+Sophie|Yeah, fair. Sorry.
+Yo|No problem. Okay, last topic from me, and then we'll go round for anything else. Aisha, before, you said some of the Pro cancellations mentioned Thursday. Do you have a number for that?
+Aisha|Let me check. Yes. Of the Pro cancellations last week, twenty-seven mentioned the incident or the wrong reminders in the survey. Total Pro cancellations were about two hundred and ten, so it's a little over ten percent.
+Yo|Okay. That's not the main driver, but it's not nothing. With the free month, hopefully some of them come back.
+Hannah|We could also email the twenty-seven people directly. Some of them might reconsider if they hear what we've changed.
+Yo|I like that. Hannah, can support reach out to those twenty-seven, once the postmortem is published, with a short note about what we've fixed?
+Hannah|Yes, I'll ask support to reach out to them after Tom's postmortem is out.
+Yo|Before the round, I want to spend five minutes on the quarterly goals, because we're halfway through the last quarter of the year and I want to know where we stand. Aisha, you have the numbers?
+Aisha|Yes. So we had three company goals for the quarter that engineering contributes to. First, activation. That's the share of new trials that send their first invoice within seven days. The target is forty-five percent. We're at forty-one percent right now.
+Hannah|It was thirty-seven at the start of the quarter, so it's moving.
+Aisha|It's moving, yes. Most of the improvement came from the new onboarding checklist that Sophie designed. People who complete the checklist activate at almost twice the rate.
+Sophie|I'm very happy about that one.
+Yo|What's the average time to first invoice now?
+Aisha|Two point three days. It was a bit over three days in the summer.
+Yo|Okay, good. Second goal?
+Aisha|Second goal is churn, which we already talked about. Target two point five, we're at three point one. That's the one I'm worried about. Third goal is uptime, which was ninety-nine point nine five percent until Thursday. After Thursday we're at ninety-nine point eight eight for the quarter, so we've missed it unless nothing else happens.
+Tom|Technically the queue backlog wasn't downtime, the app was up. But I agree it should count. Customers experienced it as broken.
+Yo|I agree, let's count it. Being honest about it is more important than the number. Okay, so activation on track, churn off track, uptime missed. Hannah, do we want to change anything for the rest of the quarter to help churn?
+Hannah|I think the biggest lever is the onboarding for Pro accounts. A lot of the Pro people who leave never set up reminders or connected their bank. If we nudge them in the first two weeks, I think we'd keep more of them.
+Aisha|The data supports that. Pro accounts with reminders turned on churn at about half the rate.
+Sophie|I could add a reminders step to the onboarding checklist. It's a small design change.
+Marcus|And a small frontend change. Maybe a day.
+Yo|Let's do it. Sophie and Marcus, add the reminders step to the onboarding checklist. Can we get it out before Thanksgiving?
+Marcus|Before Thanksgiving, yes. It can go in the same release as the date picker fix if Sophie has the design by Wednesday.
+Sophie|I'll have it by Wednesday.
+Yo|Great. Now, Making Tax Digital again, because there's one thing I forgot earlier. Priya, the HMRC recognition. Where are we with that?
+Priya|So, to be listed as recognised software for Making Tax Digital, HMRC has to approve us. We submitted the application three weeks ago. They told us to expect an answer in four to six weeks.
+Hannah|And without that, we can't launch to everyone, only the beta.
+Priya|Exactly. The beta is fine with sandbox and a limited production access. But the full launch needs the recognition.
+Yo|So the earliest full launch would be when?
+Priya|If they answer in six weeks, mid-December. Realistically, with the holidays, January.
+Hannah|January is fine. The big deadline for freelancers in the UK is the end of January anyway. As long as the beta runs in December, we're okay.
+Yo|Okay. Priya, can you chase HMRC if we haven't heard by the end of the month?
+Priya|Yes. I'll send them a follow-up on December first if we haven't heard anything.
+Tom|Sorry, I dropped again. Are we still on tax? I had a question about the HMRC sandbox. It's been very unstable this week. Twice it was down for more than an hour.
+Priya|Yeah, we've noticed. It's not us, it's them. Their status page is, let's say, optimistic.
+Tom|Okay, then I won't worry about the alerts it's triggering. Maybe I'll just mute those.
+Yo|Mute the sandbox alerts, but not the production ones, please.
+Tom|Obviously. Production stays loud.
+Marcus|Speaking of which, has anyone else noticed how many alerts we have in the general channel? I think we have about forty a day, and almost none of them are actionable.
+Tom|I know, I know. It's on my list. After the postmortem I'll do an alert cleanup.
+Yo|Good. Thursday showed us that we have too many alerts that don't matter, and not enough that do.
+Yo|Okay, let's do a quick round. Anything else people want to bring up? Tom, you first, since you have the worst connection.
+Tom|Thanks. Just one thing. The cloud bill. October came in at thirty-one thousand dollars, which is up eighteen percent from September. Most of that is the database. We've been running everything on demand, and if we commit to reserved instances for a year, we'd save about a quarter of the database cost.
+Priya|Do we know why it went up so much?
+Tom|Partly growth, partly the reporting queries. Some of the new reports run full table scans every night. Priya, I think some of those are from your team.
+Priya|Yeah, probably the VAT reports. We can add some indexes. That's a small fix.
+Yo|Okay. Tom, can you send me the numbers for the reserved instances? If it's what you say, I'll approve it this week. I just need to show it to finance.
+Tom|Sure, I'll send you the reserved instance numbers today.
+Yo|Thanks. Priya, anything else?
+Priya|Not really, I've talked enough today. Oh, actually, one small thing. The API documentation for the public API is very out of date. We've had three integration partners complain this month. It's not urgent, but someone should own it.
+Hannah|I can find someone on the developer relations side, we have a contractor who's done docs before.
+Yo|Great, let's see if the contractor can take it. Hannah, let me know. Marcus?
+Marcus|Good news, actually. I spent some time last week on the performance of the invoice list page. It used to take about three point two seconds to load for accounts with lots of invoices. It's now down to one point one seconds. Mostly pagination and caching.
+Yo|That's a big improvement. Is it live?
+Marcus|It went live on Friday. Aisha, can you check if people are using the invoice list more now?
+Aisha|Sure, I'll take a look. That's an easy one.
+Yo|Nice work, Marcus. Sophie?
+Sophie|Two things. First, we did an accessibility audit of the web app with an external agency. They found twenty-three issues. Most of them are small, like contrast on the grey buttons and missing labels on some icons. Two are serious. The invoice editor can't be used with a keyboard only, and the screen reader doesn't announce errors on the payment form.
+Yo|The payment form one we should fix as part of the Corvex work, since that form is changing anyway.
+Sophie|That's what I was going to suggest. And the invoice editor, Marcus and I can look at it together.
+Marcus|Yeah, happy to.
+Yo|Okay. Can you two put together a plan for the serious issues, and the rest goes in the backlog?
+Sophie|Yes. I'll share the full audit report with everyone this week, and Marcus and I will look at the keyboard navigation next sprint.
+Yo|Great. Second thing?
+Sophie|The second thing is about the customer advisory board. Hannah and I want to run a session in December with about twelve customers, to show them the recurring invoices and get feedback on the team plan idea.
+Hannah|We were thinking December ninth. It's after the launch, and before everyone disappears for the holidays.
+Yo|December ninth sounds good. Will it be remote?
+Hannah|Remote, yes. Ninety minutes. We'll invite a mix of US and UK customers. Rachel suggested a couple of the agencies too.
+Yo|Great. Aisha, anything from you?
+Aisha|Just a reminder that I'm out Thanksgiving week. If anyone needs data for anything before then, please ask me this week or next, not on the twenty-first at five p.m.
+Priya|Very specific. Has that happened before?
+Aisha|Every single year.
+Yo|Fair. Hannah, anything else?
+Hannah|One thing. I want to go back to the free month for the incident. I talked to finance quickly in the chat while we were talking, and they're fine with it, but they want it applied as a credit, not a refund, so it shows up correctly in the books.
+Yo|Okay, a credit is fine. That's what I meant anyway. Make sure support knows.
+Hannah|Will do.
+Yo|Okay, I think that's everything. Let me just quickly go back over a few of the important ones, not everything, just the ones with dates this week. Tom, the queue depth alert and the postmortem, both by Wednesday. Me, the offer to Leila by Tuesday. And Priya, the Corvex migration plan by the twenty-fifth.
+Tom|Yep.
+Priya|Yep, the twenty-fifth.
+Yo|And just to repeat the big decisions, because there were a lot of them. Pro goes to twenty-four dollars from January fifteenth, with six months of grandfathering. We're moving to Corvex, phased, UK first. Recurring invoices launches December first. Expense tracking is in January. QA hiring is on hold until January.
+Marcus|That's a lot of decisions for one Monday.
+Yo|It is. Good meeting, though. Thanks, everyone. Oh, Tom, before you go. The status page owner. Make sure it's in the postmortem.
+Tom|Sorry, you broke up there, what was the last bit?
+Yo|The status page owner within fifteen minutes. In the postmortem.
+Tom|Yes, yes, it's in there. Got it.
+Yo|Great. Okay, see you all next week. And Hannah, enjoy the weak coffee.
+Hannah|I will. Bye, everyone.
+Priya|Bye.
+Sophie|Bye, all.

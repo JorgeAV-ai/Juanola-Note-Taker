@@ -1,34 +1,34 @@
 {
-  "_doc": "Hechos que unas buenas notas de reunion_producto.txt deben contener. Cada hecho es una lista de grupos; se cumple si una misma viñeta contiene una alternativa de cada grupo (texto normalizado: minúsculas, sin tildes, números en dígitos, sin puntos de millar). Con task=true la viñeta tiene que ser una tarea (is_action_item).",
+  "_doc": "Hechos que unas buenas notas de reunion_producto.txt deben contener. Cada hecho es una lista de grupos; se cumple si una misma viñeta contiene una alternativa de cada grupo (texto normalizado: minúsculas, sin tildes, números en dígitos, sin puntos de millar). Con task=true la viñeta tiene que ser una tarea (is_action_item). «section» da, por plantilla, los apartados donde puede ir el hecho (colocación). «user_notes» da, por plantilla, los apartados aceptables de cada nota de notas_usuario_plantillas.txt.",
   "facts": [
-    {"id": "clinicas_activas", "all": [["1840"]]},
-    {"id": "crecimiento_22", "all": [["22"]]},
-    {"id": "mrr_112k", "all": [["112000", "112 mil", "112k"]]},
-    {"id": "objetivo_120k", "all": [["120000", "120 mil", "120k"]]},
-    {"id": "operaciones_perdidas", "all": [["9 operaciones", "nueve operaciones"]]},
-    {"id": "cancelacion_2_4", "all": [["2,4"]]},
-    {"id": "recordatorios_63", "all": [["63"]]},
-    {"id": "citas_duplicadas_javier", "all": [["javier"], ["miercoles"]]},
-    {"id": "error_pdf", "all": [["pdf"]]},
-    {"id": "android_200_sesiones", "all": [["android"], ["200"]]},
-    {"id": "mes_gratis", "all": [["mes gratis"]]},
-    {"id": "plan_basico_39", "all": [["39"]]},
-    {"id": "plan_clinica_79", "all": [["79"]]},
-    {"id": "plan_centro_149", "all": [["149"]]},
-    {"id": "precios_15_enero", "all": [["15 de enero"]]},
-    {"id": "precios_por_pais", "all": [["pais"]]},
-    {"id": "elena_52k", "all": [["elena"], ["52000", "52 mil"]]},
-    {"id": "movil_remoto", "all": [["remoto"]]},
-    {"id": "lanzamiento_18_nov", "all": [["18 de noviembre"]]},
-    {"id": "portal_2_dic", "all": [["2 de diciembre"]]},
-    {"id": "feria_valencia", "all": [["valencia"]]},
-    {"id": "nps_41", "all": [["41"]]},
-    {"id": "auditoria_1_dic", "all": [["1 de diciembre"]]},
-    {"id": "marketing_35k", "all": [["35000", "35 mil"]]},
-    {"id": "feria_12k", "all": [["12000", "12 mil"]]},
-    {"id": "buscadores_210", "all": [["210"]]},
-    {"id": "recomendacion_100", "all": [["100 clinicas"]]},
-    {"id": "holded_primero", "all": [["holded"]]},
+    {"id": "clinicas_activas", "all": [["1840"]], "section": {"semanal": ["Métricas y estado"]}},
+    {"id": "crecimiento_22", "all": [["22"]], "section": {"semanal": ["Métricas y estado"]}},
+    {"id": "mrr_112k", "all": [["112000", "112 mil", "112k"]], "section": {"semanal": ["Métricas y estado"]}},
+    {"id": "objetivo_120k", "all": [["120000", "120 mil", "120k"]], "section": {"semanal": ["Métricas y estado"]}},
+    {"id": "operaciones_perdidas", "all": [["9 operaciones", "nueve operaciones"]], "section": {"semanal": ["Métricas y estado", "Temas tratados"]}},
+    {"id": "cancelacion_2_4", "all": [["2,4"]], "section": {"semanal": ["Métricas y estado"]}},
+    {"id": "recordatorios_63", "all": [["63"]], "section": {"semanal": ["Métricas y estado", "Temas tratados"]}},
+    {"id": "citas_duplicadas_javier", "all": [["javier"], ["miercoles"]], "section": {"semanal": ["Métricas y estado", "Temas tratados"]}},
+    {"id": "error_pdf", "all": [["pdf"]], "section": {"semanal": ["Métricas y estado", "Temas tratados"]}},
+    {"id": "android_200_sesiones", "all": [["android"], ["200"]], "section": {"semanal": ["Métricas y estado", "Temas tratados"]}},
+    {"id": "mes_gratis", "all": [["mes gratis"]], "section": {"semanal": ["Temas tratados", "Decisiones"]}},
+    {"id": "plan_basico_39", "all": [["39"]], "section": {"semanal": ["Temas tratados", "Decisiones"]}},
+    {"id": "plan_clinica_79", "all": [["79"]], "section": {"semanal": ["Temas tratados", "Decisiones"]}},
+    {"id": "plan_centro_149", "all": [["149"]], "section": {"semanal": ["Temas tratados", "Decisiones"]}},
+    {"id": "precios_15_enero", "all": [["15 de enero"]], "section": {"semanal": ["Temas tratados", "Decisiones"]}},
+    {"id": "precios_por_pais", "all": [["pais"]], "section": {"semanal": ["Temas tratados", "Decisiones"]}},
+    {"id": "elena_52k", "all": [["elena"], ["52000", "52 mil"]], "section": {"semanal": ["Temas tratados", "Decisiones"]}},
+    {"id": "movil_remoto", "all": [["remoto"]], "section": {"semanal": ["Temas tratados", "Decisiones"]}},
+    {"id": "lanzamiento_18_nov", "all": [["18 de noviembre"]], "section": {"semanal": ["Decisiones"]}},
+    {"id": "portal_2_dic", "all": [["2 de diciembre"]], "section": {"semanal": ["Decisiones"]}},
+    {"id": "feria_valencia", "all": [["valencia"]], "section": {"semanal": ["Temas tratados", "Decisiones"]}},
+    {"id": "nps_41", "all": [["41"]], "section": {"semanal": ["Métricas y estado"]}},
+    {"id": "auditoria_1_dic", "all": [["1 de diciembre"]], "section": {"semanal": ["Métricas y estado", "Temas tratados"]}},
+    {"id": "marketing_35k", "all": [["35000", "35 mil"]], "section": {"semanal": ["Métricas y estado", "Temas tratados"]}},
+    {"id": "feria_12k", "all": [["12000", "12 mil"]], "section": {"semanal": ["Métricas y estado", "Temas tratados"]}},
+    {"id": "buscadores_210", "all": [["210"]], "section": {"semanal": ["Métricas y estado", "Temas tratados"]}},
+    {"id": "recomendacion_100", "all": [["100 clinicas"]], "section": {"semanal": ["Métricas y estado", "Temas tratados"]}},
+    {"id": "holded_primero", "all": [["holded"]], "section": {"semanal": ["Decisiones"]}},
     {"id": "soporte_tarde_1400", "all": [["1400"]]},
     {"id": "t_luis_llama_clinicas", "task": true, "all": [["luis"], ["llam"]]},
     {"id": "t_luis_correo", "task": true, "all": [["luis"], ["correo"]]},
@@ -37,5 +37,41 @@
     {"id": "t_marta_estimacion", "task": true, "all": [["marta"], ["estimacion"]]},
     {"id": "t_luis_analisis_pais", "task": true, "all": [["luis"], ["pais"]]},
     {"id": "t_entrevistas_cultura", "task": true, "all": [["entrevistas"], ["cultura"]]}
-  ]
+  ],
+  "user_notes": {
+      "MRR 112k, objetivo 120k": {
+          "semanal": [
+              "Métricas y estado"
+          ]
+      },
+      "precios nuevos: enero": {
+          "semanal": [
+              "Temas tratados",
+              "Decisiones"
+          ]
+      },
+      "feria Valencia 20 nov": {
+          "semanal": [
+              "Temas tratados",
+              "Decisiones"
+          ]
+      },
+      "bug citas duplicadas -> Javier miércoles": {
+          "semanal": [
+              "Métricas y estado",
+              "Temas tratados"
+          ]
+      },
+      "revisar el error del PDF": {
+          "semanal": [
+              "Próximos pasos"
+          ]
+      },
+      "contratar móvil: remoto": {
+          "semanal": [
+              "Temas tratados",
+              "Decisiones"
+          ]
+      }
+  }
 }

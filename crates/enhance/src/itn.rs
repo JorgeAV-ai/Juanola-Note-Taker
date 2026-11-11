@@ -105,7 +105,8 @@ fn value(words: &[Word]) -> u64 {
                 current = 0;
             }
             Word::Million => {
-                total = (total + current.max(1)) * 1_000_000;
+                // «mil millones» = 1000 M: el 1 solo multiplica un «millones» suelto.
+                total = (total + current).max(1) * 1_000_000;
                 current = 0;
             }
         }
@@ -162,6 +163,17 @@ fn number_len(words: &[Option<Word>]) -> usize {
     last_ok
 }
 
+/// Números escritos con letras a dígitos según el idioma del resumen: en
+/// castellano el ITN de este módulo; en inglés `text-processing-rs` (el ITN de
+/// NeMo portado a Rust). En los demás idiomas, el texto tal cual.
+pub fn normalize_numbers_lang(text: &str, language: &str) -> String {
+    match crate::language::language_index(language) {
+        0 => normalize_numbers(text),
+        1 => text_processing_rs::normalize_sentence_lang(text, "en"),
+        _ => text.to_owned(),
+    }
+}
+
 /// Sustituye los números escritos con letras por dígitos. Mantiene el resto
 /// del texto (puntuación, mayúsculas) intacto.
 pub fn normalize_numbers(text: &str) -> String {
@@ -214,8 +226,11 @@ pub fn normalize_numbers(text: &str) -> String {
             for t in &tokens[emitted..word_idx[w]] {
                 pending.push_str(t.1);
             }
-            let body = pending.strip_suffix(' ').unwrap_or("");
-            let num_start = body.rfind(|c: char| !(c.is_ascii_digit() || c == ',')).map_or(0, |i| i + 1);
+            let body = pending.trim_end();
+            // Tras el último carácter que no es cifra (que puede ocupar varios
+            // bytes: «≈112 mil», «€112 mil»).
+            let num_start =
+                body.char_indices().rev().find(|(_, c)| !(c.is_ascii_digit() || *c == ',')).map_or(0, |(i, c)| i + c.len_utf8());
             let digits = &body[num_start..];
             if let Ok(v) = digits.replace(',', ".").parse::<f64>() {
                 if !digits.is_empty() && !digits.starts_with(',') {
@@ -226,6 +241,12 @@ pub fn normalize_numbers(text: &str) -> String {
                     w += 1;
                     continue;
                 }
+            }
+            // «millones» a secas no es una cifra («millones de usuarios»);
+            // «mil» suelto sí («cuesta mil») y sigue por `value`.
+            if words[0] == Word::Million {
+                w += 1;
+                continue;
             }
         }
         let mut repl = value(&words).to_string();
@@ -301,6 +322,10 @@ mod tests {
         assert_eq!(n("llegaron a 112 mil euros"), "llegaron a 112000 euros");
         assert_eq!(n("unos 2,5 millones y 35 mil más"), "unos 2500000 y 35000 más");
         assert_eq!(n("Tenemos aprobado los 35 mil euros"), "Tenemos aprobado los 35000 euros");
+        // Un carácter de varios bytes justo antes de la cifra no la parte.
+        assert_eq!(n("un coste de ≈180 mil al mes"), "un coste de ≈180000 al mes");
+        assert_eq!(n("pagan €112 mil"), "pagan €112000");
+        assert_eq!(n("≈ mil"), "≈ 1000");
     }
 
     #[test]

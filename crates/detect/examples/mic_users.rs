@@ -12,10 +12,8 @@ fn main() {
     while t0.elapsed() < Duration::from_secs(secs) {
         let users = mic_users(std::process::id() as i32);
         let now = t0.elapsed();
-        let list: Vec<String> = users
-            .iter()
-            .map(|u| format!("{} ({}) → {:?}", u.bundle_id, u.pid, classify(&u.bundle_id).map(|a| a.name)))
-            .collect();
+        let list: Vec<String> =
+            users.iter().map(|u| format!("{} ({}) → {:?}", u.bundle_id, u.pid, classify(&u.bundle_id).map(|a| a.name))).collect();
         println!("{:>5.1}s  {}", now.as_secs_f32(), if list.is_empty() { "—".into() } else { list.join(", ") });
         for ev in watcher.update(now, &users) {
             println!("        evento: {ev:?}");

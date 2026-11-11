@@ -9,23 +9,21 @@ use std::mem::size_of;
 use std::ptr::NonNull;
 
 use objc2_core_audio::{
-    kAudioHardwarePropertyProcessObjectList, kAudioObjectPropertyElementMain, kAudioObjectPropertyScopeGlobal,
-    kAudioObjectSystemObject, kAudioProcessPropertyBundleID, kAudioProcessPropertyIsRunning, kAudioProcessPropertyIsRunningInput,
-    kAudioProcessPropertyIsRunningOutput, kAudioProcessPropertyDevices, kAudioObjectPropertyScopeInput,
-    kAudioHardwarePropertyDefaultInputDevice, kAudioObjectPropertyScopeOutput, kAudioDevicePropertyStreams, kAudioHardwarePropertyDevices, kAudioObjectPropertyName, kAudioDevicePropertyTransportType, kAudioDevicePropertyNominalSampleRate, kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE, kAudioDevicePropertyDeviceIsRunningSomewhere, AudioObjectPropertyScope,
-    kAudioProcessPropertyPID, AudioObjectGetPropertyData, AudioObjectGetPropertyDataSize, AudioObjectID,
-    AudioObjectPropertyAddress, AudioObjectPropertySelector,
+    kAudioDevicePropertyDeviceIsRunningSomewhere, kAudioDevicePropertyNominalSampleRate, kAudioDevicePropertyStreams,
+    kAudioDevicePropertyTransportType, kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE,
+    kAudioHardwarePropertyDefaultInputDevice, kAudioHardwarePropertyDevices, kAudioHardwarePropertyProcessObjectList,
+    kAudioObjectPropertyElementMain, kAudioObjectPropertyName, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyScopeInput,
+    kAudioObjectPropertyScopeOutput, kAudioObjectSystemObject, kAudioProcessPropertyBundleID, kAudioProcessPropertyDevices,
+    kAudioProcessPropertyIsRunning, kAudioProcessPropertyIsRunningInput, kAudioProcessPropertyIsRunningOutput, kAudioProcessPropertyPID,
+    AudioObjectGetPropertyData, AudioObjectGetPropertyDataSize, AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyScope,
+    AudioObjectPropertySelector,
 };
 use objc2_core_foundation::{CFRetained, CFString};
 
 use crate::MicUser;
 
 fn address(selector: AudioObjectPropertySelector) -> AudioObjectPropertyAddress {
-    AudioObjectPropertyAddress {
-        mSelector: selector,
-        mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMain,
-    }
+    AudioObjectPropertyAddress { mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain }
 }
 
 /// Lee una propiedad de tamaño fijo `T`.
@@ -52,13 +50,14 @@ fn get_ids(object: AudioObjectID, selector: AudioObjectPropertySelector, scope: 
     let addr = AudioObjectPropertyAddress { mSelector: selector, mScope: scope, mElement: kAudioObjectPropertyElementMain };
     let mut size = 0u32;
     // SAFETY: punteros a locales; sin datos de calificación.
-    let status =
-        unsafe { AudioObjectGetPropertyDataSize(object, NonNull::from(&addr), 0, std::ptr::null(), NonNull::from(&mut size)) };
+    let status = unsafe { AudioObjectGetPropertyDataSize(object, NonNull::from(&addr), 0, std::ptr::null(), NonNull::from(&mut size)) };
     if status != 0 || size == 0 {
         return Vec::new();
     }
-    let mut ids = vec![0 as AudioObjectID; size as usize / size_of::<AudioObjectID>()];
-    // SAFETY: `ids` tiene `size` bytes reservados.
+    // `size` podría no ser múltiplo de AudioObjectID: reservar de sobra para
+    // que el búfer nunca sea más pequeño que lo que la API escribe.
+    let mut ids = vec![0 as AudioObjectID; (size as usize).div_ceil(size_of::<AudioObjectID>())];
+    // SAFETY: `ids` tiene al menos `size` bytes reservados.
     let status = unsafe {
         AudioObjectGetPropertyData(
             object,
@@ -92,13 +91,14 @@ fn process_objects() -> Vec<AudioObjectID> {
     let system = kAudioObjectSystemObject as AudioObjectID;
     let mut size = 0u32;
     // SAFETY: punteros a locales; sin datos de calificación.
-    let status =
-        unsafe { AudioObjectGetPropertyDataSize(system, NonNull::from(&addr), 0, std::ptr::null(), NonNull::from(&mut size)) };
+    let status = unsafe { AudioObjectGetPropertyDataSize(system, NonNull::from(&addr), 0, std::ptr::null(), NonNull::from(&mut size)) };
     if status != 0 || size == 0 {
         return Vec::new();
     }
-    let mut ids = vec![0 as AudioObjectID; size as usize / size_of::<AudioObjectID>()];
-    // SAFETY: `ids` tiene `size` bytes reservados.
+    // `size` podría no ser múltiplo de AudioObjectID: reservar de sobra para
+    // que el búfer nunca sea más pequeño que lo que la API escribe.
+    let mut ids = vec![0 as AudioObjectID; (size as usize).div_ceil(size_of::<AudioObjectID>())];
+    // SAFETY: `ids` tiene al menos `size` bytes reservados.
     let status = unsafe {
         AudioObjectGetPropertyData(
             system,
@@ -188,9 +188,10 @@ fn is_recording(obj: AudioObjectID) -> bool {
         return false;
     }
     let outputs = get_ids(obj, kAudioProcessPropertyDevices, kAudioObjectPropertyScopeOutput);
-    input_devices(obj).into_iter().filter(|&d| device_running(d)).any(|d| {
-        !has_streams(d, kAudioObjectPropertyScopeOutput) || !outputs.contains(&d) || bluetooth_hands_free(d)
-    })
+    input_devices(obj)
+        .into_iter()
+        .filter(|&d| device_running(d))
+        .any(|d| !has_streams(d, kAudioObjectPropertyScopeOutput) || !outputs.contains(&d) || bluetooth_hands_free(d))
 }
 
 pub(crate) fn mic_users() -> Vec<MicUser> {
@@ -215,7 +216,6 @@ pub(crate) fn audio_processes() -> Vec<crate::AudioProcess> {
         })
         .collect()
 }
-
 
 /// Diagnóstico: cada dispositivo con nombre, transporte (fourcc), nº de
 /// streams de entrada y salida y si está en uso.

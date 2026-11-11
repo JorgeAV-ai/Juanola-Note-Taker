@@ -7,6 +7,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
 import { events, ipc, type EnhancedNotes, type RecordingState } from "../lib/ipc";
+import { t } from "../lib/i18n";
 
 const log = (line: string) => invoke("autotest_log", { line }).catch(() => {});
 const say = (text: string) => invoke("autotest_say", { text, voice: "Mónica" });
@@ -57,7 +58,7 @@ async function menuItem(trigger: string, text: string): Promise<boolean> {
 async function regenerate() {
   const b = document.querySelector<HTMLButtonElement>('button[title="Generate notes"]:not([disabled])');
   if (b) b.click();
-  else await menuItem(".enhance-menu", "Generar de nuevo");
+  else await menuItem(".enhance-menu", t("note.regenerate"));
 }
 
 const SESSION_1 =
@@ -90,6 +91,7 @@ export async function runAutotest(mode: string) {
     else if (mode === "detect") await detectFlow();
     else if (mode === "detect-live") await detectLiveFlow();
     else if (mode === "detect-calendar") await detectCalendarFlow();
+    else if (mode === "context") await contextFlow();
     else await flow();
   } catch (e) {
     check(false, "excepción", String(e));
@@ -97,6 +99,62 @@ export async function runAutotest(mode: string) {
   log(failures ? `FIN: ${failures} fallos` : "FIN: todo OK");
   await sleep(500);
   invoke("autotest_quit").catch(() => {});
+}
+
+// JUANOLA_AUTOTEST=context: graba dos veces el WAV de JUANOLA_AUTOTEST_AUDIO
+// (por los altavoces, canal del sistema), primero sin vocabulario y luego con
+// el de JUANOLA_AUTOTEST_GLOSSARY, y deja cada transcripción en el log como
+// `SEGMENTOS <etiqueta> <json>`. Restaura el vocabulario y manda las notas a
+// la papelera al acabar.
+async function contextFlow() {
+  const glossary = await invoke<string | null>("autotest_env", { key: "JUANOLA_AUTOTEST_GLOSSARY" });
+  const title = (await invoke<string | null>("autotest_env", { key: "JUANOLA_AUTOTEST_TITLE" })) ?? "Autotest contexto";
+  const before = await ipc.sttGlossary();
+  try {
+    for (const [label, terms] of [["sin", ""], ["con", glossary ?? ""]] as const) {
+      await ipc.setSttGlossary(terms);
+      const newNote = await waitFor("botón New note", () => document.querySelector<HTMLButtonElement>(".new-note"), 15_000);
+      newNote?.click();
+      const noteEl = await waitFor("vista de nota", () => document.querySelector<HTMLElement>(".note[data-note-id]"), 10_000);
+      if (!noteEl) return;
+      const id = noteEl.dataset.noteId!;
+      await ipc.setNoteTitle(id, title);
+      await sleep(500);
+      button(".pill-btn", t("rec.start"))?.click();
+      const rec = await waitFor(
+        `grabando (${label})`,
+        () => (button(".pill-btn", t("rec.pause")) ? "ok" : document.querySelector(".pill-msg.error") ? "error" : null),
+        150_000,
+      );
+      if (!check(rec === "ok", `arranque de la grabación (${label})`, document.querySelector(".pill-msg")?.textContent ?? "")) return;
+      // Con auriculares Bluetooth, abrir el audio del sistema tarda más de 6 s
+      // y se reintenta en segundo plano: margen antes de que empiece a sonar.
+      await sleep(12_000);
+      await invoke("autotest_play");
+      await sleep(8000);
+      button(".pill-btn.stop", t("rec.stop"))?.click();
+      // Esperar a que el enhance de después de parar empiece y acabe: si no,
+      // la siguiente grabación compite con él por la GPU.
+      await waitFor(`enhance empezado (${label})`, () => document.querySelector(".enhancing") || document.querySelector(".note-error"), 60_000);
+      await waitFor(
+        `enhance terminado (${label})`,
+        () => !document.querySelector(".enhancing") && (document.querySelector(".enhanced .ProseMirror") || document.querySelector(".note-error")),
+        300_000,
+      );
+      const enhErr = document.querySelector(".note-error");
+      if (enhErr) check(false, `enhance sin error (${label})`, enhErr.textContent ?? "");
+      const segs = await ipc.listSegments(id);
+      check(segs.some((s) => s.channel === "system"), `segmentos del sistema (${label})`, `${segs.length} segmentos`);
+      log(`SEGMENTOS ${label} ${JSON.stringify(segs)}`);
+      // Volver a Home antes de tirar la nota: «New note» solo está fuera de una nota.
+      document.querySelector<HTMLButtonElement>(".back-home")?.click();
+      await waitFor(`de vuelta en Home (${label})`, () => document.querySelector(".new-note"), 10_000);
+      await ipc.trashNote(id);
+      await sleep(1000);
+    }
+  } finally {
+    await ipc.setSttGlossary(before);
+  }
 }
 
 async function flow() {
@@ -109,7 +167,7 @@ async function flow() {
   const id = noteEl.dataset.noteId!;
   await ipc.setNoteTitle(id, `Autotest ${new Date().toLocaleString()}`);
   // El idioma está en el pie del panel del transcript: se despliega.
-  if (!document.querySelector(".pill-lang")) document.querySelector<HTMLButtonElement>('button[aria-label="Transcript"]')?.click();
+  if (!document.querySelector(".pill-lang")) document.querySelector<HTMLButtonElement>(`button[aria-label="${t("note.transcript")}"]`)?.click();
   await sleep(300);
   const lang = document.querySelector<HTMLSelectElement>(".pill-lang");
   let stored: string | null = null;
@@ -121,10 +179,10 @@ async function flow() {
   check(!!lang && lang.value === (stored ?? "Spanish"), "selector de idioma con la preferencia guardada (o Español)", `${lang?.value}; guardado=${stored}; opciones=${Array.from(lang?.options ?? []).map((o) => o.value).join(",")}`);
 
   // 2. Primera grabación con audio del sistema.
-  button(".pill-btn", "Start")?.click();
+  button(".pill-btn", t("rec.start"))?.click();
   const rec = await waitFor(
     "grabando (o error)",
-    () => (button(".pill-btn", "Pause") ? "ok" : document.querySelector(".pill-msg.error") ? "error" : null),
+    () => (button(".pill-btn", t("rec.pause")) ? "ok" : document.querySelector(".pill-msg.error") ? "error" : null),
     150_000,
   );
   if (rec !== "ok") {
@@ -139,13 +197,13 @@ async function flow() {
   check(!!them && /doce|12|presupuesto|noviembre/i.test(themText), "transcripción del sistema", themText.slice(0, 160));
 
   // Pause / Resume dentro de la sesión.
-  button(".pill-btn", "Pause")?.click();
-  check(!!(await waitFor("en pausa", () => document.querySelector(".pill-label")?.textContent === "En pausa", 5_000)), "Pause");
-  button(".pill-btn", "Resume")?.click();
-  check(!!(await waitFor("reanudada", () => button(".pill-btn", "Pause"), 5_000)), "Resume tras Pause");
+  button(".pill-btn", t("rec.pause"))?.click();
+  check(!!(await waitFor("en pausa", () => document.querySelector(".pill-label")?.textContent === t("rec.paused"), 5_000)), t("rec.pause"));
+  button(".pill-btn", t("rec.resume"))?.click();
+  check(!!(await waitFor("reanudada", () => button(".pill-btn", t("rec.pause")), 5_000)), "Resume tras Pause");
   await sleep(2000);
 
-  button(".pill-btn.stop", "Stop")?.click();
+  button(".pill-btn.stop", t("rec.stop"))?.click();
   const enhanced = await waitFor(
     "Enhanced generado (o error)",
     () => document.querySelector(".enhanced .ProseMirror") || document.querySelector(".note-error"),
@@ -160,11 +218,11 @@ async function flow() {
   if (!(await checkEnhanced(id))) return;
 
   // 7. Segunda grabación en la misma nota (el fallo de antes).
-  const resume = await waitFor("botón Resume de la píldora", () => button(".pill-btn", "Resume"), 10_000);
+  const resume = await waitFor("botón Resume de la píldora", () => button(".pill-btn", t("rec.resume")), 10_000);
   resume?.click();
   const rec2 = await waitFor(
     "segunda sesión grabando (o error)",
-    () => (button(".pill-btn", "Pause") ? "ok" : document.querySelector(".pill-msg.error") ? "error" : null),
+    () => (button(".pill-btn", t("rec.pause")) ? "ok" : document.querySelector(".pill-msg.error") ? "error" : null),
     150_000,
   );
   if (rec2 !== "ok") {
@@ -174,9 +232,9 @@ async function flow() {
   await sleep(1500);
   await say(SESSION_2);
   await sleep(3000);
-  button(".pill-btn.stop", "Stop")?.click();
+  button(".pill-btn.stop", t("rec.stop"))?.click();
   // Las notas están editadas: al parar no se regeneran sin preguntar.
-  const ask = await waitFor("aviso al parar con notas editadas", () => button(".note-confirm button", "Generar de nuevo"), 120_000);
+  const ask = await waitFor("aviso al parar con notas editadas", () => button(".note-confirm button", t("note.regenerate")), 120_000);
   check(!!ask, "al parar, pregunta antes de regenerar las notas editadas");
   ask?.click();
   await waitFor("segundo enhance empezado", () => document.querySelector(".enhancing"), 10_000);
@@ -207,7 +265,7 @@ async function enhanceOnly() {
   const gen = await waitFor("botón ✨", () => document.querySelector(".note-tabs"), 10_000);
   if (gen) await regenerate();
   await sleep(400);
-  button(".note-confirm button", "Generar de nuevo")?.click();
+  button(".note-confirm button", t("note.regenerate"))?.click();
   const t0 = performance.now();
   await waitFor("enhance en marcha", () => document.querySelector(".enhancing") || document.querySelector(".note-error"), 10_000);
   const done = await waitFor(
@@ -286,9 +344,9 @@ async function checkEnhanced(id: string): Promise<boolean> {
   }
 
   // 6. Cambiar de pestaña y volver: la edición sigue.
-  button(".tab", "My notes")?.click();
+  button(".tab", t("nav.myNotes"))?.click();
   await sleep(400);
-  button(".tab", "Enhanced")?.click();
+  button(".tab", t("note.enhanced"))?.click();
   await sleep(400);
   check(document.querySelector(".enhanced")?.textContent?.includes("EDITADO") === true, "edición conservada tras cambiar de pestaña");
 
@@ -297,7 +355,7 @@ async function checkEnhanced(id: string): Promise<boolean> {
   await regenerate();
   const ask = await waitFor("aviso antes de regenerar", () => document.querySelector(".note-confirm"), 3000);
   check(!!ask && !document.querySelector(".enhancing"), "✨ pregunta antes de pisar las ediciones", ask?.textContent ?? "");
-  button(".note-confirm button", "Mantener")?.click();
+  button(".note-confirm button", t("note.keep"))?.click();
   await sleep(300);
   check(
     !document.querySelector(".note-confirm") && document.querySelector(".enhanced")?.textContent?.includes("EDITADO") === true,
@@ -320,7 +378,7 @@ async function sidebarFlow() {
   const item = await waitFor("carpeta en el sidebar", () => buttons(".sidebar-item.folder").find((b) => b.textContent?.includes(name)), 3000);
   check(!!item, "carpeta creada en el sidebar", name);
   const folderId = item?.dataset.folderId;
-  check(!!(await waitFor("vista de carpeta", () => document.querySelector<HTMLInputElement>('input[aria-label="Nombre de la carpeta"]')?.value === name || null, 2000)), "se abre la vista de la carpeta");
+  check(!!(await waitFor("vista de carpeta", () => document.querySelector<HTMLInputElement>(`input[aria-label="${t("nav.folderName")}"]`)?.value === name || null, 2000)), "se abre la vista de la carpeta");
 
   // Nota nueva dentro de la carpeta.
   document.querySelector<HTMLButtonElement>(".new-note")?.click();
@@ -340,11 +398,11 @@ async function sidebarFlow() {
   await waitFor("nota abierta otra vez", () => document.querySelector(".note-more"), 3000);
 
   // Papelera y restaurar.
-  await menuItem(".note-more", "Mover a la papelera");
+  await menuItem(".note-more", t("note.moveToTrash"));
   await waitFor("vuelta a Home", () => document.querySelector(".coming-up"), 3000);
   await sleep(300);
   check(!document.querySelector(`.row[data-note-id="${noteId}"]`) && count() === "0", "en la papelera: fuera de Home y del recuento");
-  await menuItem(".workspace-menu", "Papelera");
+  await menuItem(".workspace-menu", t("nav.trash"));
   const row = await waitFor("fila en la papelera", () => document.querySelector(`.row[data-note-id="${noteId}"]`), 3000);
   check(!!row, "la nota aparece en la papelera");
   row?.querySelector<HTMLButtonElement>(".restore")?.click();
@@ -353,7 +411,7 @@ async function sidebarFlow() {
 
   // Renombrar.
   document.querySelector<HTMLButtonElement>(`.sidebar-item.folder[data-folder-id="${folderId}"]`)?.click();
-  const title = await waitFor("nombre editable", () => document.querySelector<HTMLInputElement>('input[aria-label="Nombre de la carpeta"]'), 3000);
+  const title = await waitFor("nombre editable", () => document.querySelector<HTMLInputElement>(`input[aria-label="${t("nav.folderName")}"]`), 3000);
   if (title) {
     title.value = `${name} bis`;
     title.dispatchEvent(new FocusEvent("blur"));
@@ -363,15 +421,15 @@ async function sidebarFlow() {
   check(!!renamed, "carpeta renombrada");
 
   // Páginas sin backend.
-  for (const [label, heading] of [["Recipes", "Recipes"], ["Shared with me", "Shared with me"], ["People", "People"], ["Companies", "Companies"]]) {
+  for (const [label, heading] of [t("nav.recipes"), t("nav.shared"), t("nav.people"), t("nav.companies")].map((l) => [l, l])) {
     document.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)?.click();
     await sleep(200);
     check(document.querySelector(".page-title")?.textContent === heading, `${label} abre su página`);
   }
 
   // Ajustes.
-  await menuItem(".workspace-menu", "Settings");
-  button(".settings-nav", "Audio")?.click();
+  await menuItem(".workspace-menu", t("nav.settings"));
+  button(".settings-nav", t("settings.audio"))?.click();
   const mic = await waitFor("estado del micrófono", () => {
     const t = document.querySelector('[data-testid="mic-permission"]')?.textContent;
     return t && t !== "…" ? t : null;
@@ -380,17 +438,17 @@ async function sidebarFlow() {
   const devs = await waitFor("dispositivos", () => document.querySelectorAll(".settings-list li").length || null, 5000);
   check(!!devs, "Ajustes lista los dispositivos de entrada", String(devs ?? 0));
 
-  const openMic = buttons(".settings-row button").find((b) => b.textContent === "Abrir Ajustes");
+  const openMic = buttons(".settings-row button").find((b) => b.textContent === t("common.openSettings"));
   openMic?.click();
   await sleep(1500);
   check(!document.querySelector(".note-error"), "«Abrir Ajustes» del micrófono sin error");
   log("     (Ajustes del Sistema debería estar abierto en Privacidad › Micrófono)");
-  button(".settings-nav", "Models")?.click();
+  button(".settings-nav", t("settings.models"))?.click();
   const rows = await waitFor("modelos", () => document.querySelectorAll(".model-row").length || null, 5000);
   const installed = document.querySelectorAll('.model-row[data-installed="true"]').length;
   check(!!rows && installed === rows, "Ajustes › Models: todos instalados, sin descargas", `${installed}/${rows ?? 0}`);
   check(!document.querySelector(".models-dialog"), "no se ofrece descargar modelos al arrancar");
-  button(".settings-nav", "Data")?.click();
+  button(".settings-nav", t("settings.data"))?.click();
   const dir = await waitFor("carpeta de datos", () => (document.querySelector(".settings .mono")?.textContent?.includes("/") ? true : null), 3000);
   check(!!dir, "Ajustes muestra la carpeta de datos");
 
@@ -398,19 +456,19 @@ async function sidebarFlow() {
   await ipc.trashNote(noteId);
   document.querySelector<HTMLButtonElement>(".back-home")?.click();
   await waitFor("fuera de Ajustes", () => document.querySelector(".workspace-menu"), 3000);
-  await menuItem(".workspace-menu", "Papelera");
+  await menuItem(".workspace-menu", t("nav.trash"));
   const trashed = await waitFor("fila a borrar", () => document.querySelector(`.row[data-note-id="${noteId}"]`), 3000);
   document.querySelector<HTMLButtonElement>(`.row[data-note-id="${noteId}"] .destroy`)?.click();
   await sleep(300);
   check(!!document.querySelector(".note-confirm"), "borrar para siempre pide confirmación");
-  button(".note-confirm button", "Borrar para siempre")?.click();
+  button(".note-confirm button", t("trash.deleteForever"))?.click();
   await sleep(500);
   check(!!trashed && !(await ipc.getNote(noteId)), "nota borrada para siempre");
   document.querySelector<HTMLButtonElement>(`.sidebar-item.folder[data-folder-id="${folderId}"]`)?.click();
   await waitFor("botón borrar carpeta", () => document.querySelector(".delete-folder"), 3000);
   document.querySelector<HTMLButtonElement>(".delete-folder")?.click();
   await sleep(300);
-  button(".note-confirm button", "Borrar carpeta")?.click();
+  button(".note-confirm button", t("folder.delete"))?.click();
   await sleep(500);
   check(!document.querySelector(`.sidebar-item.folder[data-folder-id="${folderId}"]`), "carpeta borrada");
 }

@@ -1,0 +1,245 @@
+# Reunión semanal ficticia del servicio técnico de un fabricante mediano de bombas de calor de Múnich (~30 min), en alemán. Formato: Hablante|texto.
+# «Yo» es el jefe del departamento de servicio técnico; Sabine (disposición y hotline), Markus (coordinador de técnicos de campo, conectado desde el coche), Elif (repuestos y logística) y Tobias (soporte técnico de segundo nivel, llega tarde).
+# Decisiones corregidas: el nuevo plan de guardias empieza el 1 de diciembre y luego se adelanta al 23 de noviembre; el pedido de válvulas pasa de 200 a 250 unidades (sobrecoste final 11.500 €).
+Yo|Guten Morgen zusammen. So, ich glaube, wir können langsam anfangen. Sabine, Elif, ihr seid schon da. Markus, hörst du uns?
+Markus|Ja, servus, ich bin im Auto, ich bin gerade auf der A neun Richtung Ingolstadt unterwegs. Ich hoffe, die Verbindung hält.
+Yo|Passt schon. Tobias fehlt noch, oder?
+Sabine|Der hat mir vorhin geschrieben, er steckt noch beim Kunden in Freising fest. Er kommt in zehn Minuten oder so.
+Yo|Okay. Dann fangen wir ohne ihn an. Wie war euer Wochenende? Elif, du warst doch in den Bergen, oder?
+Elif|Ja, am Spitzingsee. Samstag war traumhaft, blauer Himmel, total klar. Und am Sonntag hat es dann auf einmal geschneit. Also der Winter ist definitiv da.
+Sabine|Das merken wir auch am Telefon. Seit Sonntagabend klingelt es eigentlich ununterbrochen.
+Markus|Bei uns im Garten lag heute früh auch schon Raureif. Und auf der Autobahn war es spiegelglatt, ich habe für die Strecke bis Allershausen fast eine Stunde gebraucht.
+Elif|Fahr bitte vorsichtig, Markus. Wir brauchen dich noch.
+Markus|Keine Sorge, ich fahre wie ein Rentner. Mit Freisprecheinrichtung natürlich.
+Sabine|Und bei mir war das Wochenende eher ruhig. Mein Kleiner hatte Fieber, also waren wir die ganze Zeit zu Hause. Heute geht es ihm zum Glück schon besser, die Oma passt auf.
+Yo|Oh, gute Besserung. Wenn du früher wegmusst, sag einfach Bescheid.
+Sabine|Danke, das sollte heute gehen.
+Yo|Genau darüber müssen wir heute reden. Aber erst mal der Reihe nach. Ich hab mir die Tagesordnung so gedacht: zuerst die Kennzahlen der letzten Woche, dann das Thema mit dem Expansionsventil, dann kurz der Stand bei den Projekten, dann die Vorbereitung auf den Winter und am Schluss der neue Bereitschaftsplan. Passt das für euch?
+Elif|Passt.
+Markus|Von mir aus gerne.
+Yo|Sabine, magst du mit den Zahlen anfangen?
+Sabine|Klar. Also, wir hatten in der letzten Woche vierhundertzwölf Störungsmeldungen. In der Woche davor waren es dreihundertsechsundfünfzig. Das ist schon ein ordentlicher Sprung, ungefähr sechzehn Prozent mehr.
+Yo|Woher kommt der Großteil?
+Sabine|Zum größten Teil von den Luft-Wasser-Wärmepumpen, vor allem von der LWP neun. Das ist fast die Hälfte der Meldungen, genau genommen hundertneunzig Stück. Viele davon sind Fehlercode E siebzehn, also Hochdruckstörung, und da steckt in den meisten Fällen wieder das Expansionsventil dahinter.
+Yo|Okay, dazu kommen wir gleich. Und die Reaktionszeit?
+Sabine|Die durchschnittliche Reaktionszeit lag bei sechsundzwanzig Stunden. Unser Ziel sind ja vierundzwanzig Stunden. Also wir liegen zwei Stunden drüber.
+Markus|Darf ich da kurz was sagen? Die sechsundzwanzig Stunden sind ja ein Durchschnitt. Bei den echten Notfällen, also wenn eine Heizung komplett ausgefallen ist, waren wir bei neun Stunden. Das ist eigentlich ganz ordentlich.
+Sabine|Stimmt, die Notfälle haben wir gut im Griff. Das Problem sind die normalen Aufträge, die rutschen halt immer weiter nach hinten.
+Yo|Gut, das ist wichtig, das sollten wir auch so kommunizieren. Und die Erstlösungsquote?
+Sabine|Die lag bei achtundsiebzig Prozent. In der Vorwoche waren es noch zweiundachtzig. Also leicht gesunken, und das hat natürlich auch wieder mit den fehlenden Teilen zu tun. Wenn der Techniker das Ventil nicht im Auto hat, muss er ein zweites Mal hinfahren.
+Yo|Das ist genau der Punkt. Jede zweite Anfahrt kostet uns ungefähr hundertzwanzig Euro, wenn man Fahrzeit und Arbeitszeit zusammenrechnet.
+Elif|Hundertzwanzig ist sogar eher knapp gerechnet, ehrlich gesagt.
+Yo|Wahrscheinlich. Und die Kundenzufriedenheit?
+Sabine|Da haben wir vier Komma eins von fünf Sternen bei den Umfragen nach dem Einsatz. Im Oktober hatten wir noch vier Komma vier. Die meisten Beschwerden sind wegen der Wartezeit, nicht wegen der Arbeit selbst. Die Techniker werden eigentlich durchgehend gelobt, freundlich, sauber, kompetent.
+Yo|Das freut mich zu hören. Wie viele Umfragen sind zurückgekommen?
+Sabine|Zweihundertdreißig. Also eine ganz gute Basis, das ist kein Zufallswert.
+Yo|Gab es letzte Woche eine Beschwerde, die ich kennen sollte? Irgendwas, das eskaliert ist?
+Sabine|Ja, leider eine größere. Die Wohnungsbaugenossenschaft Isartal in Garching. Die haben bei uns vierundsechzig Wärmepumpen in ihrer Neubausiedlung, und letzte Woche sind drei davon innerhalb von vier Tagen ausgefallen. Der technische Leiter, Herr Obermaier, hat mich am Freitag angerufen und war ziemlich sauer.
+Yo|Was hat er gesagt?
+Sabine|Er hat gesagt, wenn das so weitergeht, überlegen sie, den Rahmenvertrag nicht zu verlängern. Der läuft Ende März aus.
+Elif|Wie groß ist der Rahmenvertrag noch mal?
+Yo|Ungefähr hundertvierzigtausend Euro im Jahr, mit Wartung und Ersatzteilen. Das ist einer unserer größten Kunden in der Region. Den dürfen wir auf keinen Fall verlieren.
+Markus|Ich kenne Herrn Obermaier, der ist eigentlich vernünftig. Der will nur, dass sich jemand kümmert.
+Yo|Dann schlage ich vor, dass du persönlich hinfährst, Markus. Nicht nur telefonieren, sondern vor Ort mit ihm durch die Anlagen gehen.
+Markus|Kann ich machen. Ich hab Mittwoch Nachmittag sowieso einen Termin in Garching, dann besuche ich die Genossenschaft gleich mit.
+Yo|Perfekt. Sag mir danach bitte Bescheid, wie das Gespräch gelaufen ist. Und wenn es hilft, komme ich beim nächsten Termin auch mit.
+Markus|Gut, mache ich.
+Sabine|Ach, und was ich noch sagen wollte: Bei den drei ausgefallenen Geräten war zweimal das Expansionsventil schuld und einmal ein Fühler. Also auch da wieder das gleiche Thema.
+Yo|Natürlich. Es läuft alles auf das gleiche Teil hinaus.
+Yo|Und die Hotline?
+Sabine|An der Hotline hatten wir eintausendachthundertfünfzig Anrufe. Die Abbruchquote lag bei zwölf Prozent. Das heißt, ungefähr jeder achte Anrufer hat aufgelegt, bevor jemand drangegangen ist. Das ist zu viel. Normalerweise liegen wir bei fünf Prozent.
+Markus|Das liegt auch daran, dass ... die Kollegen ... jeden ... und dann ...
+Yo|Markus, du bist ganz abgehackt. Wir verstehen nur jedes dritte Wort.
+Markus|Jetzt besser? Ich war gerade in einem Tunnel.
+Yo|Jetzt ja, jetzt hören wir dich.
+Markus|Ich wollte sagen, das liegt auch daran, dass die Kollegen an der Hotline im Moment jeden Anruf selbst diagnostizieren wollen. Die Gespräche dauern dadurch im Schnitt fast acht Minuten.
+Sabine|Das stimmt leider. Früher waren es eher fünf Minuten pro Gespräch.
+Yo|Okay, das nehme ich mal mit. Vielleicht brauchen wir da eine kürzere Checkliste für die Ferndiagnose. Aber dazu später, wenn Tobias da ist, der hat die Checkliste ja ursprünglich geschrieben.
+Elif|Kann ich noch eine Zahl ergänzen? Bei den Ersatzteilen ist der Umsatz auch interessant. Wir haben letzte Woche Teile für knapp achtundvierzigtausend Euro rausgegeben. Das ist ein Rekord für eine einzelne Woche.
+Yo|Wow. Achtundvierzigtausend. Und ist das alles Garantie?
+Elif|Nein, ungefähr sechzig Prozent sind Garantie, der Rest wird an die Kunden oder an die Fachhandwerker berechnet.
+Yo|Gut. Dann haben wir die Zahlen erst mal durch. Danke, Sabine, danke, Elif.
+Tobias|Hallo, Entschuldigung, ich bin jetzt da. Der Kunde in Freising hat mich einfach nicht gehen lassen.
+Yo|Servus Tobias. Kein Problem. Wir sind gerade mit den Kennzahlen fertig. Was war denn in Freising los?
+Tobias|Eine LWP neun, Baujahr 2023, Fehlercode E siebzehn. Rate mal, was es war.
+Elif|Das Expansionsventil.
+Tobias|Genau. Und natürlich hatte ich keins dabei. Der Kunde war nicht begeistert, das kann ich euch sagen.
+Yo|Da sind wir direkt beim nächsten Thema. Elif, wie ist der Stand beim Expansionsventil?
+Elif|Also, die Lage ist leider ernst. Wir haben im Zentrallager noch siebenunddreißig Stück. Wir verbrauchen im Moment ungefähr fünfzehn pro Woche, mit steigender Tendenz. Das heißt, wir kommen noch gut zwei Wochen hin, wenn nichts Unerwartetes passiert.
+Yo|Und was sagt der Lieferant?
+Elif|Unser Lieferant ist ja die Firma Ventara in Brescia. Die haben ein Problem mit ihrem Zulieferer für die Schrittmotoren. Ursprünglich sollte die nächste Lieferung in Kalenderwoche siebenundvierzig kommen, also nächste Woche. Jetzt sagen sie Kalenderwoche einundfünfzig, frühestens.
+Markus|Einundfünfzig? Das ist ja kurz vor Weihnachten.
+Elif|Ja. Und ehrlich gesagt glaube ich auch nicht an die einundfünfzig. Die haben jetzt schon zweimal verschoben.
+Yo|Wie viele Ventile sind bei denen noch offen bestellt?
+Elif|Dreihundert Stück. Die sind bestellt, aber bezahlt ist noch nichts, das ist immerhin gut.
+Tobias|Gibt es denn keinen zweiten Lieferanten? Ich meine, so ein Ventil ist doch kein Exot.
+Elif|Doch, es gibt eine Alternative. Die Hanseatische Kältetechnik aus Hamburg hat ein baugleiches Ventil. Ich hab das mit der Entwicklung abgeklärt, das ist technisch freigegeben. Der Haken ist der Preis. Bei Ventara zahlen wir hundertachtundsechzig Euro pro Stück, bei den Hamburgern zweihundertvierzehn Euro.
+Yo|Also sechsundvierzig Euro mehr pro Stück.
+Elif|Genau. Dafür können sie innerhalb von zehn Tagen liefern, das haben sie mir schriftlich bestätigt.
+Sabine|Also ich muss sagen, wenn man die zweite Anfahrt mit hundertzwanzig Euro rechnet, dann ist das doch eigentlich eine ganz einfache Rechnung.
+Yo|Sehe ich auch so. Wie viele würden wir bestellen?
+Elif|Ich würde vorschlagen, zweihundert Stück. Das sollte uns bis in den Januar hinein überbrücken.
+Yo|Okay. Zweihundert mal sechsundvierzig, das sind neuntausendzweihundert Euro Mehrkosten. Das muss ich mir von der Geschäftsführung freigeben lassen, das liegt über meinem Rahmen. Mein Rahmen liegt bei fünftausend Euro.
+Tobias|Wird Frau Lindner das freigeben?
+Yo|Ich denke schon, wenn wir die Zahlen sauber aufbereiten. Elif, kannst du mir bis morgen eine kurze Aufstellung machen: Bestand, Verbrauch, Preisvergleich und was uns die zweiten Anfahrten kosten?
+Elif|Mach ich. Bis morgen Mittag hast du das.
+Yo|Super. Und ich gehe damit am Donnerstag zu Frau Lindner und hole mir die Freigabe. Da habe ich sowieso meinen Jour fixe mit ihr.
+Markus|Und was machen wir in der Zwischenzeit mit den siebenunddreißig Ventilen? Ich hab Techniker, die das Ventil gar nicht im Auto haben, und andere haben drei Stück im Regal liegen.
+Elif|Das ist ein guter Punkt. Ich würde die Ventile zentral halten und nur auf Anforderung rausgeben. Also kein Ventil mehr als fester Bestand im Fahrzeug.
+Tobias|Hm, das finde ich schwierig. Dann fährt der Techniker doch wieder zweimal.
+Elif|Nicht unbedingt. Wenn die Disposition schon beim Anruf erkennt, dass es ein E siebzehn ist, dann kann der Techniker das Ventil morgens vor der Tour im Lager abholen.
+Sabine|Das können wir machen. Bei E siebzehn liegt die Wahrscheinlichkeit, dass es wirklich das Ventil ist, bei ungefähr siebzig Prozent.
+Yo|Okay, dann machen wir das so: Die Ventile werden ab sofort zentral im Lager verwaltet, und die Disposition kennzeichnet alle Aufträge mit E siebzehn, damit der Techniker das Teil vorher abholt. Markus, sagst du das deinen Leuten?
+Markus|Ja, ich schicke heute noch eine Info an alle Techniker raus und sammle die Ventile aus den Fahrzeugen wieder ein.
+Yo|Danke dir. Bevor wir zum Winter kommen, noch kurz zum Status von unseren laufenden Projekten. Tobias, wie steht's mit der neuen Service-App?
+Tobias|Die Tablet-App ServicePilot läuft jetzt bei fünfzehn von zweiundzwanzig Technikern. Die Rückmeldungen sind überwiegend positiv, vor allem die digitale Unterschrift vom Kunden spart richtig Zeit. Pro Einsatz sparen wir laut den Technikern etwa zehn Minuten Papierkram.
+Yo|Das ist super. Und die restlichen sieben?
+Tobias|Da fehlen noch die Tablets. Die sind bestellt und sollen nächste Woche kommen. Ich würde die restlichen sieben Kollegen dann bis zum fünfzehnten Dezember umstellen.
+Sabine|Eine Bitte hätte ich dazu: In der App fehlt noch die Rückmeldung an die Disposition, wenn ein Auftrag abgeschlossen ist. Wir sehen das erst am Abend, wenn synchronisiert wird. Das heißt, ich rufe tagsüber ständig Techniker an und frage, ob sie fertig sind.
+Tobias|Ja, das ist bekannt. Das kommt mit dem nächsten Update, Version 2.4, laut Hersteller Anfang Dezember.
+Yo|Okay. Behalt das bitte im Blick, Tobias. Das ist für die Disposition im Winter wirklich wichtig.
+Yo|Und das zweite Projekt, die Fernüberwachung? Wie viele Geräte sind inzwischen online angebunden?
+Tobias|Da sind wir bei achtunddreißig Prozent der Geräte, die seit 2022 verkauft wurden. Das Ziel für Jahresende waren fünfzig Prozent. Das schaffen wir wahrscheinlich nicht ganz, ich rechne eher mit fünfundvierzig.
+Yo|Woran hängt es?
+Tobias|Hauptsächlich am WLAN bei den Kunden. Die Wärmepumpe steht im Keller oder im Garten, und da kommt das Signal nicht an. Wir bräuchten eigentlich ein LTE-Modul als Alternative, aber das kostet pro Gerät um die neunzig Euro.
+Markus|Gerade jetzt im Winter wäre die Fernüberwachung Gold wert. Wenn wir den Fehler schon sehen, bevor der Kunde anruft, sparen wir uns die halbe Diagnose.
+Yo|Das sehe ich genauso. Aber das LTE-Modul ist ein Thema fürs nächste Jahr, das müssen wir mit dem Produktmanagement besprechen. Ich nehme es mal für die Budgetrunde im Januar mit.
+Tobias|Okay. Ich kann dafür bis dahin eine kleine Auswertung machen, wie viele Einsätze wir mit Fernüberwachung tatsächlich gespart hätten.
+Yo|Gerne, aber ohne Stress, das hat bis Januar Zeit.
+Tobias|Apropos wichtig, weiß jemand, ob die Kaffeemaschine im zweiten Stock wieder geht? Ich hab heute früh vor dem Kunden schon keinen Kaffee bekommen.
+Sabine|Da hängt seit Freitag ein Zettel dran, außer Betrieb. Angeblich kommt diese Woche ein Techniker.
+Tobias|Ein Techniker. Hoffentlich hat der seine Teile dabei.
+Elif|Sehr witzig.
+Markus|Vielleicht ist es ja auch das Expansionsventil.
+Sabine|Ich hab gehört, die Maschine ist von 2011. Die Hausverwaltung überlegt, ob sie überhaupt noch repariert wird.
+Tobias|Dann bringe ich mir ab morgen eine Thermoskanne mit.
+Yo|Okay, okay. Lasst uns weitermachen, sonst sitzen wir hier um elf noch. Thema Winter. Markus, wie schaut's aus?
+Markus|Also, laut den Zahlen der letzten zwei Jahre rechnen wir im Dezember und Januar mit ungefähr dreißig Prozent mehr Einsätzen als jetzt im November. Wenn wir jetzt schon bei vierhundertzwölf Meldungen sind, dann reden wir im Januar von über fünfhundert pro Woche.
+Yo|Und wie viele Techniker haben wir aktuell im Außendienst?
+Markus|Wir haben zweiundzwanzig Techniker. Davon ist einer bis Ende Januar in Elternzeit, und der Kollege Huber ist nach seiner Knie-OP noch bis Mitte Dezember krankgeschrieben. Also effektiv zwanzig.
+Tobias|Das reicht im Januar niemals.
+Yo|Was ist eigentlich mit den zwei offenen Stellen? Die Ausschreibung läuft doch seit September.
+Markus|Ja, seit Mitte September. Wir haben bisher sieben Bewerbungen bekommen, davon waren zwei wirklich interessant. Einer ist Kältetechniker, der andere kommt aus dem Heizungsbau und hat noch keine Wärmepumpenerfahrung.
+Yo|Und? Gibt es schon Gespräche?
+Markus|Mit dem Kältetechniker hatte ich letzte Woche das erste Gespräch, der war sehr gut. Der hätte aber drei Monate Kündigungsfrist, also könnte er frühestens im März anfangen.
+Elif|Das hilft uns für diesen Winter dann leider nicht.
+Markus|Nein, für diesen Winter nicht. Aber für den nächsten. Und den zweiten Kandidaten lade ich nächste Woche ein.
+Yo|Gut. Wenn der Kältetechniker so gut ist, dann lass uns ihm schnell ein Angebot machen, bevor ihn jemand anders schnappt. Ich kann beim zweiten Gespräch gerne dabei sein.
+Markus|Das wäre gut, dann vereinbare ich einen Termin mit dir und der Personalabteilung.
+Markus|Und für diesen Winter habe ich letzte Woche mit der Firma Moser Haustechnik gesprochen, das ist ein Partnerbetrieb aus Rosenheim. Die könnten uns ab dem ersten Dezember zwei Techniker überlassen, für drei Monate, also bis Ende Februar.
+Yo|Was kostet das?
+Markus|Fünfundachtzig Euro pro Stunde und Techniker. Das ist nicht billig, aber die Leute sind erfahren mit Wärmepumpen, die machen das seit Jahren.
+Sabine|Haben die auch Zugriff auf unsere Software für die Auftragsabwicklung? Sonst muss ich alles per Telefon durchgeben, und das mache ich im Januar nicht.
+Markus|Nein, die müssten wir einrichten. Ich glaube, das wären zwei Lizenzen.
+Yo|Das sollte kein Problem sein. Die Lizenzen frage ich bei der IT an. Markus, wann kannst du das mit Moser festmachen?
+Markus|Ich würde den Vertrag gerne bis zum zwanzigsten November unterschrieben haben, damit die Leute ab dem ersten Dezember wirklich starten können. Vorher brauchen die ja noch eine Einweisung bei uns.
+Yo|Gut. Dann machst du den Vertrag mit Moser bis zum zwanzigsten November, und ich kümmere mich um die zwei Lizenzen bei der IT.
+Tobias|Wo wir gerade bei Einweisung sind: Die Moser-Leute kennen unsere neuen Geräte mit R zweihundertneunzig wahrscheinlich nicht, oder? Das ist ja Propan, da gelten ganz andere Sicherheitsregeln.
+Markus|Weiß ich ehrlich gesagt nicht genau. Ich frage nach.
+Tobias|Ich hätte sowieso vorgeschlagen, dass wir eine Schulung für R zweihundertneunzig machen. Von unseren eigenen zweiundzwanzig Technikern haben bisher nur vierzehn die Propan-Schulung. Und ab Januar liefern wir die neue LWP zwölf nur noch mit Propan aus.
+Yo|Nur vierzehn? Das wusste ich nicht. Dann ist das wirklich dringend. Tobias, kannst du die Schulung organisieren?
+Tobias|Ja. Ich würde einen Termin am einundzwanzigsten November vorschlagen ... nein, Moment, der einundzwanzigste ist ein Samstag, das geht nicht. Dann lieber Donnerstag, der sechsundzwanzigste November.
+Yo|Donnerstag, sechsundzwanzigster November. Passt. Und die zwei Moser-Techniker nehmen gleich mit teil?
+Tobias|Genau, dann haben wir alle auf einmal. Ich kläre den Schulungsraum und schicke bis Ende der Woche die Einladung für die Propan-Schulung raus.
+Yo|Sehr gut. Was gehört noch zur Wintervorbereitung? Fahrzeuge?
+Markus|Die Winterreifen sind auf allen Fahrzeugen drauf, das ist erledigt. Drei Fahrzeuge sind aber gerade in der Werkstatt, wegen der Standheizung. Die kommen Ende nächster Woche zurück.
+Elif|Und ich würde gerne die Standardbestückung in den Fahrzeugen für den Winter anpassen. Mehr Sicherungen, mehr Umwälzpumpen, mehr Temperaturfühler. Das sind die Teile, die im Winter am häufigsten gebraucht werden.
+Yo|Was würde das kosten?
+Elif|Pro Fahrzeug ungefähr sechshundert Euro zusätzlicher Bestand, also bei zweiundzwanzig Fahrzeugen etwa dreizehntausend Euro. Aber das ist ja nur Bestand, das ist kein Verlust, das Geld liegt dann halt im Auto statt im Lager.
+Yo|Das ist richtig. Das geht über das normale Lagerbudget, da brauche ich keine Freigabe. Mach das.
+Elif|Okay, dann stelle ich die Pakete diese Woche zusammen.
+Sabine|Und was ist mit der Hotline? Wenn wir jetzt schon zwölf Prozent Abbruchquote haben, dann wird das im Januar richtig schlimm.
+Yo|Was schlägst du vor?
+Sabine|Ich würde gern zwei Kolleginnen aus dem Vertriebsinnendienst für die Hotline einarbeiten. Die könnten zumindest die Terminvergabe übernehmen, dann können sich meine Leute auf die Störungen konzentrieren. Ich habe schon mit Frau Demir vom Vertrieb gesprochen, sie wäre grundsätzlich offen dafür.
+Yo|Gute Idee, mach das.
+Sabine|Mache ich. Frau Demir meinte, die zwei Kolleginnen könnten ab dem ersten Dezember jeweils vormittags an der Hotline sitzen. Ich würde sie vorher zwei Tage einarbeiten, damit sie wissen, welche Fragen sie selbst beantworten können und wann sie an einen Techniker weitergeben.
+Yo|Sehr gut. Und das Telefonsystem? Können die sich einfach einloggen?
+Sabine|Ja, die Hotline läuft über die normale Telefonanlage, das ist nur eine Gruppeneinstellung. Das kann ich selbst machen.
+Markus|Und wenn sie trotzdem nicht weiterwissen?
+Sabine|Dann gibt es den Rückruf. Der Kunde bekommt innerhalb von zwei Stunden einen Rückruf von einem Techniker. Das ist immer noch besser, als wenn er nach zehn Minuten in der Warteschleife auflegt.
+Yo|Absolut. Lieber ein verlässlicher Rückruf als eine endlose Warteschleife.
+Yo|Und die Checkliste, die Markus vorhin angesprochen hat?
+Tobias|Welche Checkliste?
+Markus|Die für die Ferndiagnose. Die Gespräche an der Hotline dauern im Moment fast acht Minuten, weil die Kollegen alles durchgehen.
+Tobias|Ah, die. Die ist tatsächlich zu lang, das sind zwölf Seiten. Ich kann eine Kurzversion machen, eine Seite, mit den zehn häufigsten Fehlercodes.
+Yo|Bis wann schaffst du das?
+Tobias|Bis Ende nächster Woche, also bis zum zwanzigsten November.
+Yo|Gut, dann machst du die Kurzversion der Checkliste bis zum zwanzigsten. Sabine, du schaust sie dir dann an, bevor sie an die Hotline geht.
+Sabine|Gerne.
+Yo|Kommen wir zum letzten großen Thema, dem Bereitschaftsplan. Ihr wisst ja, bisher haben wir am Wochenende immer nur einen Techniker in Bereitschaft für ganz Oberbayern. Das ging im Sommer, aber letzten Winter war das eine Katastrophe. Der Kollege ist an manchen Wochenenden sechshundert Kilometer gefahren.
+Markus|Ja, das war der Stefan, der hat danach fast gekündigt.
+Yo|Eben. Mein Vorschlag ist: Ab Dezember haben wir am Wochenende zwei Techniker in Bereitschaft, einen für München Nord und einen für München Süd. Und unter der Woche verlängern wir die Abendbereitschaft bis zweiundzwanzig Uhr, statt bis zwanzig Uhr wie bisher.
+Sabine|Und die Hotline? Wer nimmt dann am Abend die Anrufe an?
+Yo|Die Notfallnummer läuft abends ohnehin über den externen Callcenter-Dienstleister. Das bleibt so. Der leitet nur die echten Notfälle an den Bereitschaftstechniker weiter.
+Tobias|Wie oft wäre dann jeder dran?
+Markus|Wenn wir mit zwanzig Technikern rechnen und zwei pro Wochenende, dann ist jeder ungefähr alle zehn Wochen dran. Bisher war es alle zwanzig Wochen, aber dafür allein und mit doppelt so viel Fahrerei.
+Tobias|Das klingt fair, finde ich.
+Elif|Und die Bereitschaftszulage? Die Leute werden als Erstes danach fragen.
+Yo|Die Zulage pro Wochenende liegt bisher bei hundertfünfzig Euro. Ich möchte sie auf hundertachtzig Euro erhöhen. Das muss ich aber noch mit dem Betriebsrat besprechen, das ist mitbestimmungspflichtig.
+Markus|Hundertachtzig ist gut. Da werden die Leute zufrieden sein.
+Yo|Gut. Dann halten wir fest: neuer Bereitschaftsplan ab dem ersten Dezember, zwei Techniker am Wochenende, Abendbereitschaft bis zweiundzwanzig Uhr. Sabine, kannst du den Plan erstellen?
+Sabine|Mach ich. Ich brauche aber von Markus die Liste, wer im Dezember Urlaub hat.
+Markus|Die schicke ich dir heute Nachmittag.
+Sabine|Dann habe ich den Bereitschaftsplan bis Freitag fertig und schicke ihn an alle.
+Yo|Prima. Und ich spreche mit dem Betriebsrat wegen der Zulage. Ich versuche, noch diese Woche einen Termin bei Herrn Gruber zu bekommen.
+Sabine|Darf ich noch ein Thema einschieben, das hängt ein bisschen mit dem Winter zusammen? Die Wartungsverträge.
+Yo|Ja klar, das wollte ich eigentlich vorhin beim Projektstatus schon fragen. Wie sieht's da aus?
+Sabine|Wir haben aktuell eintausendzweihundertvierzig aktive Wartungsverträge. Von den Wartungen für dieses Jahr sind noch dreihundertzehn offen. Die würde ich eigentlich gern vor Weihnachten schaffen, aber mit dem Winter wird das schwierig.
+Markus|Das wird nichts, ganz ehrlich. Wenn die Störungen hochgehen, haben die Wartungen keine Priorität.
+Yo|Was passiert, wenn wir die Wartungen nach hinten schieben?
+Sabine|Vertraglich ist das kein Problem, da steht nur einmal jährlich, kein bestimmtes Datum. Aber manche Kunden haben sich das halt so eingeplant und rufen an, wenn keiner kommt.
+Yo|Dann schlage ich vor: Wir verschieben die offenen Wartungen, wo der Kunde einverstanden ist, in den Februar und März. Dann haben wir im Dezember und Januar Luft für die Störungen.
+Markus|Februar ist aber auch noch tiefster Winter.
+Yo|Stimmt, du hast recht. Dann eher März und April. Sabine, kannst du ein Anschreiben an die Kunden vorbereiten?
+Sabine|Ja, das kann ich machen. Aber nicht diese Woche, mit dem Bereitschaftsplan und allem. Ich würde sagen, bis Ende November.
+Yo|Bis Ende November ist in Ordnung.
+Tobias|Ich hätte noch eine technische Sache, die zum Ventil passt. Die Entwicklung hat letzte Woche eine neue Firmware für die Steuerung der LWP neun freigegeben, Version 3.1. Damit wird das Expansionsventil anders angesteuert, und ein Teil der E siebzehn Meldungen sind eigentlich Fehlalarme, die damit verschwinden.
+Yo|Wie groß ist der Teil?
+Tobias|Die Entwicklung schätzt ungefähr ein Viertel. Also jede vierte E siebzehn Meldung wäre gar kein defektes Ventil, sondern nur eine zu empfindliche Regelung.
+Elif|Moment, das heißt, wir tauschen im Moment Ventile, die eigentlich in Ordnung sind?
+Tobias|Teilweise, ja. Das vermute ich zumindest. Ich habe drei ausgebaute Ventile ins Labor geschickt, und zwei davon waren technisch einwandfrei.
+Yo|Das ist ja ein ganz wichtiger Hinweis. Dann sollten die Techniker vor dem Tausch zuerst die Firmware aktualisieren und schauen, ob der Fehler weg ist.
+Tobias|Genau. Das Update dauert ungefähr zehn Minuten und geht über den Laptop. Ich schreibe eine kurze Anleitung dafür und nehme das gleich mit in die neue Checkliste auf.
+Markus|Das würde uns richtig Ventile sparen.
+Yo|Gut. Ich behalte trotzdem die Bestellung so, wie wir sie besprochen haben. Lieber ein paar Ventile zu viel im Lager als ein Kunde ohne Heizung.
+Markus|Darf ich noch mal kurz auf den Bereitschaftsplan zurückkommen? Mir ist gerade was eingefallen. Der Deutsche Wetterdienst hat für die Woche ab dem zwanzigsten November eine Kältewelle angekündigt, mit bis zu minus fünfzehn Grad im Alpenvorland. Wenn wir erst am ersten Dezember mit dem neuen Plan starten, haben wir genau das Wochenende dazwischen nur mit einer Person.
+Yo|Hm. Das ist ein guter Einwand. Sabine, schaffst du es, den Plan früher zu starten?
+Sabine|Wenn ich ihn bis Freitag fertig habe, dann könnten wir ab Montag, dem dreiundzwanzigsten November, starten. Das erste Wochenende wäre dann der achtundzwanzigste und neunundzwanzigste.
+Tobias|Aber das Wochenende davor, der einundzwanzigste und zweiundzwanzigste, wäre dann trotzdem noch mit einer Person besetzt.
+Markus|Das stimmt, aber das könnten wir notfalls mit Freiwilligen abdecken. Ich frage mal in die Runde, wer da zusätzlich einspringen würde.
+Yo|Okay, dann korrigiere ich das: Der neue Bereitschaftsplan startet nicht am ersten Dezember, sondern schon am Montag, den dreiundzwanzigsten November. Und Markus, du suchst für das Wochenende davor einen Freiwilligen als zweite Bereitschaft.
+Markus|Mach ich, bis Mittwoch weiß ich Bescheid.
+Elif|Noch eine Frage zum Callcenter-Dienstleister: Weiß der schon, dass sich der Plan ändert? Die brauchen ja die Telefonnummern von den Technikern in Bereitschaft.
+Yo|Gut, dass du das sagst. Nein, das weiß er noch nicht. Sabine, schickst du denen den neuen Plan mit, wenn er fertig ist?
+Sabine|Ja, klar. Die bekommen den Plan gleichzeitig mit dem Team. Und ich kläre mit denen, dass sie ab dem dreiundzwanzigsten nach Postleitzahl unterscheiden, also Nord oder Süd.
+Tobias|Wo ist eigentlich die Grenze zwischen Nord und Süd? Ich wohne in Pasing, wo wäre das dann?
+Markus|Wir hatten an die Bahnlinie gedacht, ungefähr auf Höhe der Stammstrecke. Pasing wäre dann Süd. Aber das kann Sabine im Plan noch genauer festlegen.
+Sabine|Ich mache das nach Postleitzahlen, das ist für das Callcenter am einfachsten. Die Liste hänge ich an den Plan dran.
+Elif|Und wenn wir eh gerade am Korrigieren sind: Ich habe nebenbei noch mal in die Zahlen geschaut, während ihr gesprochen habt. Wenn im Januar dreißig Prozent mehr Einsätze kommen, dann reichen zweihundert Ventile nicht bis Ende Januar. Ich würde lieber zweihundertfünfzig bestellen.
+Yo|Zweihundertfünfzig. Dann sind die Mehrkosten zweihundertfünfzig mal sechsundvierzig, das sind ...
+Sabine|Elftausendfünfhundert Euro.
+Yo|Danke. Elftausendfünfhundert Euro. Okay, das ist ein höherer Betrag, aber die Begründung ist die gleiche. Elif, nimm bitte die zweihundertfünfzig in die Aufstellung, und dann bestellst du bei den Hamburgern, sobald Frau Lindner freigegeben hat.
+Elif|Und die Ventara-Bestellung? Sollen wir die stornieren?
+Yo|Nein, die lassen wir erst mal laufen, aber du reduzierst sie von dreihundert auf hundertfünfzig Stück. Dann haben wir nicht zu viel auf Lager, falls beide gleichzeitig liefern.
+Elif|Okay, das kläre ich diese Woche mit Ventara.
+Sabine|Eine Sache noch zu den Ventilen. Wir haben im Moment dreiundvierzig Kunden, die auf einen zweiten Termin warten, weil beim ersten Mal das Ventil gefehlt hat. Manche warten schon seit über einer Woche. Die rufen jeden Tag an.
+Yo|Dreiundvierzig. Okay. Die müssen zuerst versorgt werden, sobald Teile da sind. Kannst du die Kunden alle proaktiv anrufen und ihnen sagen, wie der Stand ist?
+Sabine|Ja, das machen wir bis Mittwoch. Und ich würde sagen, die siebenunddreißig Ventile im Lager gehen zuerst an genau diese Kunden.
+Elif|Das reicht aber nicht für alle dreiundvierzig.
+Yo|Dann nach Dringlichkeit. Wer gar keine Heizung hat, kommt zuerst. Wer noch mit dem Heizstab heizen kann, der kann ein paar Tage warten.
+Tobias|Bei den Kunden mit Heizstab sollten wir übrigens auch an die Stromkosten denken. Der Heizstab läuft dann ja rund um die Uhr. Das gibt Ärger, wenn die Stromrechnung kommt.
+Yo|Guter Punkt. Ich würde vorschlagen, dass wir den betroffenen Kunden eine Kulanzgutschrift anbieten. Was haltet ihr von pauschal hundert Euro?
+Markus|Hundert Euro finde ich fair.
+Sabine|Das würde auch bei der Kundenzufriedenheit helfen, glaube ich.
+Yo|Gut, dann machen wir das: Kunden, die wegen des fehlenden Ventils länger als fünf Tage mit dem Heizstab heizen mussten, bekommen eine Gutschrift von hundert Euro. Das nehme ich am Donnerstag auch mit zu Frau Lindner, das hängt ja zusammen.
+Tobias|Wie viele Kunden wären das ungefähr?
+Sabine|Schwer zu sagen. Von den dreiundvierzig vielleicht die Hälfte.
+Yo|Dann reden wir über gut zweitausend Euro. Das ist überschaubar.
+Yo|So, wir sind schon fast über der Zeit. Lasst mich nur kurz die drei dringendsten Sachen wiederholen: Elif, die Aufstellung für Frau Lindner bis morgen Mittag. Sabine, der Bereitschaftsplan bis Freitag. Und Markus, der Vertrag mit Moser bis zum zwanzigsten. Der Rest steht im Protokoll.
+Markus|Alles klar. Ich muss jetzt eh gleich raus, ich bin fast in Ingolstadt.
+Tobias|Und was ist jetzt mit der Kaffeemaschine?
+Yo|Darum kümmert sich hoffentlich jemand anderes. Danke euch allen, bis nächste Woche.
+Sabine|Tschüss.
+Elif|Ciao zusammen.
+
+

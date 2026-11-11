@@ -4,6 +4,8 @@ Fecha: 6 de noviembre de 2026. Investigación hecha sobre la documentación ofic
 
 Los modelos concretos quedan fuera de este plan: cada sección de IA define un "slot" (qué hace, qué formato de pesos necesita el runtime y qué latencia exige) y tú eliges el modelo que lo ocupa.
 
+> **Estado (10 nov).** Este es el plan de partida (6 nov), y su inventario de Granola (§1) sigue siendo la referencia de qué replicar. Lo que ya se decidió y construyó no se repite aquí: el stack y los runtimes en uso están en [HANDOFF.md](HANDOFF.md) («Código, crates y runtimes»), los modelos elegidos en [modelos-mvp.md](modelos-mvp.md) y el avance de cada fase en §12.
+
 ---
 
 ## 0. Resumen ejecutivo
@@ -160,15 +162,17 @@ El resultado debe sentirse idéntico en la UI, pero el "motor" tiene además un 
 
 **Coste.** El frontend es TypeScript. Si "hacerlo en Rust" es un requisito duro del 100 % del código, ver 3.2.
 
-### 3.2 Alternativa: Dioxus 0.7/0.8 (UI escrita en Rust, renderizada en webview)
+### 3.2 Alternativa: Dioxus 0.7/0.8 (UI escrita en Rust, renderizada en webview) — descartada (decisión cerrada)
 
 Permite escribir la UI en Rust con sintaxis tipo React y seguir usando CSS idéntico al de Granola. Problema: el editor de texto rico. Habría que embeber ProseMirror vía JS interop (lo que vuelve a meter JS) o escribir un editor propio. Dioxus Native (renderer Blitz sin webview) sigue en alpha y con soporte CSS incompleto a fecha de hoy; no es opción para una UI "exactamente igual". Viable solo si se acepta el editor vía interop.
 
-### 3.3 Alternativa: 100 % nativo (GPUI + gpui-component, o Iced)
+### 3.3 Alternativa: 100 % nativo (GPUI + gpui-component, o Iced) — descartada (decisión cerrada)
 
 GPUI es el framework de Zed y rinde muy bien, pero en 2026 el propio GPUI no trae widget de entrada de texto rico; `gpui-component` y `twrite` aportan un editor de texto/Markdown, no un editor WYSIWYG por bloques con imágenes, menús `/` y decoraciones por tramo. Habría que construir el editor desde cero. Es la opción más cara (estimación: el editor por sí solo duplica el esfuerzo total) y la que menos garantiza paridad visual. Descartada salvo que el rendimiento nativo sea prioritario sobre la paridad.
 
 ### 3.4 Stack concreto (opción recomendada)
+
+> Lista de partida, con alternativas por capa. Lo que se usa de verdad está en [HANDOFF.md](HANDOFF.md), «Código, crates y runtimes» (por ejemplo, el STT en Mac va con `mlxrs` y Qwen3-ASR, no con sherpa-onnx ni whisper).
 
 **Rust (núcleo, workspace de crates)**
 - Runtime: `tokio`. Errores: `thiserror`/`anyhow`. Logs: `tracing`.
@@ -243,6 +247,8 @@ Pipeline común: dos streams → resample a 16 kHz mono (`rubato`) → AEC para 
 
 ## 6. ASR, VAD y diarización (slots de modelo)
 
+> Modelos elegidos para cada slot: [modelos-mvp.md](modelos-mvp.md). Resultados medidos: [experimentos.md](experimentos.md), «STT».
+
 | Slot | Función | Requisitos | Formato / runtime |
 |---|---|---|---|
 | **VAD** | Cortar habla por canal, alimentar auto-stop (15 min sin audio) | <10 ms por frame en CPU | ONNX en sherpa-onnx (Silero, TEN) |
@@ -260,6 +266,8 @@ Gestión de modelos: catálogo `models.toml` por slot con URL de Hugging Face, S
 ---
 
 ## 7. LLM: enhance, chat, recipes, briefs, follow-ups (slots de modelo)
+
+> El enhance tal como funciona hoy (Markdown con citas en vez de JSON, pasadas de detalle, post-proceso en código) está en [HANDOFF.md](HANDOFF.md), «El enhance hoy»; el punto 1 de abajo es el diseño de partida.
 
 | Slot | Función | Requisitos |
 |---|---|---|
@@ -332,13 +340,15 @@ Componentes a implementar (todos ya descritos en la sección 1):
 
 ## 12. Roadmap por fases
 
-**Fase 0 — Auditoría y cimientos (2-3 semanas)**
+Estado a 10 nov: ✅ hecho · 🟡 en parte · ⬜ sin empezar. Todo lo hecho es en Mac; Windows y Linux están sin empezar.
+
+**Fase 0 — Auditoría y cimientos (2-3 semanas)** 🟡 workspace, esquema SQLite, gestor de modelos con descarga desde HF y diseño a partir de capturas de Granola hechos; CI, firma y notarización, y `tauri-specta`, pendientes.
 - Instalar Granola, capturar todas las pantallas y estados, extraer tokens de diseño.
 - Workspace Rust + Tauri v2 + tauri-specta; CI para macOS (arm64, x64), Windows, Linux; firma y notarización.
 - Esquema SQLite inicial, gestor de modelos con descarga desde HF y `models.toml`.
 - Decisión y prueba de los modelos por slot (tú eliges; aquí se mide latencia en CPU y GPU en los equipos objetivo).
 
-**Fase 1 — MVP grabable (4-6 semanas)**
+**Fase 1 — MVP grabable (4-6 semanas)** ✅ en Mac (captura dual, STT en dos canales, editor, enhance con lupa, Home, papelera, ajustes y modelos), salvo el auto-stop por silencio y el fallback ScreenCaptureKit.
 - Captura dual en macOS (process tap + SCK fallback) y Windows (WASAPI loopback); VU meters.
 - STT streaming en dos canales con VAD; transcript con burbujas Me/Them; Stop/Resume; auto-stop básico.
 - Editor TipTap con Markdown ligero e imágenes; nota con título inline.
@@ -346,29 +356,29 @@ Componentes a implementar (todos ya descritos en la sección 1):
 - Home con Recent meetings; New Note; papelera.
 - Settings: Models, Language, Preferences básicas.
 
-**Fase 2 — Calendario y detección (3-4 semanas)**
+**Fase 2 — Calendario y detección (3-4 semanas)** 🟡 detección de llamadas, calendario de macOS (EventKit), Coming up, avisos y Take Notes hechos; Google y Microsoft directos, reposición de ventana, indicador flotante y tray, pendientes.
 - Google y Microsoft Calendar, Coming up, notificaciones propias (ambos estilos), asociación evento↔nota, recurrentes.
 - Detección de mic en uso y de apps de reunión; títulos exactos; Take Notes.
 - Reposición de ventana, indicador flotante arrastrable, tray.
 
-**Fase 3 — Templates, Chat, Recipes (4-5 semanas)**
+**Fase 3 — Templates, Chat, Recipes (4-5 semanas)** 🟡 núcleo de plantillas y cinco integradas hechos, sin conectar a la app ([plantillas.md](plantillas.md)); búsqueda ⌘K por texto hecha; chat, recipes y embeddings sin empezar.
 - Picker ✨ y 🔁, Manage templates, `/` en nota.
 - FTS + embeddings; Chat con scopes (home, nota, carpeta, selección, persona/empresa), citas, historial, selector de modelo, adjuntos, rewrite, live chat ⌘J.
 - Recipes: menú `/`, pestaña con Discover/My/Workspace, formulario, Remix.
 
-**Fase 4 — Organización (3 semanas)**
+**Fase 4 — Organización (3 semanas)** 🟡 carpetas de My notes y papelera hechas; lo demás sin empezar.
 - Spaces (My notes / Team space / custom), Folders con subcarpetas, auto-add de recurrentes, multiselección.
 - People & Companies desde asistentes; Customer calls.
 - Export Markdown/HTML/CSV; retención y auto-deletion; papelera 30 días.
 
-**Fase 5 — Speaker tags, Voice Typing, snapshots, briefs (4-6 semanas)**
+**Fase 5 — Speaker tags, Voice Typing, snapshots, briefs (4-6 semanas)** ⬜
 - Accesibilidad para Zoom/Teams/Meet → nombres en transcript; diarización acústica como fallback.
 - Voice Typing: hotkey global, píldora, modo manos libres, Esc, limpieza LLM, contexto de app, Mute other audio.
 - Snapshots de pantalla compartida (macOS, ScreenCaptureKit) con stack Images.
 - Briefs y follow-up emails (fuentes locales; Gmail opcional).
 - Mensaje automático de consentimiento y marca de agua (transparencia).
 
-**Fase 6 — Ecosistema (abierto)**
+**Fase 6 — Ecosistema (abierto)** ⬜
 - MCP y API locales; integraciones Slack/Notion/CRM/Zapier.
 - Servidor opcional self-hosted para compartir enlaces y sync E2E; vista web de notas.
 - Linux como plataforma soportada; importación de audio/SRT/VTT; edición de transcript (extras sobre Granola).
