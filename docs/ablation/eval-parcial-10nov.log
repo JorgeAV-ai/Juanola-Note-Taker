@@ -1,0 +1,685 @@
+=== stand_up · plantilla
+idioma: español (detectado: español)
+plantilla: Stand-up (standup)
+modelo: LFM3-1.7B-Q8_0.gguf
+variante        run cobertura  tareas nºs fieles  secc  dup copiadas      s
+full              0   11/12 92%   4/4      88% (16)     4    0      45%   18.7
+               faltan: carrito_3_3
+               tareas escritas: 7 (en el guion: 4)
+               plantilla: colocación 9/11 82% · otros temas 0/20 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: pedro_redondeo → Plan de hoy + Próximos pasos, ana_push → Terminado
+full              1   12/12100%   4/4      89% (19)     4    0      52%   24.0
+               faltan: 
+               tareas escritas: 9 (en el guion: 4)
+               plantilla: colocación 7/12 58% · otros temas 0/23 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado + Próximos pasos, pedro_carrito → Terminado, lucia_5_usuarios → Próximos pasos, pasarela_100 → Terminado, textos_legales → Terminado + Próximos pasos
+full              2   11/12 92%   4/4      70% (20)     4    0      62%   22.1
+               faltan: carrito_3_3
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 8/11 73% · otros temas 0/24 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado + Próximos pasos, pedro_carrito → Terminado, lucia_5_usuarios → Terminado
+noitn             0   11/12 92%   4/4     100% (11)     4    0      47%   27.4
+               faltan: carrito_3_3
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 8/11 73% · otros temas 0/17 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado, pasarela_100 → Plan de hoy, textos_legales → Próximos pasos
+noitn             1   11/12 92%   4/4     100% (15)     5    0      33%   21.5
+               faltan: carrito_3_3
+               tareas escritas: 7 (en el guion: 4)
+               plantilla: colocación 8/11 73% · otros temas 1/18 6% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado, pasarela_100 → Plan de hoy, textos_legales → Próximos pasos
+noitn             2   12/12100%   4/4     100% (15)     5    0      59%   24.5
+               faltan: 
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 8/12 67% · otros temas 1/17 6% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado, pasarela_100 → Plan de hoy, textos_legales → Plan de hoy + Próximos pasos, carrito_3_3 → Otros temas
+nodetail          0   10/12 83%   4/4     100% (9)     4    0      62%   21.3
+               faltan: ana_push, carrito_3_3
+               tareas escritas: 7 (en el guion: 4)
+               plantilla: colocación 9/10 90% · otros temas 0/13 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: pedro_redondeo → Próximos pasos
+nodetail          1   12/12100%   4/4     100% (13)     4    0      61%   23.9
+               faltan: 
+               tareas escritas: 8 (en el guion: 4)
+               plantilla: colocación 7/12 58% · otros temas 0/18 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado, pedro_carrito → Terminado, lucia_5_usuarios → Próximos pasos, pasarela_100 → Terminado, textos_legales → Próximos pasos
+nodetail          2   10/12 83%   4/4     100% (10)     4    0      74%   22.0
+               faltan: version_3_2_jueves, carrito_3_3
+               tareas escritas: 5 (en el guion: 4)
+               plantilla: colocación 7/10 70% · otros temas 0/19 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado, pedro_carrito → Terminado, lucia_5_usuarios → Terminado
+nopromote         0   11/12 92%   4/4      88% (16)     4    0      45%   23.8
+               faltan: carrito_3_3
+               tareas escritas: 7 (en el guion: 4)
+               plantilla: colocación 9/11 82% · otros temas 0/20 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: pedro_redondeo → Plan de hoy + Próximos pasos, ana_push → Terminado
+nopromote         1   12/12100%   4/4      89% (19)     4    0      52%   30.7
+               faltan: 
+               tareas escritas: 9 (en el guion: 4)
+               plantilla: colocación 7/12 58% · otros temas 0/23 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado + Próximos pasos, pedro_carrito → Terminado, lucia_5_usuarios → Próximos pasos, pasarela_100 → Terminado, textos_legales → Terminado + Próximos pasos
+nopromote         2   11/12 92%   4/4      70% (20)     4    0      62%   28.1
+               faltan: carrito_3_3
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 8/11 73% · otros temas 0/24 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado + Próximos pasos, pedro_carrito → Terminado, lucia_5_usuarios → Terminado
+nocitelimit       0   11/12 92%   4/4      88% (16)     4    0      45%   23.4
+               faltan: carrito_3_3
+               tareas escritas: 7 (en el guion: 4)
+               plantilla: colocación 9/11 82% · otros temas 0/20 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: pedro_redondeo → Plan de hoy + Próximos pasos, ana_push → Terminado
+nocitelimit       1   12/12100%   4/4      89% (19)     4    0      52%   23.9
+               faltan: 
+               tareas escritas: 9 (en el guion: 4)
+               plantilla: colocación 7/12 58% · otros temas 0/23 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado + Próximos pasos, pedro_carrito → Terminado, lucia_5_usuarios → Próximos pasos, pasarela_100 → Terminado, textos_legales → Terminado + Próximos pasos
+nocitelimit       2   11/12 92%   4/4      70% (20)     4    0      62%   22.7
+               faltan: carrito_3_3
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 8/11 73% · otros temas 0/24 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado + Próximos pasos, pedro_carrito → Terminado, lucia_5_usuarios → Terminado
+nonotes           0    9/12 75%   4/4     100% (12)     5    0      39%   22.5
+               faltan: ana_14_pruebas, ana_push, carrito_3_3
+               tareas escritas: 7 (en el guion: 4)
+               plantilla: colocación 8/9 89% · otros temas 1/18 6% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: textos_legales → Plan de hoy + Próximos pasos
+nonotes           1   11/12 92%   4/4      88% (16)     4    0      33%   27.3
+               faltan: carrito_3_3
+               tareas escritas: 7 (en el guion: 4)
+               plantilla: colocación 6/11 55% · otros temas 0/18 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado, pedro_carrito → Próximos pasos, lucia_5_usuarios → Terminado, pasarela_100 → Terminado, textos_legales → Próximos pasos
+nonotes           2   10/12 83%   4/4      65% (17)     4    0      37%   25.5
+               faltan: ana_14_pruebas, carrito_3_3
+               tareas escritas: 9 (en el guion: 4)
+               plantilla: colocación 7/10 70% · otros temas 0/19 0% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado, pedro_carrito → Terminado, lucia_5_usuarios → Terminado
+gbnf              0   11/12 92%   4/4      88% (16)     5    0      47%   25.6
+               faltan: lucia_5_usuarios
+               tareas escritas: 5 (en el guion: 4)
+               plantilla: colocación 9/11 82% · otros temas 2/17 12% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado, carrito_3_3 → Otros temas
+gbnf              1   12/12100%   4/4      86% (14)     5    0      41%   24.3
+               faltan: 
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 8/12 67% · otros temas 2/17 12% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado + Próximos pasos, lucia_5_usuarios → Otros temas, textos_legales → Próximos pasos, carrito_3_3 → Otros temas
+gbnf              2   11/12 92%   4/4      75% (16)     5    0      47%   23.4
+               faltan: lucia_5_usuarios
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 9/11 82% · otros temas 1/17 6% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ana_push → Terminado + Próximos pasos, carrito_3_3 → Otros temas
+=== stand_up · auto
+idioma: español (detectado: español)
+modelo: LFM3-1.7B-Q8_0.gguf
+variante        run cobertura  tareas nºs fieles  secc  dup copiadas      s
+full              0   12/12100%   1/4      88% (17)     9    0      46%   22.2
+               faltan: t_pedro_incidencia, t_ana_legal, t_lucia_figma
+               tareas escritas: 2 (en el guion: 4)
+full              1   12/12100%   4/4      90% (20)    10    0      38%   22.3
+               faltan: 
+               tareas escritas: 7 (en el guion: 4)
+full              2   12/12100%   4/4      75% (24)    11    0      31%   20.4
+               faltan: 
+               tareas escritas: 8 (en el guion: 4)
+noitn             0   11/12 92%   4/4      93% (14)     8    0      12%   20.9
+               faltan: carrito_3_3
+               tareas escritas: 6 (en el guion: 4)
+noitn             1   10/12 83%   4/4      94% (17)     7    0      21%   20.8
+               faltan: pedro_redondeo, carrito_3_3
+               tareas escritas: 7 (en el guion: 4)
+noitn             2   10/12 83%   4/4      93% (15)     7    0      14%   17.9
+               faltan: ana_14_pruebas, pedro_redondeo
+               tareas escritas: 7 (en el guion: 4)
+nodetail          0   11/12 92%   1/4     100% (8)     9    0      53%   15.9
+               faltan: pedro_redondeo, t_pedro_incidencia, t_ana_legal, t_lucia_figma
+               tareas escritas: 2 (en el guion: 4)
+nodetail          1   10/12 83%   4/4     100% (11)    10    0      42%   14.5
+               faltan: pedro_redondeo, ana_push
+               tareas escritas: 6 (en el guion: 4)
+nodetail          2   11/12 92%   4/4     100% (13)    11    0      48%   17.4
+               faltan: pedro_redondeo
+               tareas escritas: 6 (en el guion: 4)
+nopromote         0   12/12100%   1/4      88% (17)     9    0      48%   23.5
+               faltan: t_pedro_incidencia, t_ana_legal, t_lucia_figma
+               tareas escritas: 1 (en el guion: 4)
+nopromote         1   12/12100%   4/4      90% (20)    10    0      38%   21.5
+               faltan: 
+               tareas escritas: 7 (en el guion: 4)
+nopromote         2   12/12100%   4/4      75% (24)    11    0      31%   24.0
+               faltan: 
+               tareas escritas: 7 (en el guion: 4)
+nocitelimit       0   12/12100%   1/4      88% (17)     9    0      46%   23.1
+               faltan: t_pedro_incidencia, t_ana_legal, t_lucia_figma
+               tareas escritas: 2 (en el guion: 4)
+nocitelimit       1   12/12100%   4/4      90% (20)    10    0      38%   30.3
+               faltan: 
+               tareas escritas: 7 (en el guion: 4)
+nocitelimit       2   12/12100%   4/4      75% (24)    11    0      31%   24.3
+               faltan: 
+               tareas escritas: 8 (en el guion: 4)
+nonotes           0   12/12100%   3/4      90% (20)     9    0      55%   19.3
+               faltan: t_ana_legal
+               tareas escritas: 6 (en el guion: 4)
+nonotes           1   11/12 92%   4/4      82% (22)     7    0      43%   19.5
+               faltan: carrito_3_3
+               tareas escritas: 5 (en el guion: 4)
+nonotes           2   12/12100%   3/4      70% (27)    12    0      52%   25.4
+               faltan: t_lucia_figma
+               tareas escritas: 5 (en el guion: 4)
+nofloor           0   10/12 83%   1/4      85% (13)     7    0      40%   19.6
+               faltan: lucia_5_usuarios, textos_legales, t_pedro_incidencia, t_ana_legal, t_lucia_figma
+               tareas escritas: 1 (en el guion: 4)
+nofloor           1   12/12100%   3/4      88% (17)     7    0      46%   18.5
+               faltan: t_lucia_figma
+               tareas escritas: 4 (en el guion: 4)
+nofloor           2   12/12100%   1/4      71% (21)     8    0      40%   19.7
+               faltan: t_pedro_incidencia, t_ana_legal, t_lucia_figma
+               tareas escritas: 2 (en el guion: 4)
+=== uno_a_uno · plantilla
+idioma: español (detectado: español)
+plantilla: 1:1 (1on1)
+modelo: LFM3-1.7B-Q8_0.gguf
+variante        run cobertura  tareas nºs fieles  secc  dup copiadas      s
+full              0   14/14100%   4/5     100% (21)     5    0      11%   24.9
+               faltan: t_rrhh_criterios
+               tareas escritas: 7 (en el guion: 5)
+               plantilla: colocación 10/14 71% · otros temas 0/18 0% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, curso_1500 → Cómo está, senior_marzo → Otros temas
+full              1   14/14100%   5/5     100% (20)     4    0      24%   25.0
+               faltan: 
+               tareas escritas: 9 (en el guion: 5)
+               plantilla: colocación 12/14 86% · otros temas 0/21 0% · vacíos 0 · notas usuario 5/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está
+full              2   14/14100%   4/5     100% (18)     5    0      27%   22.6
+               faltan: t_rrhh_criterios
+               tareas escritas: 7 (en el guion: 5)
+               plantilla: colocación 10/14 71% · otros temas 0/15 0% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, curso_1500 → Próximos pasos + Otros temas, senior_marzo → Otros temas
+noitn             0   14/14100%   5/5     100% (18)     4    0      25%   20.9
+               faltan: 
+               tareas escritas: 7 (en el guion: 5)
+               plantilla: colocación 11/14 79% · otros temas 0/20 0% · vacíos 1 · notas usuario 4/5 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, senior_marzo → Cómo está
+noitn             1   14/14100%   5/5     100% (18)     4    0      29%   23.6
+               faltan: 
+               tareas escritas: 7 (en el guion: 5)
+               plantilla: colocación 12/14 86% · otros temas 0/21 0% · vacíos 0 · notas usuario 5/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está
+noitn             2   14/14100%   5/5      91% (22)     4    0      23%   27.3
+               faltan: 
+               tareas escritas: 7 (en el guion: 5)
+               plantilla: colocación 11/14 79% · otros temas 0/22 0% · vacíos 0 · notas usuario 4/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, curso_1500 → Cómo está
+nodetail          0   11/14 79%   4/5     100% (13)     5    0      17%   20.3
+               faltan: consultas_120, consultas_15_reescribir, objetivo_60, t_rrhh_criterios
+               tareas escritas: 6 (en el guion: 5)
+               plantilla: colocación 8/11 73% · otros temas 0/12 0% · vacíos 1 · notas usuario 3/5 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, curso_1500 → Próximos pasos + Otros temas, senior_marzo → Otros temas
+nodetail          1   13/14 93%   5/5     100% (17)     4    0      25%   26.5
+               faltan: objetivo_60
+               tareas escritas: 9 (en el guion: 5)
+               plantilla: colocación 12/13 92% · otros temas 0/20 0% · vacíos 0 · notas usuario 5/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está
+nodetail          2   13/14 93%   4/5     100% (13)     5    0      23%   20.9
+               faltan: objetivo_60, t_rrhh_criterios
+               tareas escritas: 7 (en el guion: 5)
+               plantilla: colocación 10/13 77% · otros temas 0/13 0% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, curso_1500 → Próximos pasos + Otros temas, senior_marzo → Otros temas
+nopromote         0   14/14100%   4/5     100% (21)     5    0      11%   25.6
+               faltan: t_rrhh_criterios
+               tareas escritas: 7 (en el guion: 5)
+               plantilla: colocación 10/14 71% · otros temas 0/18 0% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, curso_1500 → Cómo está, senior_marzo → Otros temas
+nopromote         1   14/14100%   5/5     100% (19)     4    0      21%   28.5
+               faltan: 
+               tareas escritas: 7 (en el guion: 5)
+               plantilla: colocación 12/14 86% · otros temas 0/19 0% · vacíos 0 · notas usuario 5/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está
+nopromote         2   14/14100%   4/5     100% (18)     5    0      29%   25.3
+               faltan: t_rrhh_criterios
+               tareas escritas: 6 (en el guion: 5)
+               plantilla: colocación 10/14 71% · otros temas 0/14 0% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, curso_1500 → Próximos pasos + Otros temas, senior_marzo → Otros temas
+nocitelimit       0   14/14100%   5/5     100% (17)     5    0       6%   24.3
+               faltan: 
+               tareas escritas: 8 (en el guion: 5)
+               plantilla: colocación 10/14 71% · otros temas 0/16 0% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, curso_1500 → Próximos pasos + Otros temas, senior_marzo → Próximos pasos + Otros temas
+nocitelimit       1   14/14100%   5/5     100% (20)     4    0      24%   28.2
+               faltan: 
+               tareas escritas: 9 (en el guion: 5)
+               plantilla: colocación 12/14 86% · otros temas 0/21 0% · vacíos 0 · notas usuario 5/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está
+nocitelimit       2   14/14100%   4/5     100% (18)     5    0      27%   26.7
+               faltan: t_rrhh_criterios
+               tareas escritas: 7 (en el guion: 5)
+               plantilla: colocación 10/14 71% · otros temas 0/15 0% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, curso_1500 → Próximos pasos + Otros temas, senior_marzo → Otros temas
+nonotes           0   14/14100%   5/5     100% (20)     5    0      15%   19.6
+               faltan: 
+               tareas escritas: 7 (en el guion: 5)
+               plantilla: colocación 10/14 71% · otros temas 0/20 0% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, curso_1500 → Feedback + Próximos pasos, senior_marzo → Otros temas
+nonotes           1   14/14100%   5/5     100% (18)     5    0       0%   27.9
+               faltan: 
+               tareas escritas: 8 (en el guion: 5)
+               plantilla: colocación 12/14 86% · otros temas 0/18 0% · vacíos 0 · notas usuario 4/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, senior_marzo → Otros temas
+nonotes           2   14/14100%   5/5      95% (21)     5    0      19%   22.8
+               faltan: 
+               tareas escritas: 9 (en el guion: 5)
+               plantilla: colocación 10/14 71% · otros temas 0/21 0% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, curso_1500 → Feedback, senior_marzo → Otros temas
+gbnf              0   14/14100%   5/5      95% (19)     5    0      36%   40.6
+               faltan: 
+               tareas escritas: 6 (en el guion: 5)
+               plantilla: colocación 12/14 86% · otros temas 0/14 0% · vacíos 1 · notas usuario 3/5 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: curso_1500 → Próximos pasos + Otros temas, senior_marzo → Otros temas
+gbnf              1   14/14100%   3/5     100% (18)     5    0      20%   41.7
+               faltan: t_diego_plan_migracion, t_rrhh_criterios
+               tareas escritas: 5 (en el guion: 5)
+               plantilla: colocación 10/14 71% · otros temas 2/15 13% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: cobertura_45 → Cómo está, objetivo_60 → Cómo está, curso_1500 → Próximos pasos + Otros temas, senior_marzo → Otros temas
+gbnf              2   14/14100%   5/5     100% (20)     5    0      17%   34.8
+               faltan: 
+               tareas escritas: 8 (en el guion: 5)
+               plantilla: colocación 12/14 86% · otros temas 0/18 0% · vacíos 0 · notas usuario 3/5 (perdidas 0) · rellenados ["Feedback"] · reintentos 0 · caída false
+               fuera de su apartado: curso_1500 → Próximos pasos + Otros temas, senior_marzo → Próximos pasos + Otros temas
+=== uno_a_uno · auto
+idioma: español (detectado: español)
+modelo: LFM3-1.7B-Q8_0.gguf
+variante        run cobertura  tareas nºs fieles  secc  dup copiadas      s
+full              0   13/14 93%   5/5      86% (22)     7    0      24%   18.7
+               faltan: mudanza_getafe
+               tareas escritas: 6 (en el guion: 5)
+full              1   13/14 93%   5/5     100% (24)     8    0      27%   21.1
+               faltan: mudanza_getafe
+               tareas escritas: 7 (en el guion: 5)
+full              2   13/14 93%   1/5     100% (20)     8    0      24%   16.1
+               faltan: mudanza_getafe, t_diego_plan_migracion, t_diego_curso, t_documento_logros, t_rrhh_criterios
+               tareas escritas: 2 (en el guion: 5)
+noitn             0   14/14100%   4/5     100% (27)     8    0      21%   17.5
+               faltan: t_documento_logros
+               tareas escritas: 7 (en el guion: 5)
+noitn             1   14/14100%   4/5     100% (22)     7    0      25%   17.7
+               faltan: t_rrhh_criterios
+               tareas escritas: 6 (en el guion: 5)
+noitn             2   14/14100%   3/5     100% (25)     8    0      39%   23.3
+               faltan: t_diego_plan_migracion, t_rrhh_criterios
+               tareas escritas: 5 (en el guion: 5)
+nodetail          0   13/14 93%   5/5     100% (18)     7    0      26%   17.6
+               faltan: mudanza_getafe
+               tareas escritas: 6 (en el guion: 5)
+nodetail          1   12/14 86%   5/5     100% (21)     8    0      27%   22.8
+               faltan: fecha_30_nov, plan_b_13_dic
+               tareas escritas: 6 (en el guion: 5)
+nodetail          2   13/14 93%   1/5     100% (19)     8    0      25%   19.8
+               faltan: mudanza_getafe, t_diego_plan_migracion, t_diego_curso, t_documento_logros, t_rrhh_criterios
+               tareas escritas: 2 (en el guion: 5)
+nopromote         0   13/14 93%   5/5      86% (22)     7    0      24%   23.8
+               faltan: mudanza_getafe
+               tareas escritas: 6 (en el guion: 5)
+nopromote         1   13/14 93%   5/5     100% (24)     8    0      27%   29.2
+               faltan: mudanza_getafe
+               tareas escritas: 7 (en el guion: 5)
+nopromote         2   13/14 93%   1/5     100% (18)     8    0      25%   25.6
+               faltan: mudanza_getafe, t_diego_plan_migracion, t_diego_curso, t_documento_logros, t_rrhh_criterios
+               tareas escritas: 1 (en el guion: 5)
+nocitelimit       0   13/14 93%   5/5      86% (22)     7    0      24%   23.5
+               faltan: mudanza_getafe
+               tareas escritas: 6 (en el guion: 5)
+nocitelimit       1   13/14 93%   5/5     100% (24)     8    0      27%   28.3
+               faltan: mudanza_getafe
+               tareas escritas: 7 (en el guion: 5)
+nocitelimit       2   13/14 93%   1/5     100% (20)     8    0      24%   25.3
+               faltan: mudanza_getafe, t_diego_plan_migracion, t_diego_curso, t_documento_logros, t_rrhh_criterios
+               tareas escritas: 2 (en el guion: 5)
+nonotes           0   14/14100%   3/5     100% (19)     8    0      17%   29.6
+               faltan: t_diego_plan_migracion, t_rrhh_criterios
+               tareas escritas: 5 (en el guion: 5)
+nonotes           1   14/14100%   5/5     100% (22)     7    0       8%   36.6
+               faltan: 
+               tareas escritas: 7 (en el guion: 5)
+nonotes           2   14/14100%   5/5     100% (22)     8    0      14%   36.9
+               faltan: 
+               tareas escritas: 10 (en el guion: 5)
+nofloor           0   13/14 93%   4/5      86% (21)     7    0      21%   29.1
+               faltan: mudanza_getafe, t_documento_logros
+               tareas escritas: 4 (en el guion: 5)
+nofloor           1   13/14 93%   1/5     100% (21)     8    0      26%   22.3
+               faltan: mudanza_getafe, t_diego_plan_migracion, t_diego_curso, t_documento_logros, t_rrhh_criterios
+               tareas escritas: 1 (en el guion: 5)
+nofloor           2   13/14 93%   1/5     100% (20)     8    0      24%   22.5
+               faltan: mudanza_getafe, t_diego_plan_migracion, t_diego_curso, t_documento_logros, t_rrhh_criterios
+               tareas escritas: 2 (en el guion: 5)
+=== llamada_ventas · plantilla
+idioma: español (detectado: español)
+plantilla: Llamada de ventas (ventas)
+modelo: LFM3-1.7B-Q8_0.gguf
+variante        run cobertura  tareas nºs fieles  secc  dup copiadas      s
+full              0   14/18 78%   4/4     100% (23)     5    0      46%   28.8
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 13/14 93% · otros temas 3/26 12% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: objetivo_5 → Otros temas
+full              1   14/18 78%   4/4     100% (22)     5    0      24%   28.3
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 5 (en el guion: 4)
+               plantilla: colocación 14/14 100% · otros temas 1/29 3% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+full              2   13/18 72%   4/4     100% (23)     5    0      37%   29.4
+               faltan: excel, conductores_resistencia, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 13/13 100% · otros temas 2/27 7% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+noitn             0   16/18 89%   4/4     100% (24)     5    0      35%   26.8
+               faltan: excel, empezar_vitoria
+               tareas escritas: 7 (en el guion: 4)
+               plantilla: colocación 15/16 94% · otros temas 2/26 8% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: objetivo_5 → Otros temas
+noitn             1   16/18 89%   4/4     100% (23)     5    0      38%   20.1
+               faltan: excel, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 16/16 100% · otros temas 2/29 7% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+noitn             2   16/18 89%   4/4     100% (25)     5    0      38%   20.0
+               faltan: excel, empezar_vitoria
+               tareas escritas: 7 (en el guion: 4)
+               plantilla: colocación 15/16 94% · otros temas 3/29 10% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: conductores_resistencia → Otros temas
+nodetail          0   14/18 78%   4/4     100% (20)     5    0      43%   16.6
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 13/14 93% · otros temas 3/23 13% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: objetivo_5 → Otros temas
+nodetail          1   13/18 72%   4/4     100% (19)     5    0      25%   16.5
+               faltan: excel, objetivo_5, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 5 (en el guion: 4)
+               plantilla: colocación 13/13 100% · otros temas 1/24 4% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+nodetail          2   11/18 61%   4/4     100% (20)     5    0      41%   17.4
+               faltan: excel, objetivo_5, datos_europa, conductores_resistencia, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 11/11 100% · otros temas 2/22 9% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+nopromote         0   14/18 78%   4/4     100% (23)     5    0      46%   22.4
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 13/14 93% · otros temas 3/26 12% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: objetivo_5 → Otros temas
+nopromote         1   14/18 78%   4/4     100% (22)     5    0      24%   21.2
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 5 (en el guion: 4)
+               plantilla: colocación 14/14 100% · otros temas 1/29 3% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+nopromote         2   13/18 72%   4/4     100% (23)     5    0      37%   22.7
+               faltan: excel, conductores_resistencia, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 13/13 100% · otros temas 2/27 7% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+nocitelimit       0   14/18 78%   4/4     100% (23)     5    0      46%   24.4
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 13/14 93% · otros temas 3/26 12% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: objetivo_5 → Otros temas
+nocitelimit       1   14/18 78%   4/4     100% (22)     5    0      24%   29.3
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 5 (en el guion: 4)
+               plantilla: colocación 14/14 100% · otros temas 1/29 3% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+nocitelimit       2   13/18 72%   4/4     100% (23)     5    0      37%   28.3
+               faltan: excel, conductores_resistencia, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 13/13 100% · otros temas 2/27 7% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+nonotes           0   13/18 72%   4/4     100% (24)     5    0      44%   25.3
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, decide_consejero, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 13/13 100% · otros temas 1/25 4% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+nonotes           1   15/18 83%   4/4     100% (22)     5    0      19%   28.2
+               faltan: presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 15/15 100% · otros temas 1/26 4% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+nonotes           2   15/18 83%   4/4     100% (25)     5    0      15%   27.0
+               faltan: presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 7 (en el guion: 4)
+               plantilla: colocación 15/15 100% · otros temas 2/27 7% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+gbnf              0   14/18 78%   4/4      88% (24)     5    0      34%   47.3
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 14/14 100% · otros temas 1/29 3% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+gbnf              1   14/18 78%   4/4     100% (24)     5    0      19%   47.2
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 14/14 100% · otros temas 1/27 4% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+gbnf              2   14/18 78%   4/4     100% (25)     5    0      33%   53.3
+               faltan: excel, presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+               plantilla: colocación 14/14 100% · otros temas 4/27 15% · vacíos 0 · notas usuario 4/4 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+=== llamada_ventas · auto
+idioma: español (detectado: español)
+modelo: LFM3-1.7B-Q8_0.gguf
+variante        run cobertura  tareas nºs fieles  secc  dup copiadas      s
+full              0   17/18 94%   1/4     100% (22)    10    0       9%   32.8
+               faltan: conductores_resistencia, t_raul_api, t_contacto_cliente, t_demo_vitoria
+               tareas escritas: 1 (en el guion: 4)
+full              1   17/18 94%   4/4     100% (23)     9    0      11%   31.7
+               faltan: conductores_resistencia
+               tareas escritas: 5 (en el guion: 4)
+full              2   15/18 83%   4/4     100% (26)    13    0      21%   33.4
+               faltan: presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 4 (en el guion: 4)
+noitn             0   16/18 89%   4/4     100% (26)     8    0      21%   23.2
+               faltan: excel, empezar_vitoria
+               tareas escritas: 6 (en el guion: 4)
+noitn             1   15/18 83%   4/4     100% (26)     9    0      28%   25.8
+               faltan: excel, seis_semanas, empezar_vitoria
+               tareas escritas: 5 (en el guion: 4)
+noitn             2   16/18 89%   4/4     100% (23)     9    0      13%   24.1
+               faltan: excel, empezar_vitoria
+               tareas escritas: 5 (en el guion: 4)
+nodetail          0   14/18 78%   1/4     100% (19)    10    0      10%   19.6
+               faltan: retrasos_12, datos_europa, conductores_resistencia, seis_semanas, t_raul_api, t_contacto_cliente, t_demo_vitoria
+               tareas escritas: 1 (en el guion: 4)
+nodetail          1   14/18 78%   4/4     100% (20)     9    0      13%   19.4
+               faltan: retrasos_12, datos_europa, conductores_resistencia, seis_semanas
+               tareas escritas: 5 (en el guion: 4)
+nodetail          2   15/18 83%   4/4     100% (24)    13    0      21%   23.3
+               faltan: presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 4 (en el guion: 4)
+nopromote         0   17/18 94%   1/4     100% (22)    10    0       9%   23.6
+               faltan: conductores_resistencia, t_raul_api, t_contacto_cliente, t_demo_vitoria
+               tareas escritas: 1 (en el guion: 4)
+nopromote         1   17/18 94%   4/4     100% (23)     9    0      11%   25.3
+               faltan: conductores_resistencia
+               tareas escritas: 5 (en el guion: 4)
+nopromote         2   15/18 83%   4/4     100% (26)    13    0      21%   29.4
+               faltan: presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 4 (en el guion: 4)
+nocitelimit       0   17/18 94%   1/4     100% (22)    10    0       9%   27.7
+               faltan: conductores_resistencia, t_raul_api, t_contacto_cliente, t_demo_vitoria
+               tareas escritas: 1 (en el guion: 4)
+nocitelimit       1   17/18 94%   4/4     100% (23)     9    0      11%   27.7
+               faltan: conductores_resistencia
+               tareas escritas: 5 (en el guion: 4)
+nocitelimit       2   15/18 83%   4/4     100% (26)    13    0      21%   30.9
+               faltan: presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 4 (en el guion: 4)
+nonotes           0   15/18 83%   4/4     100% (25)     9    0      15%   28.9
+               faltan: presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 7 (en el guion: 4)
+nonotes           1   15/18 83%   4/4     100% (25)     7    0      16%   27.3
+               faltan: presupuesto_40k, puesta_marcha_4000, empezar_vitoria
+               tareas escritas: 8 (en el guion: 4)
+nonotes           2   15/18 83%   3/4      88% (25)    13    0      19%   31.3
+               faltan: conductores_resistencia, presupuesto_40k, puesta_marcha_4000, t_demo_vitoria
+               tareas escritas: 5 (en el guion: 4)
+nofloor           0   17/18 94%   1/4     100% (20)     9    0      10%   23.0
+               faltan: conductores_resistencia, t_raul_api, t_contacto_cliente, t_demo_vitoria
+               tareas escritas: 1 (en el guion: 4)
+nofloor           1   17/18 94%   1/4     100% (20)     9    0      12%   23.0
+               faltan: conductores_resistencia, t_raul_api, t_contacto_cliente, t_demo_vitoria
+               tareas escritas: 2 (en el guion: 4)
+nofloor           2   15/18 83%   1/4     100% (24)    11    0      25%   23.1
+               faltan: presupuesto_40k, puesta_marcha_4000, empezar_vitoria, t_raul_api, t_contacto_cliente, t_demo_vitoria
+               tareas escritas: 1 (en el guion: 4)
+=== entrevista_cliente · plantilla
+idioma: español (detectado: español)
+plantilla: Entrevista con cliente (entrevista)
+modelo: LFM3-1.7B-Q8_0.gguf
+variante        run cobertura  tareas nºs fieles  secc  dup copiadas      s
+full              0   21/27 78%   6/8      89% (87)     6    0      24%   82.7
+               faltan: impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_dinero_dormido, cita_whatsapp_erp, cita_otro_sistema, alertas_reorden, t_marisol_fotos_libreta, t_andres_prototipo
+               tareas escritas: 8 (en el guion: 8)
+               plantilla: colocación 12/21 57% · otros temas 20/84 24% · vacíos 0 · notas usuario 4/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cadena_14_ferreterias → Problemas y necesidades + Próximos pasos, ventas_310_millones → Problemas y necesidades, cedis_apodaca → Problemas y necesidades + Próximos pasos + Otros temas, seis_horas_consolidar → Otros temas, codigos_22400 → Problemas y necesidades, proveedores_130 → Problemas y necesidades, buen_fin → Citas destacables, internet_tres_sucursales → Otros temas, presupuesto_25_mil_mes → Otros temas
+full              1   21/27 78%   5/8      87% (85)     6    0      26%   78.6
+               faltan: ventas_310_millones, inventario_muerto_4_millones, cita_dinero_dormido, inventario_fisico_2_dias, codigos_22400, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo
+               tareas escritas: 10 (en el guion: 8)
+               plantilla: colocación 15/21 71% · otros temas 13/88 15% · vacíos 0 · notas usuario 5/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cadena_14_ferreterias → Problemas y necesidades + Citas destacables, cedis_apodaca → Problemas y necesidades + Próximos pasos, impermeabilizante_1_8_millones → Citas destacables, proveedores_130 → Problemas y necesidades, cita_whatsapp_erp → Lo que usan hoy, buen_fin → Citas destacables
+full              2   21/27 78%   5/8      94% (70)     6    0      29%   77.0
+               faltan: ventas_310_millones, inventario_muerto_4_millones, cita_dinero_dormido, proveedores_130, cita_whatsapp_erp, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo
+               tareas escritas: 8 (en el guion: 8)
+               plantilla: colocación 18/21 86% · otros temas 5/70 7% · vacíos 0 · notas usuario 6/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: codigos_22400 → Problemas y necesidades, buen_fin → Citas destacables, presupuesto_25_mil_mes → Otros temas
+noitn             0   21/27 78%   6/8      96% (53)     6    0      32%  110.4
+               faltan: cuatro_compradores, ventas_310_millones, impermeabilizante_1_8_millones, cita_dinero_dormido, cita_whatsapp_erp, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio
+               tareas escritas: 12 (en el guion: 8)
+               plantilla: colocación 17/21 81% · otros temas 3/65 5% · vacíos 0 · notas usuario 6/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: seis_horas_consolidar → Citas destacables, codigos_22400 → Problemas y necesidades, buen_fin → Lo que usan hoy + Próximos pasos, presupuesto_25_mil_mes → Otros temas
+noitn             1   19/27 70%   5/8      97% (63)     6    0      21%  120.8
+               faltan: cuatro_compradores, ventas_310_millones, impermeabilizante_1_8_millones, cita_dinero_dormido, inventario_fisico_2_dias, codigos_22400, cita_whatsapp_erp, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo
+               tareas escritas: 10 (en el guion: 8)
+               plantilla: colocación 15/19 79% · otros temas 8/72 11% · vacíos 0 · notas usuario 6/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cedis_apodaca → Problemas y necesidades + Próximos pasos, seis_horas_consolidar → Lo que usan hoy, buen_fin → Otros temas, internet_tres_sucursales → Otros temas
+noitn             2   19/27 70%   6/8      94% (62)     6    0      26%   83.7
+               faltan: cuatro_compradores, ventas_310_millones, impermeabilizante_1_8_millones, cita_dinero_dormido, codigos_22400, cita_whatsapp_erp, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_andres_prototipo
+               tareas escritas: 15 (en el guion: 8)
+               plantilla: colocación 16/19 84% · otros temas 5/74 7% · vacíos 0 · notas usuario 6/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: seis_horas_consolidar → Citas destacables, buen_fin → Citas destacables, presupuesto_25_mil_mes → Otros temas
+nodetail          0   15/27 56%   6/8      90% (30)     6    0      15%   52.1
+               faltan: cuatro_compradores, ventas_310_millones, seis_horas_consolidar, impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_dinero_dormido, inventario_fisico_2_dias, codigos_22400, proveedores_130, cita_whatsapp_erp, cita_otro_sistema, alertas_reorden, t_marisol_fotos_libreta, t_andres_prototipo
+               tareas escritas: 8 (en el guion: 8)
+               plantilla: colocación 9/15 60% · otros temas 7/33 21% · vacíos 0 · notas usuario 5/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cadena_14_ferreterias → Próximos pasos + Otros temas, cedis_apodaca → Próximos pasos + Otros temas, whatsapp_gerentes → Otros temas, buen_fin → Citas destacables, internet_tres_sucursales → Otros temas, presupuesto_25_mil_mes → Otros temas
+nodetail          1   12/27 44%   5/8      71% (28)     6    0      31%   43.8
+               faltan: nueve_anos_compras, cuatro_compradores, ventas_310_millones, whatsapp_gerentes, seis_horas_consolidar, impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_dinero_dormido, inventario_fisico_2_dias, codigos_22400, proveedores_130, cita_whatsapp_erp, buen_fin, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo
+               tareas escritas: 7 (en el guion: 8)
+               plantilla: colocación 12/12 100% · otros temas 3/29 10% · vacíos 0 · notas usuario 7/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+nodetail          2   14/27 52%   5/8     100% (23)     6    0      31%   48.2
+               faltan: nueve_anos_compras, ventas_310_millones, whatsapp_gerentes, seis_horas_consolidar, impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_dinero_dormido, inventario_fisico_2_dias, codigos_22400, proveedores_130, cita_whatsapp_erp, buen_fin, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo
+               tareas escritas: 7 (en el guion: 8)
+               plantilla: colocación 14/14 100% · otros temas 2/29 7% · vacíos 0 · notas usuario 6/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+nopromote         0   21/27 78%   6/8      89% (87)     6    0      24%  108.3
+               faltan: impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_dinero_dormido, cita_whatsapp_erp, cita_otro_sistema, alertas_reorden, t_marisol_fotos_libreta, t_andres_prototipo
+               tareas escritas: 8 (en el guion: 8)
+               plantilla: colocación 12/21 57% · otros temas 20/84 24% · vacíos 0 · notas usuario 4/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cadena_14_ferreterias → Problemas y necesidades + Próximos pasos, ventas_310_millones → Problemas y necesidades, cedis_apodaca → Problemas y necesidades + Próximos pasos + Otros temas, seis_horas_consolidar → Otros temas, codigos_22400 → Problemas y necesidades, proveedores_130 → Problemas y necesidades, buen_fin → Citas destacables, internet_tres_sucursales → Otros temas, presupuesto_25_mil_mes → Otros temas
+nopromote         1   21/27 78%   5/8      87% (85)     6    0      26%  100.2
+               faltan: ventas_310_millones, inventario_muerto_4_millones, cita_dinero_dormido, inventario_fisico_2_dias, codigos_22400, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo
+               tareas escritas: 9 (en el guion: 8)
+               plantilla: colocación 15/21 71% · otros temas 13/87 15% · vacíos 0 · notas usuario 5/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cadena_14_ferreterias → Problemas y necesidades + Citas destacables, cedis_apodaca → Problemas y necesidades + Próximos pasos, impermeabilizante_1_8_millones → Citas destacables, proveedores_130 → Problemas y necesidades, cita_whatsapp_erp → Lo que usan hoy, buen_fin → Citas destacables
+nopromote         2   21/27 78%   5/8      94% (70)     6    0      29%   96.3
+               faltan: ventas_310_millones, inventario_muerto_4_millones, cita_dinero_dormido, proveedores_130, cita_whatsapp_erp, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo
+               tareas escritas: 8 (en el guion: 8)
+               plantilla: colocación 18/21 86% · otros temas 5/70 7% · vacíos 0 · notas usuario 6/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: codigos_22400 → Problemas y necesidades, buen_fin → Citas destacables, presupuesto_25_mil_mes → Otros temas
+nocitelimit       0   21/27 78%   6/8      89% (87)     6    0      24%  108.0
+               faltan: impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_dinero_dormido, cita_whatsapp_erp, cita_otro_sistema, alertas_reorden, t_marisol_fotos_libreta, t_andres_prototipo
+               tareas escritas: 8 (en el guion: 8)
+               plantilla: colocación 12/21 57% · otros temas 20/84 24% · vacíos 0 · notas usuario 4/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cadena_14_ferreterias → Problemas y necesidades + Próximos pasos, ventas_310_millones → Problemas y necesidades, cedis_apodaca → Problemas y necesidades + Próximos pasos + Otros temas, seis_horas_consolidar → Otros temas, codigos_22400 → Problemas y necesidades, proveedores_130 → Problemas y necesidades, buen_fin → Citas destacables, internet_tres_sucursales → Otros temas, presupuesto_25_mil_mes → Otros temas
+nocitelimit       1   21/27 78%   5/8      87% (85)     6    0      26%   76.7
+               faltan: ventas_310_millones, inventario_muerto_4_millones, cita_dinero_dormido, inventario_fisico_2_dias, codigos_22400, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo
+               tareas escritas: 10 (en el guion: 8)
+               plantilla: colocación 15/21 71% · otros temas 13/88 15% · vacíos 0 · notas usuario 5/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cadena_14_ferreterias → Problemas y necesidades + Citas destacables, cedis_apodaca → Problemas y necesidades + Próximos pasos, impermeabilizante_1_8_millones → Citas destacables, proveedores_130 → Problemas y necesidades, cita_whatsapp_erp → Lo que usan hoy, buen_fin → Citas destacables
+nocitelimit       2   21/27 78%   5/8      94% (70)     6    0      29%   74.1
+               faltan: ventas_310_millones, inventario_muerto_4_millones, cita_dinero_dormido, proveedores_130, cita_whatsapp_erp, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo
+               tareas escritas: 8 (en el guion: 8)
+               plantilla: colocación 18/21 86% · otros temas 5/70 7% · vacíos 0 · notas usuario 6/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: codigos_22400 → Problemas y necesidades, buen_fin → Citas destacables, presupuesto_25_mil_mes → Otros temas
+nonotes           0   20/27 74%   6/8      85% (79)     6    0      27%   70.8
+               faltan: monterrey, impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_dinero_dormido, codigos_22400, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_marisol_rogelio
+               tareas escritas: 12 (en el guion: 8)
+               plantilla: colocación 13/20 65% · otros temas 5/88 6% · vacíos 0 · notas usuario 5/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: cadena_14_ferreterias → Problemas y necesidades + Lo que usan hoy + Citas destacables, ventas_310_millones → Problemas y necesidades, cedis_apodaca → Problemas y necesidades + Próximos pasos, proveedores_130 → Problemas y necesidades, cita_whatsapp_erp → Lo que usan hoy, buen_fin → Citas destacables, presupuesto_25_mil_mes → Lo que usan hoy
+nonotes           1   23/27 85%   6/8      94% (98)     6    0      22%   70.6
+               faltan: inventario_muerto_4_millones, cita_dinero_dormido, codigos_22400, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio
+               tareas escritas: 12 (en el guion: 8)
+               plantilla: colocación 17/23 74% · otros temas 11/87 13% · vacíos 0 · notas usuario 6/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ventas_310_millones → Problemas y necesidades, impermeabilizante_1_8_millones → Lo que usan hoy, cita_whatsapp_erp → Lo que usan hoy, buen_fin → Citas destacables, internet_tres_sucursales → Otros temas, presupuesto_25_mil_mes → Otros temas
+nonotes           2   21/27 78%   6/8      85% (62)     6    0      29%   86.5
+               faltan: ventas_310_millones, impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_dinero_dormido, cita_whatsapp_erp, cita_otro_sistema, t_marisol_fotos_libreta, t_andres_prototipo
+               tareas escritas: 10 (en el guion: 8)
+               plantilla: colocación 16/21 76% · otros temas 7/73 10% · vacíos 0 · notas usuario 5/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: codigos_22400 → Problemas y necesidades, proveedores_130 → Problemas y necesidades, buen_fin → Lo que usan hoy, internet_tres_sucursales → Otros temas, presupuesto_25_mil_mes → Otros temas
+gbnf              0   25/27 93%   5/8      93% (83)     6    0      26%  120.2
+               faltan: cita_dinero_dormido, cita_whatsapp_erp, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_andres_prototipo
+               tareas escritas: 7 (en el guion: 8)
+               plantilla: colocación 18/25 72% · otros temas 13/81 16% · vacíos 0 · notas usuario 6/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ventas_310_millones → Otros temas, inventario_muerto_4_millones → Otros temas, codigos_22400 → Problemas y necesidades + Otros temas, proveedores_130 → Otros temas, buen_fin → Citas destacables, alertas_reorden → Otros temas, presupuesto_25_mil_mes → Otros temas
+gbnf              1   21/27 78%   5/8      88% (83)     6    0      23%  110.7
+               faltan: monterrey, inventario_muerto_4_millones, cita_dinero_dormido, codigos_22400, cita_whatsapp_erp, alertas_reorden, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_andres_prototipo
+               tareas escritas: 9 (en el guion: 8)
+               plantilla: colocación 17/21 81% · otros temas 13/78 17% · vacíos 0 · notas usuario 5/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: ventas_310_millones → Problemas y necesidades, proveedores_130 → Problemas y necesidades, internet_tres_sucursales → Citas destacables, presupuesto_25_mil_mes → Otros temas
+gbnf              2   22/27 81%   5/8      91% (82)     6    0      24%  104.6
+               faltan: monterrey, ventas_310_millones, cita_dinero_dormido, inventario_fisico_2_dias, cita_whatsapp_erp, t_marisol_fotos_libreta, t_marisol_rogelio, t_marisol_lupita
+               tareas escritas: 7 (en el guion: 8)
+               plantilla: colocación 15/22 68% · otros temas 23/87 26% · vacíos 0 · notas usuario 5/8 (perdidas 0) · rellenados [] · reintentos 0 · caída false
+               fuera de su apartado: inventario_muerto_4_millones → Otros temas, codigos_22400 → Problemas y necesidades, buen_fin → Otros temas, odoo_450_mil → Otros temas, internet_tres_sucursales → Citas destacables, alertas_reorden → Contexto del cliente + Próximos pasos, presupuesto_25_mil_mes → Otros temas
+=== entrevista_cliente · auto
+idioma: español (detectado: español)
+modelo: LFM3-1.7B-Q8_0.gguf
+variante        run cobertura  tareas nºs fieles  secc  dup copiadas      s
+full              0   23/27 85%   4/8      86% (100)    20    0      19%   86.9
+               faltan: cita_excel_no_avisa, impermeabilizante_1_8_millones, cita_dinero_dormido, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_visita_cedis_20_nov, t_marisol_lupita
+               tareas escritas: 10 (en el guion: 8)
+full              1   24/27 89%   4/8      93% (105)    18    0      15%   95.3
+               faltan: cita_excel_no_avisa, cita_dinero_dormido, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_visita_cedis_20_nov, t_marisol_lupita
+               tareas escritas: 8 (en el guion: 8)
+full              2   21/27 78%   3/8      80% (87)    12    0      22%   86.0
+               faltan: cita_excel_no_avisa, impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_whatsapp_erp, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_marisol_rogelio, t_andres_prototipo, t_marisol_lupita
+               tareas escritas: 4 (en el guion: 8)
+noitn             0   23/27 85%   4/8      88% (84)    14    0      19%   96.3
+               faltan: nueve_anos_compras, cita_dinero_dormido, proveedores_130, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo, t_marisol_lupita
+               tareas escritas: 8 (en el guion: 8)
+noitn             1   21/27 78%   3/8      89% (74)    11    0      12%   99.7
+               faltan: impermeabilizante_1_8_millones, cita_dinero_dormido, cita_whatsapp_erp, buen_fin, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_marisol_rogelio, t_visita_cedis_20_nov, t_andres_prototipo, t_marisol_lupita
+               tareas escritas: 8 (en el guion: 8)
+noitn             2   23/27 85%   5/8      91% (85)    19    0      12%  104.2
+               faltan: impermeabilizante_1_8_millones, cita_dinero_dormido, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_andres_prototipo
+               tareas escritas: 13 (en el guion: 8)
+nodetail          0   13/27 48%   4/8      67% (36)    18    0       4%   60.3
+               faltan: nueve_anos_compras, cuatro_compradores, ventas_310_millones, cita_excel_no_avisa, impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_dinero_dormido, inventario_fisico_2_dias, codigos_22400, proveedores_130, cita_whatsapp_erp, buen_fin, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_marisol_rogelio, t_andres_prototipo
+               tareas escritas: 6 (en el guion: 8)
+nodetail          1   20/27 74%   3/8      98% (42)    18    0       5%   57.0
+               faltan: nueve_anos_compras, seis_horas_consolidar, cita_excel_no_avisa, cita_dinero_dormido, proveedores_130, cita_whatsapp_erp, cita_otro_sistema, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_marisol_rogelio, t_visita_cedis_20_nov, t_marisol_lupita
+               tareas escritas: 4 (en el guion: 8)
+nodetail          2   15/27 56%   1/8      62% (29)    12    0      11%   39.4
+               faltan: nueve_anos_compras, ventas_310_millones, whatsapp_gerentes, seis_horas_consolidar, cita_excel_no_avisa, impermeabilizante_1_8_millones, inventario_muerto_4_millones, inventario_fisico_2_dias, codigos_22400, cita_whatsapp_erp, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_marisol_exportacion, t_marisol_rogelio, t_visita_cedis_20_nov, t_andres_prototipo, t_marisol_lupita
+               tareas escritas: 2 (en el guion: 8)
+nopromote         0   23/27 85%   2/8      86% (100)    20    0      18%   80.3
+               faltan: cita_excel_no_avisa, impermeabilizante_1_8_millones, cita_dinero_dormido, cita_otro_sistema, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_marisol_rogelio, t_visita_cedis_20_nov, t_andres_prototipo, t_marisol_lupita
+               tareas escritas: 7 (en el guion: 8)
+nopromote         1   24/27 89%   2/8      93% (105)    18    0      15%   95.0
+               faltan: cita_excel_no_avisa, cita_dinero_dormido, cita_otro_sistema, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_marisol_rogelio, t_visita_cedis_20_nov, t_andres_prototipo, t_marisol_lupita
+               tareas escritas: 6 (en el guion: 8)
+nopromote         2   21/27 78%   3/8      80% (87)    12    0      22%   84.7
+               faltan: cita_excel_no_avisa, impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_whatsapp_erp, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_marisol_rogelio, t_andres_prototipo, t_marisol_lupita
+               tareas escritas: 4 (en el guion: 8)
+nocitelimit       0   23/27 85%   4/8      86% (100)    20    0      19%   89.4
+               faltan: cita_excel_no_avisa, impermeabilizante_1_8_millones, cita_dinero_dormido, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_visita_cedis_20_nov, t_marisol_lupita
+               tareas escritas: 10 (en el guion: 8)
+nocitelimit       1   24/27 89%   4/8      93% (105)    18    0      15%  104.1
+               faltan: cita_excel_no_avisa, cita_dinero_dormido, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_visita_cedis_20_nov, t_marisol_lupita
+               tareas escritas: 8 (en el guion: 8)
+nocitelimit       2   21/27 78%   3/8      80% (87)    12    0      22%   94.2
+               faltan: cita_excel_no_avisa, impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_whatsapp_erp, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_yo_llamada_ernesto, t_marisol_rogelio, t_andres_prototipo, t_marisol_lupita
+               tareas escritas: 4 (en el guion: 8)
+nonotes           0   23/27 85%   5/8      87% (90)    20    0      15%  110.9
+               faltan: impermeabilizante_1_8_millones, cita_dinero_dormido, cita_otro_sistema, internet_tres_sucursales, t_marisol_fotos_libreta, t_marisol_rogelio, t_marisol_lupita
+               tareas escritas: 8 (en el guion: 8)
+nonotes           1   22/27 81%   4/8      80% (97)    27    0      12%  127.8
+               faltan: impermeabilizante_1_8_millones, inventario_muerto_4_millones, cita_dinero_dormido, codigos_22400, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_andres_prototipo, t_marisol_lupita
+               tareas escritas: 10 (en el guion: 8)
+nonotes           2   21/27 78%   6/8      78% (97)    22    0      14%  129.7
+               faltan: nueve_anos_compras, ventas_310_millones, cita_excel_no_avisa, cita_dinero_dormido, cita_whatsapp_erp, cita_otro_sistema, t_marisol_fotos_libreta, t_yo_llamada_ernesto
+               tareas escritas: 10 (en el guion: 8)
+nofloor           0   23/27 85%   4/8      86% (100)    20    0      19%   89.4
+               faltan: cita_excel_no_avisa, impermeabilizante_1_8_millones, cita_dinero_dormido, cita_otro_sistema, t_marisol_fotos_libreta, t_marisol_rogelio, t_visita_cedis_20_nov, t_marisol_lupita
+               tareas escritas: 10 (en el guion: 8)
