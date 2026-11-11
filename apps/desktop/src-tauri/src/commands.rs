@@ -4,10 +4,11 @@
 use std::sync::Arc;
 
 use juanola_calendar::Access;
-use juanola_core_types::{CalendarEvent, Id, Note, NoteStatus, Segment};
+use juanola_core_types::{CalendarEvent, Id, Note, NoteStatus, Segment, Template};
 use juanola_db::repo;
 use juanola_db::repo::folders::Folder;
 use juanola_enhance::pipelines::enhance::enhance;
+use juanola_enhance::templates::{builtin_template, builtin_templates, is_builtin};
 use juanola_enhance::{EnhanceInput, EnhancedNotes};
 use juanola_llm::backends::llamacpp::LlamaCpp;
 use serde::Serialize;
@@ -302,6 +303,10 @@ struct NoteStatusEvent {
     status: NoteStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     message: Option<String>,
+    /// Aviso para el usuario, como código (lo traduce el frontend):
+    /// `template_fallback` si la plantilla no encajó y se usó Auto.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    notice: Option<&'static str>,
 }
 
 async fn llm(state: &AppState) -> Res<Arc<LlamaCpp>> {
@@ -322,46 +327,96 @@ async fn llm(state: &AppState) -> Res<Arc<LlamaCpp>> {
     Ok(model)
 }
 
+/// Idioma de los títulos de las plantillas integradas: acepta el código de la
+/// interfaz («es», «en») o el nombre que da `summary_language` («inglés»).
+fn template_language(language: Option<&str>) -> &str {
+    match language {
+        Some("en") => "inglés",
+        Some("es") | None => "español",
+        Some(other) => other,
+    }
+}
+
+/// Plantillas para el menú: las integradas (con los títulos en `language`) y
+/// después las del usuario.
+#[tauri::command]
+pub async fn list_templates(state: State<'_, AppState>, language: Option<String>) -> Res<Vec<Template>> {
+    let mut all = builtin_templates(template_language(language.as_deref()));
+    all.extend(repo::templates::list(&state.db).await.map_err(e)?);
+    Ok(all)
+}
+
+/// La plantilla `id` lista para el enhance, o `None` si ya no existe (borrada).
+async fn load_template(state: &AppState, id: Id, summary_language: &str) -> Res<Option<Template>> {
+    if is_builtin(id) {
+        return Ok(builtin_template(id, summary_language));
+    }
+    repo::templates::get(&state.db, id).await.map_err(e)
+}
+
 /// Genera las notas mejoradas de una nota a partir de sus notas crudas y su
 /// transcripción, y las guarda en `enhanced_doc`.
+///
+/// `template`: sin él se usa la plantilla de la nota; «auto» o el id de una
+/// plantilla la cambian (y se guarda en la nota) antes de generar.
 #[tauri::command]
-pub async fn enhance_note(app: AppHandle, state: State<'_, AppState>, id: Id) -> Res<EnhancedNotes> {
+pub async fn enhance_note(app: AppHandle, state: State<'_, AppState>, id: Id, template: Option<String>) -> Res<EnhancedNotes> {
     // De uno en uno: dos enhances a la vez (misma nota o no) compiten por la
     // GPU y pisan el estado Enhancing/Ready del otro.
     static LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
     let _guard = LOCK.lock().await;
-    let set = |status: NoteStatus, message: Option<String>| {
-        let _ = app.emit("note://status", NoteStatusEvent { note_id: id, status, message });
+    let set = |status: NoteStatus, message: Option<String>, notice: Option<&'static str>| {
+        let _ = app.emit("note://status", NoteStatusEvent { note_id: id, status, message, notice });
+    };
+    let choice = match template.as_deref() {
+        None => None,
+        Some("auto") => Some(None),
+        Some(t) => Some(Some(t.parse::<Id>().map_err(|_| format!("plantilla «{t}» no válida"))?)),
     };
     state.models.require(&["llm_main"])?;
+    if let Some(template_id) = choice {
+        repo::notes::set_template(&state.db, id, template_id).await.map_err(e)?;
+    }
     repo::notes::set_status(&state.db, id, NoteStatus::Enhancing).await.map_err(e)?;
-    set(NoteStatus::Enhancing, None);
+    set(NoteStatus::Enhancing, None, None);
     let result = async {
         let note = repo::notes::get(&state.db, id).await.map_err(e)?.ok_or("la nota no existe")?;
         let segments = repo::segments::list(&state.db, id).await.map_err(e)?;
         let model = llm(&state).await?;
         let summary_language = juanola_enhance::language::summary_language(&segments);
-        tracing::info!(summary_language, "idioma del resumen");
-        let input = EnhanceInput { note: &note, segments: &segments, template: None, summary_language, user_profile: "" };
+        let template = match note.template_id {
+            Some(tid) => {
+                let t = load_template(&state, tid, summary_language).await?;
+                if t.is_none() {
+                    tracing::warn!(template_id = %tid, "la plantilla de la nota ya no existe: se usa Auto");
+                    repo::notes::set_template(&state.db, id, None).await.map_err(e)?;
+                }
+                t
+            }
+            None => None,
+        };
+        tracing::info!(summary_language, template = template.as_ref().map(|t| t.name.as_str()), "idioma del resumen");
+        let input = EnhanceInput { note: &note, segments: &segments, template: template.as_ref(), summary_language, user_profile: "" };
         let (notes, report) = enhance(model.as_ref(), &input).await.map_err(e)?;
         tracing::info!(?report, "enhance");
         let value = serde_json::to_value(&notes).map_err(e)?;
         repo::notes::set_enhanced_doc(&state.db, id, Some(&value)).await.map_err(e)?;
-        Ok::<_, String>(notes)
+        Ok::<_, String>((notes, report.template_fallback))
     }
     .await;
-    match &result {
-        Ok(_) => {
+    match result {
+        Ok((notes, fallback)) => {
             repo::notes::set_status(&state.db, id, NoteStatus::Ready).await.map_err(e)?;
-            set(NoteStatus::Ready, None);
+            set(NoteStatus::Ready, None, fallback.then_some("template_fallback"));
+            Ok(notes)
         }
         Err(msg) => {
             tracing::error!(note_id = %id, error = %msg, "enhance falló");
             repo::notes::set_status(&state.db, id, NoteStatus::Failed).await.map_err(e)?;
-            set(NoteStatus::Failed, Some(msg.clone()));
+            set(NoteStatus::Failed, Some(msg.clone()), None);
+            Err(msg)
         }
     }
-    result
 }
 
 // ------------------------------------------------------------------- otros

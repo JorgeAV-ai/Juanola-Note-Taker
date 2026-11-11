@@ -3,10 +3,11 @@
 // el log de la app con el prefijo `autotest`:
 //   nota nueva → Start → audio del sistema con `say` → Stop → Enhanced →
 //   lupa de cita → edición a mano (se guarda como texto del usuario) → tarea →
-//   cambio de pestaña → Pause/Resume → segunda grabación en la misma nota.
+//   cambio de pestaña → Pause/Resume → segunda grabación en la misma nota →
+//   regenerar con la plantilla «Reunión semanal de equipo».
 import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
-import { events, ipc, type EnhancedNotes, type RecordingState } from "../lib/ipc";
+import { events, ipc, type EnhancedNotes, type NoteStatusEvent, type RecordingState } from "../lib/ipc";
 import { t } from "../lib/i18n";
 
 const log = (line: string) => invoke("autotest_log", { line }).catch(() => {});
@@ -246,6 +247,67 @@ async function flow() {
   check(newer.some((s) => s.channel === "system"), "segunda sesión transcrita", newer.map((s) => s.text).join(" ").slice(0, 160));
   const err = document.querySelector(".note-error, .pill-msg.error");
   check(!err, "sin errores en pantalla", err?.textContent ?? "");
+
+  await templateStep(id);
+}
+
+// Id fijo de «Reunión semanal de equipo» (crates/enhance/src/templates.rs).
+const WEEKLY_TEAM = "6a75616e-6f6c-4100-8000-000000000003";
+// Apartados que añade el pipeline fuera de la plantilla.
+const EXTRA_HEADINGS = new Set(["Otros temas", "Other topics", "Tus notas", "Your notes"]);
+
+// Regenera la nota con la plantilla desde el submenú «Plantilla» y comprueba
+// que los títulos siguen la plantilla, en su orden, y que no hubo caída a Auto.
+async function templateStep(id: string) {
+  let ready: NoteStatusEvent | null = null;
+  const un = await events.noteStatus((e) => {
+    if (e.note_id === id && e.status !== "enhancing") ready = e;
+  });
+  try {
+    press(document.querySelector(".enhance-menu"));
+    const sub = await waitFor("submenú Plantilla", () => document.querySelector<HTMLElement>(".template-menu"), 3000);
+    sub?.click();
+    const item = await waitFor("plantilla en el submenú", () => document.querySelector<HTMLElement>(`[data-template-id="${WEEKLY_TEAM}"]`), 3000);
+    if (!check(!!item, "submenú con «Reunión semanal de equipo»")) return;
+    item!.click();
+    await sleep(400);
+    button(".note-confirm button", t("note.regenerate"))?.click();
+    await waitFor("enhance con plantilla empezado", () => document.querySelector(".enhancing") || document.querySelector(".note-error"), 10_000);
+    const t0 = performance.now();
+    await waitFor("enhance con plantilla terminado", () => (!document.querySelector(".enhancing") && ready) || document.querySelector(".note-error"), 240_000);
+    const err = document.querySelector(".note-error");
+    // `ready` lo asigna el listener: TypeScript no lo ve y lo deja en `null`.
+    const got = ready as NoteStatusEvent | null;
+    if (!check(!err && got?.status === "ready", "enhance con plantilla sin error", err?.textContent ?? `${((performance.now() - t0) / 1000).toFixed(1)} s`)) return;
+    check(got?.notice !== "template_fallback", "plantilla aplicada sin caer a Auto");
+    check(!!document.querySelector(".note-notice") === (got?.notice === "template_fallback"), "aviso de caída a Auto solo si la hubo");
+
+    const saved = await ipc.getNote(id);
+    check(saved?.template_id === WEEKLY_TEAM, "plantilla guardada en la nota", String(saved?.template_id));
+    const headings = (saved?.enhanced_doc?.sections ?? []).map((s) => s.heading);
+    // Los títulos de la plantilla van en el idioma del resumen: se prueba con los dos.
+    const options = await Promise.all(["español", "inglés"].map((l) => ipc.listTemplates(l)));
+    const expected = options.map((list) => list.find((x) => x.id === WEEKLY_TEAM)?.structure.map((s) => s.heading) ?? []);
+    const own = headings.filter((h) => !EXTRA_HEADINGS.has(h));
+    const ordered = expected.some((exp) => {
+      let i = 0;
+      return own.every((h) => {
+        while (i < exp.length && exp[i] !== h) i++;
+        return i++ < exp.length;
+      });
+    });
+    check(own.length > 0 && ordered, "títulos: subconjunto ordenado de la plantilla", headings.join(" · "));
+    check(expected.some((exp) => exp.every((h) => own.includes(h))), "todos los apartados de la plantilla presentes", headings.join(" · "));
+    // El menú marca la plantilla actual.
+    press(document.querySelector(".enhance-menu"));
+    (await waitFor("submenú Plantilla", () => document.querySelector<HTMLElement>(".template-menu"), 3000))?.click();
+    const marked = await waitFor("plantilla marcada", () => document.querySelector(`[data-template-id="${WEEKLY_TEAM}"] svg`), 3000);
+    check(!!marked, "el submenú marca la plantilla de la nota");
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await sleep(300);
+  } finally {
+    un();
+  }
 }
 
 // Solo enhance + editor sobre la nota transcrita más reciente (sin audio: no

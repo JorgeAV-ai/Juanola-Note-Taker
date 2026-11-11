@@ -83,7 +83,7 @@ Cifras de referencia (3 semillas): reuniones de 1 hora, cobertura de hechos 61-9
 
 Por orden de valor, según lo hablado con el usuario:
 
-1. **Conectar las plantillas a la app** (fase 2 de [plantillas.md](plantillas.md) §7): submenú, aviso de caída a Auto y autotest.
+1. **Plantillas en la app** (fase 2 de [plantillas.md](plantillas.md) §7): hecha en `feat/plantillas-app` y con `JUANOLA_AUTOTEST=1` en verde (12 nov). Lo siguiente es la fase 3: el editor de plantillas del usuario.
 2. **Ver el resumen antes:** mostrarlo a los ~20 s y añadir los detalles después; más adelante, procesar durante la reunión. Ojo: con el enhance en la GPU, el STT en vivo se queda más de un minuto atrás (medido); tendría que ceder la GPU o esperar a los silencios.
 3. **Validar con grabaciones reales** en castellano e inglés: todo lo medido es con guiones y voces de `say` ([eval-dataset.md](eval-dataset.md), capa D).
 4. **Audio:** cancelación de eco sin auriculares (candidato: LocalVQE, ver experimentos) y fallback ScreenCaptureKit para macOS 13-14.5.

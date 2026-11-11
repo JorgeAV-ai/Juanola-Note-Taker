@@ -48,6 +48,36 @@ export interface EnhancedNotes {
   edited?: boolean;
 }
 
+export type SectionKind = "topics" | "tasks";
+
+export interface TemplateSection {
+  heading: string;
+  hint: string;
+  kind: SectionKind;
+}
+
+/** Plantilla del resumen. Las integradas traen los títulos en el idioma pedido. */
+export interface Template {
+  id: string;
+  name: string;
+  purpose: string;
+  style: string;
+  structure: TemplateSection[];
+  is_builtin: boolean;
+  shared_with_workspace: boolean;
+}
+
+/** Plantilla para `enhanceNote`: «auto», el id de una plantilla o nada (la de la nota). */
+export type TemplateChoice = "auto" | string;
+
+/** Evento `note://status`. `notice: "template_fallback"`: la plantilla no encajó y se usó Auto. */
+export interface NoteStatusEvent {
+  note_id: string;
+  status: NoteStatus;
+  message?: string;
+  notice?: "template_fallback";
+}
+
 export interface Attendee {
   email: string;
   name: string | null;
@@ -163,7 +193,9 @@ export const ipc = {
   resumeRecording: () => invoke<void>("resume_recording"),
   stopRecording: () => invoke<number>("stop_recording"),
   recordingState: () => invoke<{ note_id: string | null; stopping_note: string | null; paused: boolean; stopping: boolean }>("recording_state"),
-  enhanceNote: (id: string) => invoke<EnhancedNotes>("enhance_note", { id }),
+  enhanceNote: (id: string, template?: TemplateChoice) => invoke<EnhancedNotes>("enhance_note", { id, template }),
+  /** `language`: «es»/«en» (interfaz) o el nombre del idioma del resumen («inglés»). */
+  listTemplates: (language?: string) => invoke<Template[]>("list_templates", { language }),
   openPrivacySettings: (kind: SettingsAction) => invoke<void>("open_privacy_settings", { kind }),
   comingUp: () => invoke<CalendarEvent[]>("coming_up"),
   calendarAccess: () => invoke<CalendarAccess>("calendar_access"),
@@ -204,8 +236,7 @@ export const events = {
     listen<{ note_id: string; mic: number; system: number }>("recording://levels", (e) => cb(e.payload)),
   segment: (cb: (e: LiveSegment) => void): Promise<UnlistenFn> =>
     listen<LiveSegment>("transcript://segment", (e) => cb(e.payload)),
-  noteStatus: (cb: (e: { note_id: string; status: NoteStatus; message?: string }) => void): Promise<UnlistenFn> =>
-    listen<{ note_id: string; status: NoteStatus; message?: string }>("note://status", (e) => cb(e.payload)),
+  noteStatus: (cb: (e: NoteStatusEvent) => void): Promise<UnlistenFn> => listen<NoteStatusEvent>("note://status", (e) => cb(e.payload)),
   calendarChanged: (cb: () => void): Promise<UnlistenFn> => listen("calendar://changed", () => cb()),
   takeNotes: (cb: (e: { note_id: string }) => void): Promise<UnlistenFn> =>
     listen<{ note_id: string }>("detect://take-notes", (e) => cb(e.payload)),

@@ -13,6 +13,9 @@ pub enum DbError {
     /// Una fila con datos que no se pueden interpretar (uuid o fecha mal formados).
     #[error("fila corrupta: {0}")]
     Corrupt(String),
+    /// Datos que no se pueden guardar (por ejemplo, una plantilla que no pasa `validate`).
+    #[error("{0}")]
+    Invalid(String),
 }
 
 #[derive(Clone)]
@@ -159,6 +162,50 @@ mod tests {
         assert_eq!(repo::notes::find_by_event(&db, &ev.id).await.unwrap().unwrap().id, n.id);
         repo::notes::trash(&db, n.id).await.unwrap();
         assert!(repo::notes::find_by_event(&db, &ev.id).await.unwrap().is_none());
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[tokio::test]
+    async fn templates_and_note_template() {
+        use juanola_core_types::{SectionKind, Template, TemplateSection};
+        let dir = std::env::temp_dir().join(format!("juanola-db-test-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let db = Db::open(&dir.join("t.sqlite")).await.unwrap();
+        let sec = |h: &str, kind| TemplateSection { heading: h.into(), hint: "pista".into(), kind };
+        let mut t = Template {
+            id: uuid::Uuid::new_v4(),
+            name: "Retro".into(),
+            purpose: "retrospectiva".into(),
+            style: "breve".into(),
+            structure: vec![sec("Bien", SectionKind::Topics), sec("Acciones", SectionKind::Tasks)],
+            is_builtin: false,
+            shared_with_workspace: false,
+        };
+        repo::templates::upsert(&db, &t).await.unwrap();
+        t.name = "Retrospectiva".into();
+        repo::templates::upsert(&db, &t).await.unwrap();
+        let got = repo::templates::get(&db, t.id).await.unwrap().unwrap();
+        assert_eq!((got.name.as_str(), got.structure.clone()), ("Retrospectiva", t.structure.clone()));
+        assert_eq!(repo::templates::list(&db).await.unwrap().len(), 1);
+
+        // Una plantilla inválida o integrada no se guarda.
+        let mut bad = t.clone();
+        bad.id = uuid::Uuid::new_v4();
+        bad.structure.clear();
+        assert!(matches!(repo::templates::upsert(&db, &bad).await, Err(DbError::Invalid(_))));
+        let mut builtin = t.clone();
+        builtin.is_builtin = true;
+        assert!(repo::templates::upsert(&db, &builtin).await.is_err());
+
+        // La nota guarda la plantilla; al borrarla vuelve a Auto.
+        let ws = repo::workspaces::ensure_personal(&db).await.unwrap();
+        let n = repo::notes::create(&db, ws, "Retro").await.unwrap();
+        assert_eq!(n.template_id, None);
+        repo::notes::set_template(&db, n.id, Some(t.id)).await.unwrap();
+        assert_eq!(repo::notes::get(&db, n.id).await.unwrap().unwrap().template_id, Some(t.id));
+        repo::templates::delete(&db, t.id).await.unwrap();
+        assert!(repo::templates::get(&db, t.id).await.unwrap().is_none());
+        assert_eq!(repo::notes::get(&db, n.id).await.unwrap().unwrap().template_id, None);
         std::fs::remove_dir_all(&dir).ok();
     }
 }

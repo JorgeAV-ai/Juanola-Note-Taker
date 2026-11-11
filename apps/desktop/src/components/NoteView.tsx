@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { AlignLeft, CalendarDays, ChevronDown, Ellipsis, Folder, FolderMinus, FolderPlus, Sparkles, Trash2, UsersRound } from "lucide-react";
-import { events, ipc, type CalendarEvent, type Note, MODELS_MISSING } from "@/lib/ipc";
+import { AlignLeft, CalendarDays, Check, ChevronDown, Ellipsis, Folder, FolderMinus, FolderPlus, LayoutTemplate, Sparkles, Trash2, UsersRound } from "lucide-react";
+import { events, ipc, type CalendarEvent, type Note, type Template, type TemplateChoice, MODELS_MISSING } from "@/lib/ipc";
 import { useModels } from "@/state/models";
 import { dayLabel, timeLabel } from "@/lib/dates";
 import { cn } from "@/lib/utils";
-import { t as tr, tBackend, useT } from "@/lib/i18n";
+import { t as tr, tBackend, useI18n, useT } from "@/lib/i18n";
 import { useTranscript } from "@/state/transcript";
 import { useLibrary } from "@/state/library";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -42,7 +45,12 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
   const [tab, setTab] = useState<Tab>("mine");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  // Diálogo de «¿generar de nuevo?»: abierto si no es `null`, con la plantilla
+  // que se usará (`undefined`: la de la nota).
+  const [confirm, setConfirm] = useState<{ template?: TemplateChoice } | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const uiLang = useI18n((s) => s.lang);
   const [folder, setFolder] = useState<string | null>(null);
   const [event, setEvent] = useState<CalendarEvent | null>(null);
   const folders = useLibrary((s) => s.folders);
@@ -63,19 +71,26 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
       if (e.note_id !== id) return;
       setBusy(e.status === "enhancing");
       if (e.status === "failed") setError(e.message ?? tr("note.enhanceFailed"));
+      if (e.status === "ready") setNotice(e.notice === "template_fallback" ? tr("note.templateFallback") : null);
     });
     return () => {
       un.then((f) => f());
     };
   }, [id, load]);
 
-  const enhanceNow = async () => {
-    setConfirm(false);
+  useEffect(() => {
+    ipc.listTemplates(uiLang).then(setTemplates).catch(() => setTemplates([]));
+  }, [uiLang]);
+
+  const enhanceNow = async (template?: TemplateChoice) => {
+    setConfirm(null);
     setError(null);
+    setNotice(null);
     setBusy(true);
     try {
-      const enhanced = await ipc.enhanceNote(id);
-      setNote((n) => (n ? { ...n, enhanced_doc: enhanced, status: "ready" } : n));
+      const enhanced = await ipc.enhanceNote(id, template);
+      const template_id = template === undefined ? undefined : template === "auto" ? null : template;
+      setNote((n) => (n ? { ...n, enhanced_doc: enhanced, status: "ready", ...(template_id !== undefined && { template_id }) } : n));
       setTab("enhanced");
     } catch (e) {
       if (String(e) === MODELS_MISSING) useModels.getState().openDialog(true);
@@ -84,7 +99,7 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
       setBusy(false);
     }
   };
-  const requestEnhance = () => (note?.enhanced_doc?.edited ? setConfirm(true) : enhanceNow());
+  const requestEnhance = (template?: TemplateChoice) => (note?.enhanced_doc?.edited ? setConfirm({ template }) : enhanceNow(template));
 
   const moveTo = async (folderId: string | null) => {
     try {
@@ -108,6 +123,7 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
   if (!note) return <div className="note" />;
   const folderName = folders.find((f) => f.id === folder)?.name;
   const hasEnhanced = !!note.enhanced_doc;
+  const currentTemplate = templates.find((tpl) => tpl.id === note.template_id);
 
   return (
     <div className="note relative mx-auto flex min-h-full max-w-[800px] flex-col px-12" data-note-id={id}>
@@ -146,15 +162,39 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  <DropdownMenuItem title={t("note.generate")} onSelect={requestEnhance}>
+                  <DropdownMenuItem title={t("note.generate")} onSelect={() => requestEnhance()}>
                     <Sparkles /> {t("note.regenerate")}
                   </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="template-menu">
+                      <LayoutTemplate /> {t("note.template")}
+                      <span className="ml-auto max-w-[140px] truncate pl-3 text-[12.5px] text-muted">{currentTemplate?.name ?? t("note.templateAuto")}</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-[260px]">
+                      <DropdownMenuItem data-template-id="auto" title={t("note.templateAutoHint")} onSelect={() => requestEnhance("auto")}>
+                        <span className="flex-1">{t("note.templateAuto")}</span>
+                        {!currentTemplate && <Check />}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {templates.map((tpl) => (
+                        <DropdownMenuItem
+                          key={tpl.id}
+                          data-template-id={tpl.id}
+                          title={tpl.structure.map((s) => s.heading).join(" · ")}
+                          onSelect={() => requestEnhance(tpl.id)}
+                        >
+                          <span className="flex-1 truncate">{tpl.name}</span>
+                          {tpl.id === currentTemplate?.id && <Check />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
         ) : (
-          <Button size="lg" title={t("note.generate")} onClick={requestEnhance} disabled={busy} className="text-[15px]">
+          <Button size="lg" title={t("note.generate")} onClick={() => requestEnhance()} disabled={busy} className="text-[15px]">
             <Sparkles /> {t("note.enhance")}
           </Button>
         )}
@@ -212,6 +252,14 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
       </div>
 
       {error && <div className="note-error mb-4 rounded-xl border border-[#f1d3a8] bg-[#fdf6ea] px-4 py-2.5 text-[13.5px] text-[#8a4b0f] dark:border-[#6b4a1e] dark:bg-[#3a2e1c] dark:text-[#f3c98b]">{tBackend(error)}</div>}
+      {notice && !error && (
+        <div className="note-notice mb-4 flex items-start gap-3 rounded-xl border border-line bg-hover/60 px-4 py-2.5 text-[13.5px] text-ink-2">
+          <span className="flex-1">{notice}</span>
+          <button className="text-muted hover:text-ink" aria-label={t("common.close")} onClick={() => setNotice(null)}>
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="flex-1">
         {tab === "mine" || !note.enhanced_doc ? (
@@ -242,13 +290,13 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
         />
       </div>
 
-      <AlertDialog open={confirm} onOpenChange={setConfirm}>
+      <AlertDialog open={confirm !== null} onOpenChange={(open) => !open && setConfirm(null)}>
         <AlertDialogContent className="note-confirm">
           <AlertDialogTitle>{t("note.regenTitle")}</AlertDialogTitle>
           <AlertDialogDescription>{t("note.regenDesc")}</AlertDialogDescription>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("note.keep")}</AlertDialogCancel>
-            <AlertDialogAction onClick={enhanceNow}>{t("note.regenerate")}</AlertDialogAction>
+            <AlertDialogAction onClick={() => enhanceNow(confirm?.template)}>{t("note.regenerate")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

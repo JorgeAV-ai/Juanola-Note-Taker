@@ -90,6 +90,7 @@ pub fn run() {
             commands::resume_recording,
             commands::stop_recording,
             commands::enhance_note,
+            commands::list_templates,
             commands::list_audio_devices,
             commands::coming_up,
             commands::calendar_access,
