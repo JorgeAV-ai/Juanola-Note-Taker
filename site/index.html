@@ -421,7 +421,7 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
         <div class="step">
           <div class="n">2</div>
           <h3>It transcribes as you talk</h3>
-          <p>Text appears a fraction of a second after it's spoken. The meeting's title, attendees and glossary come from your calendar on this Mac and help get names right.</p>
+          <p>Draft text appears while people are still talking, and each sentence is finalised a few seconds after it ends. The meeting's title, attendees and glossary come from your calendar on this Mac and help get names right.</p>
         </div>
         <div class="step">
           <div class="n">3</div>
@@ -437,14 +437,15 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
       <div class="reveal">
         <div class="kicker">The models on your Mac</div>
         <h2 class="big">Small models, <em>measured</em> on real work.</h2>
-        <p style="color:var(--ink-2);max-width:28em">Open-weight models, about 3.5 GB in total. They’re downloaded once from inside the app and checked against their SHA-256, and after that they run with no connection. Every change to the pipeline is measured against scripted meetings and logged, kept or thrown out.</p>
+        <p style="color:var(--ink-2);max-width:28em">Open-weight models, about 3.5 GB in total (2.6 GB on Macs with less than 16 GB of RAM). They’re downloaded once from inside the app and checked against their SHA-256, and after that they run with no connection. Every change to the pipeline is measured against scripted meetings and logged, kept or thrown out.</p>
       </div>
       <div class="table-scroll reveal">
         <table>
           <thead><tr><th>Job</th><th>Model</th><th>Size</th></tr></thead>
           <tbody>
             <tr><td>Notes</td><td>LFM3-1.7B<small>Liquid AI · GGUF Q8_0 on llama.cpp + Metal</small></td><td>1.85 GB</td></tr>
-            <tr><td>Transcription</td><td>Qwen3-ASR 1.7B<small>4-bit MLX · 0.6B on Macs under 16 GB</small></td><td>1.6 GB</td></tr>
+            <tr><td>Transcription</td><td>Qwen3-ASR 1.7B<small>4-bit MLX, on Macs with 16 GB of RAM or more</small></td><td>1.6 GB</td></tr>
+            <tr><td></td><td>Qwen3-ASR 0.6B<small>4-bit MLX, used instead on Macs with less memory: faster, slightly less accurate</small></td><td>0.7 GB</td></tr>
             <tr><td>Voice activity</td><td>Silero VAD<small>MLX</small></td><td>2 MB</td></tr>
             <tr><td>Speed</td><td>An hour-long meeting<small>enhanced in about 2 minutes on an M4 Pro</small></td><td>~2 min</td></tr>
           </tbody>
