@@ -310,7 +310,12 @@ async fn llm(state: &AppState) -> Res<Arc<LlamaCpp>> {
         return Ok(m.clone());
     }
     let path = state.gguf();
-    let model = tauri::async_runtime::spawn_blocking(move || LlamaCpp::load(&path, 32_768).map(Arc::new)).await.map_err(e)?.map_err(e)?;
+    // Flash attention forzada: en Metal recorta el coste del prefill del
+    // resumen largo (llama.cpp ya la aplicaría en AUTO, pero así es explícita).
+    let model = tauri::async_runtime::spawn_blocking(move || LlamaCpp::load(&path, 32_768).map(|m| m.with_flash_attention(Some(true))).map(Arc::new))
+        .await
+        .map_err(e)?
+        .map_err(e)?;
     *slot = Some(model.clone());
     Ok(model)
 }
