@@ -3,7 +3,7 @@ import { SquareSlash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 
-// Barra «Ask anything» de Granola: píldora grande abajo, con una receta a la
+// Barra para preguntar a la reunión: píldora abajo, con una sugerencia a la
 // derecha. Al enviar abre el Chat con la pregunta (el chat aún no tiene modelo).
 export function AskAnythingBar({
   onAsk,

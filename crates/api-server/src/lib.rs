@@ -1,4 +1,4 @@
-//! API REST local equivalente a la de Granola: notes, search, transcript,
+//! API REST local: notes, search, transcript,
 //! folders, spaces, webhooks.
 
 use axum::{routing::get, Router};

@@ -81,7 +81,7 @@ h1 em { font-style: italic; color: var(--olive-ink); }
 .btn-ghost:hover { background: var(--hover); }
 .fine { margin-top: 16px; font: 13px/1.5 var(--mono); color: var(--muted); }
 
-/* ventana de la nota (maqueta en HTML de la vista Enhanced) */
+/* ventana de la nota (maqueta en HTML del resumen) */
 .window {
   position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
   box-shadow: 0 1px 0 rgb(255 255 255 / .6) inset, 0 40px 80px -40px rgb(40 30 20 / .35), 0 12px 24px -16px rgb(40 30 20 / .2);
@@ -295,7 +295,7 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
       <div class="titlebar"><i></i><i></i><i></i><span class="offline"><b></b> offline · 0 bytes sent</span></div>
       <div class="note">
         <h2>Weekly planning</h2>
-        <div class="chips"><span class="chip">My notes</span><span class="chip on">Enhanced</span><span class="chip">Today · 10:00</span></div>
+        <div class="chips"><span class="chip">My notes</span><span class="chip on">Summary</span><span class="chip">Today · 10:00</span></div>
         <h3>Numbers this week</h3>
         <ul>
           <li class="me">MRR record</li>
@@ -373,7 +373,7 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
         <p class="reveal">“We don't look at your data” is a promise. With Juanola there's nothing to promise, because your data never reaches anyone. You can confirm it in five minutes.</p>
       </div>
       <ol class="checks reveal">
-        <li><span class="n">1</span><h3>Turn the Wi‑Fi off</h3><p>Once the models are downloaded, record a meeting in airplane mode. You still get the transcript and the enhanced notes.</p></li>
+        <li><span class="n">1</span><h3>Turn the Wi‑Fi off</h3><p>Once the models are downloaded, record a meeting in airplane mode. You still get the transcript and the summary.</p></li>
         <li><span class="n">2</span><h3>Watch the network</h3><p>Run Little Snitch, LuLu or <code>nettop</code> while you record. Juanola makes no connections.</p></li>
         <li><span class="n">3</span><h3>Read the code</h3><p>It's MIT-licensed. Only one module can reach the internet, <code>crates/models</code>, and all it does is download the models.</p></li>
         <li><span class="n">4</span><h3>A locked-down interface</h3><p>The app's content security policy blocks the interface from loading or sending anything outside your Mac.</p></li>
@@ -447,7 +447,7 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
             <tr><td>Transcription</td><td>Qwen3-ASR 1.7B<small>4-bit MLX, on Macs with 16 GB of RAM or more</small></td><td>1.6 GB</td></tr>
             <tr><td></td><td>Qwen3-ASR 0.6B<small>4-bit MLX, used instead on Macs with less memory: faster, slightly less accurate</small></td><td>0.7 GB</td></tr>
             <tr><td>Voice activity</td><td>Silero VAD<small>MLX</small></td><td>2 MB</td></tr>
-            <tr><td>Speed</td><td>An hour-long meeting<small>enhanced in about 2 minutes on an M4 Pro</small></td><td>~2 min</td></tr>
+            <tr><td>Speed</td><td>An hour-long meeting<small>summarised in about 2 minutes on an M4 Pro</small></td><td>~2 min</td></tr>
           </tbody>
         </table>
       </div>
@@ -465,7 +465,7 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
           <h3><span class="dot" style="background:var(--leaf)"></span> Works today, on macOS</h3>
           <ul>
             <li>Live transcription of mic and system audio</li>
-            <li>Enhanced notes with citations to the transcript</li>
+            <li>Summaries with citations to the transcript</li>
             <li>Call detection and calendar reminders</li>
             <li>Folders, search, trash, editable notes</li>
             <li>Notes in the meeting's language: best in English and Spanish</li>
@@ -501,7 +501,7 @@ cd apps/desktop &amp;&amp; pnpm install &amp;&amp; pnpm tauri dev</pre>
 <footer>
   <div class="wrap">
     <span>Juanola · MIT · Built in Rust</span>
-    <span>An independent open-source project, inspired by Granola and not affiliated with it.</span>
+    <span>Open source and on-device.</span>
   </div>
 </footer>
 

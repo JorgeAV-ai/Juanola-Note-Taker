@@ -56,7 +56,7 @@ async function menuItem(trigger: string, text: string): Promise<boolean> {
 }
 // ✨: botón «Enhance notes» si aún no hay notas mejoradas; si las hay, menú de Enhanced.
 async function regenerate() {
-  const b = document.querySelector<HTMLButtonElement>('button[title="Generate notes"]:not([disabled])');
+  const b = document.querySelector<HTMLButtonElement>(`button[title="${t("note.generate")}"]:not([disabled])`);
   if (b) b.click();
   else await menuItem(".enhance-menu", t("note.regenerate"));
 }
@@ -366,10 +366,10 @@ async function checkEnhanced(id: string): Promise<boolean> {
 }
 
 // Sidebar contra la base de datos real: carpeta, nota dentro, papelera,
-// restaurar, renombrar, Ajustes, páginas «todavía no» y limpieza (no deja nada).
+// restaurar, renombrar, Ajustes y limpieza (no deja nada).
 async function sidebarFlow() {
   const name = `Autotest ${Date.now() % 100000}`;
-  const plus = await waitFor("botón + de My notes", () => document.querySelector<HTMLButtonElement>('button[title="Nueva carpeta"]'), 15_000);
+  const plus = await waitFor("botón de nueva carpeta", () => document.querySelector<HTMLButtonElement>(`button[title="${t("nav.newFolder")}"]`), 15_000);
   plus?.click();
   const input = await waitFor("campo de nombre", () => document.querySelector<HTMLInputElement>(".folder-input"), 2000);
   if (!check(!!input, "el + abre el campo de nombre") || !input) return;
@@ -389,7 +389,7 @@ async function sidebarFlow() {
   await waitFor("selector de carpeta", () => document.querySelector<HTMLElement>(".note-folder")?.dataset.folder === folderId || null, 3000);
   check(document.querySelector<HTMLElement>(".note-folder")?.dataset.folder === folderId, "la nota nueva está en la carpeta");
   const count = () => document.querySelector(`.sidebar-item.folder[data-folder-id="${folderId}"] .count`)?.textContent ?? "0";
-  // En la nota no hay sidebar (como en Granola): se vuelve a Home para verlo.
+  // En la nota no hay sidebar: se vuelve a Home para verlo.
   check(!document.querySelector(".sidebar") && !!document.querySelector(".back-home"), "la nota ocupa toda la ventana, con «‹ ⌂»");
   document.querySelector<HTMLButtonElement>(".back-home")?.click();
   await waitFor("sidebar de vuelta", () => document.querySelector(".sidebar"), 3000);
@@ -402,7 +402,7 @@ async function sidebarFlow() {
   await waitFor("vuelta a Home", () => document.querySelector(".coming-up"), 3000);
   await sleep(300);
   check(!document.querySelector(`.row[data-note-id="${noteId}"]`) && count() === "0", "en la papelera: fuera de Home y del recuento");
-  await menuItem(".workspace-menu", t("nav.trash"));
+  (await waitFor("botón Papelera", () => document.querySelector<HTMLButtonElement>(".nav-trash"), 3000))?.click();
   const row = await waitFor("fila en la papelera", () => document.querySelector(`.row[data-note-id="${noteId}"]`), 3000);
   check(!!row, "la nota aparece en la papelera");
   row?.querySelector<HTMLButtonElement>(".restore")?.click();
@@ -420,16 +420,9 @@ async function sidebarFlow() {
   const renamed = await waitFor("nombre nuevo", () => buttons(".sidebar-item.folder").find((b) => b.textContent?.includes(`${name} bis`)), 3000);
   check(!!renamed, "carpeta renombrada");
 
-  // Páginas sin backend.
-  for (const [label, heading] of [t("nav.recipes"), t("nav.shared"), t("nav.people"), t("nav.companies")].map((l) => [l, l])) {
-    document.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)?.click();
-    await sleep(200);
-    check(document.querySelector(".page-title")?.textContent === heading, `${label} abre su página`);
-  }
-
   // Ajustes.
-  await menuItem(".workspace-menu", t("nav.settings"));
-  button(".settings-nav", t("settings.audio"))?.click();
+  document.querySelector<HTMLButtonElement>(".nav-settings")?.click();
+  (await waitFor("Ajustes abiertos", () => button(".settings-nav", t("settings.audio")), 3000))?.click();
   const mic = await waitFor("estado del micrófono", () => {
     const t = document.querySelector('[data-testid="mic-permission"]')?.textContent;
     return t && t !== "…" ? t : null;
@@ -455,8 +448,8 @@ async function sidebarFlow() {
   // Limpieza: nota a la papelera y borrada para siempre; carpeta borrada.
   await ipc.trashNote(noteId);
   document.querySelector<HTMLButtonElement>(".back-home")?.click();
-  await waitFor("fuera de Ajustes", () => document.querySelector(".workspace-menu"), 3000);
-  await menuItem(".workspace-menu", t("nav.trash"));
+  await waitFor("fuera de Ajustes", () => document.querySelector(".nav-trash"), 3000);
+  document.querySelector<HTMLButtonElement>(".nav-trash")?.click();
   const trashed = await waitFor("fila a borrar", () => document.querySelector(`.row[data-note-id="${noteId}"]`), 3000);
   document.querySelector<HTMLButtonElement>(`.row[data-note-id="${noteId}"] .destroy`)?.click();
   await sleep(300);

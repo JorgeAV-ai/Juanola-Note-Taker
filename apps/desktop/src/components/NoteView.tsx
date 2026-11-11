@@ -32,7 +32,7 @@ import { AskAnythingBar } from "@/components/AskAnythingBar";
 
 type Tab = "mine" | "enhanced";
 
-// Vista de nota de Granola: título en serif, fila de chips (My notes / Enhanced,
+// Vista de nota: título en serif, fila de chips (My notes / Enhanced,
 // fecha y asistentes, carpeta, más) y abajo la píldora de grabación junto a
 // «Ask anything». Al parar la grabación se generan las notas mejoradas; si el
 // usuario ya las había editado, se pregunta antes de sustituirlas.
@@ -259,7 +259,7 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
 const personName = (a: CalendarEvent["attendees"][number]) => (a.is_self ? tr("common.me") : a.name || a.email.split("@")[0]);
 const attendeeNames = (e: CalendarEvent) => e.attendees.filter((a) => !a.declined).map(personName).join(", ");
 
-// «Me», «Ana», «Ana +3»: como Granola, los extra se colapsan en «+N».
+// «Me», «Ana», «Ana +3»: los extra se colapsan en «+N».
 function attendeeLabel(e: CalendarEvent) {
   const others = e.attendees.filter((a) => !a.is_self && !a.declined);
   if (others.length === 0) return tr("common.me");

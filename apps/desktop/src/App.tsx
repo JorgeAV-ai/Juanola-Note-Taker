@@ -5,7 +5,6 @@ import { NoteView } from "@/components/NoteView";
 import { FolderView } from "@/components/FolderView";
 import { TrashView } from "@/components/TrashView";
 import { SettingsView, type SettingsSection } from "@/components/SettingsView";
-import { SoonView, type SoonKind } from "@/components/SoonView";
 import { ChatView } from "@/components/ChatView";
 import { SearchDialog } from "@/components/SearchDialog";
 import { ModelsDialog } from "@/components/ModelsDialog";
@@ -23,8 +22,7 @@ export type Route =
   | { kind: "folder"; id: string }
   | { kind: "trash" }
   | { kind: "chat"; q?: string }
-  | { kind: "settings"; section?: SettingsSection }
-  | { kind: "soon"; what: SoonKind };
+  | { kind: "settings"; section?: SettingsSection };
 
 export default function App() {
   const [route, setRoute] = useState<Route>({ kind: "home" });
@@ -63,7 +61,7 @@ export default function App() {
     };
   }, [reload]);
 
-  // Atajos de Granola: ⌘K búsqueda, ⌘, ajustes, ⌘N nota nueva.
+  // Atajos: ⌘K búsqueda, ⌘, ajustes, ⌘N nota nueva.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey)) return;
@@ -120,14 +118,11 @@ export default function App() {
     case "chat":
       view = <ChatView initial={route.q} onOpenNote={openNote} />;
       break;
-    case "soon":
-      view = <SoonView what={route.what} />;
-      break;
   }
   return (
     <TooltipProvider>
       <div className="flex h-full bg-canvas">
-        {/* En una nota, como en Granola, la nota ocupa toda la ventana. */}
+        {/* En una nota, la nota ocupa toda la ventana. */}
         {sidebar && route.kind !== "note" && <Sidebar route={route} onNavigate={setRoute} onSearch={() => setSearch(true)} onCollapse={() => setSidebar(false)} />}
         <main className="relative flex min-w-0 flex-1 flex-col">
           <TopBar

@@ -1,5 +1,5 @@
 //! Grabación opcional a disco (`audio/<note_id>/{mic,system}.flac`), política de
-//! retención y snapshots de pantalla compartida. Granola no guarda audio; aquí es
+//! retención y snapshots de pantalla compartida. Por defecto no se guarda audio; aquí es
 //! configurable y permite reproducir y re-transcribir.
 
 use std::path::PathBuf;

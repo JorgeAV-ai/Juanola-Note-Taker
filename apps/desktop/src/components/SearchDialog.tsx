@@ -30,7 +30,7 @@ function snippet(text: string, q: string): [string, string, string] | null {
   return [(from > 0 ? "…" : "") + text.slice(from, i), text.slice(i, i + q.length), text.slice(i + q.length, i + q.length + 90)];
 }
 
-// Búsqueda de Granola (⌘K): campo arriba, «ESC», y resultados con el
+// Búsqueda (⌘K): campo arriba, «ESC», y resultados con el
 // fragmento que coincide resaltado.
 export function SearchDialog({ open, onOpenChange, onOpenNote }: { open: boolean; onOpenChange: (o: boolean) => void; onOpenNote: (id: string) => void }) {
   const t = useT();

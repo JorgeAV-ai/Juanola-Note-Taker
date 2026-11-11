@@ -106,7 +106,7 @@ En `enhance_with`, con plantilla:
 
 ### 4.5 Notas del usuario
 
-Las notas crudas del usuario deben guiar el resumen, como en Granola: marcan lo que le importó. Hoy solo se pasan como contexto y se colocan por palabras en común, y tienen un fallo con las listas.
+Las notas crudas del usuario deben guiar el resumen: marcan lo que le importó. Hoy solo se pasan como contexto y se colocan por palabras en común, y tienen un fallo con las listas.
 
 **Paso 0, fallo de hoy (independiente de las plantillas).** `user_blocks` (`enhance.rs:46`) solo mira los bloques de primer nivel y concatena el texto de sus hijos sin separador: una lista con «demo jueves» y «llamar a Luis» se convierte en una única nota «demo juevesllamar a Luis», que llega así al prompt y a las notas mejoradas. El test `blocks_from_prosemirror` no lo detecta porque usa una lista de un solo elemento. Detectado leyendo el código; falta reproducirlo en la app. Arreglo:
 
@@ -219,19 +219,19 @@ Las iteraciones de la primera evaluación (8-9 nov) están en [experimentos.md](
 
 ## 8. Cómo lo hacen otros (revisado el 8 nov 2026)
 
-| | Granola | Char / Hyprnote (`fastrepl/anarlog`) | Meetily |
-|---|---|---|---|
-| Modelo | Nube (OpenAI y Anthropic) | El del usuario (Ollama, LM Studio, nube); por defecto HyprLLM, fine-tune de Qwen3-1.7B | El del usuario (Ollama, nube) |
-| Plantilla | Propósito, estilo y apartados | Apartados con título y descripción | Apartados con título, instrucción, formato (`list`, `paragraph`, `string`) y formato por elemento |
-| Salida | Markdown | Markdown, apartados `# Título` | Markdown, apartados `**Título**` |
-| Estructura | No publicado | Prompt + comprobación en streaming del primer título (Levenshtein ≤ 30 %) + hasta 2 reintentos con el motivo del fallo | Solo el prompt |
-| Apartado vacío | No publicado | «Breve, sin inventar» | «None noted in this section.» |
-| Idioma | Configurable | Directamente en el idioma pedido | Resume en inglés y traduce; si falla, devuelve inglés |
-| Citas a la transcripción | Sí | No | No |
+| | Char / Hyprnote (`fastrepl/anarlog`) | Meetily |
+|---|---|---|
+| Modelo | El del usuario (Ollama, LM Studio, nube); por defecto HyprLLM, fine-tune de Qwen3-1.7B | El del usuario (Ollama, nube) |
+| Plantilla | Apartados con título y descripción | Apartados con título, instrucción, formato (`list`, `paragraph`, `string`) y formato por elemento |
+| Salida | Markdown, apartados `# Título` | Markdown, apartados `**Título**` |
+| Estructura | Prompt + comprobación en streaming del primer título (Levenshtein ≤ 30 %) + hasta 2 reintentos con el motivo del fallo | Solo el prompt |
+| Apartado vacío | «Breve, sin inventar» | «None noted in this section.» |
+| Idioma | Directamente en el idioma pedido | Resume en inglés y traduce; si falla, devuelve inglés |
+| Citas a la transcripción | No | No |
 
 Lo que se toma de ellos: Markdown en vez de JSON y apartados con título más instrucción (todos); el reintento con el motivo del fallo (Char); mostrar los apartados vacíos (Char y Meetily). El formato por apartado de Meetily (`list` o `paragraph`) queda para la fase 3. Lo que va más allá: el encaje determinista de `fit_to_template`, que ellos no necesitan porque cuentan con modelos grandes, y las citas por viñeta.
 
-Fuentes: [prompts de Char](https://github.com/fastrepl/anarlog/tree/main/crates/template-app/assets), [validador de Char](https://github.com/fastrepl/anarlog/blob/main/apps/desktop/src/store/zustand/ai-task/task-configs/enhance-validator.ts), [procesador de Meetily](https://github.com/Zackriya-Solutions/meetily/blob/main/frontend/src-tauri/src/summary/processor.rs), [tipos de plantilla de Meetily](https://github.com/Zackriya-Solutions/meetily/blob/main/frontend/src-tauri/src/summary/templates/types.rs), [plantillas de Granola](https://docs.granola.ai/help-center/taking-notes/customise-notes-with-templates), [Launch HN de Hyprnote](https://hn.svelte.dev/item/44725306).
+Fuentes: [prompts de Char](https://github.com/fastrepl/anarlog/tree/main/crates/template-app/assets), [validador de Char](https://github.com/fastrepl/anarlog/blob/main/apps/desktop/src/store/zustand/ai-task/task-configs/enhance-validator.ts), [procesador de Meetily](https://github.com/Zackriya-Solutions/meetily/blob/main/frontend/src-tauri/src/summary/processor.rs), [tipos de plantilla de Meetily](https://github.com/Zackriya-Solutions/meetily/blob/main/frontend/src-tauri/src/summary/templates/types.rs), [Launch HN de Hyprnote](https://hn.svelte.dev/item/44725306).
 
 ## 9. Riesgos
 

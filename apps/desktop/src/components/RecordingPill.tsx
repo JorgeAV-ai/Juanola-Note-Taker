@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { tBackend, useT } from "@/lib/i18n";
 import { useTranscript } from "@/state/transcript";
 
-// Zona inferior de la nota, como en Granola. Plegada: círculo con las barras
+// Zona inferior de la nota. Plegada: círculo con las barras
 // (y parar/pausa mientras graba) a la izquierda de «Ask anything». Desplegada:
 // una tarjeta con el transcript (Them a la izquierda, Me a la derecha) y, en su
 // pie, las barras, parar, el micrófono y el idioma; tapa «Ask anything».

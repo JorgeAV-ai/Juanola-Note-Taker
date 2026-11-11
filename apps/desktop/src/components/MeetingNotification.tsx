@@ -20,7 +20,7 @@ function texts(n: MeetingNotice, t: ReturnType<typeof useT>): [string, string] {
   return [title, n.body];
 }
 
-// Aviso de reunión de Granola, en su propia ventana arriba a la derecha: barra
+// Aviso de reunión, en su propia ventana arriba a la derecha: barra
 // sólida a la izquierda si viene del calendario, discontinua si es una llamada
 // detectada por el micrófono. «Take Notes» abre la nota y empieza a grabar.
 export function MeetingNotification() {

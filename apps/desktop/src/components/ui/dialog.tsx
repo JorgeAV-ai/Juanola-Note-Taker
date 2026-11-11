@@ -6,7 +6,7 @@ export const Dialog = DialogPrimitive.Root;
 export const DialogTitle = DialogPrimitive.Title;
 export const DialogDescription = DialogPrimitive.Description;
 
-// Diálogo centrado arriba (la búsqueda de Granola sale en el tercio superior).
+// Diálogo centrado arriba, en el tercio superior (la búsqueda).
 export const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>

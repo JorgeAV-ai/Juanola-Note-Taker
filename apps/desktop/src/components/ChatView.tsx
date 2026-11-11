@@ -10,7 +10,7 @@ const ago = (d: Date) => {
   return `${Math.round(m / 1440)}d`;
 };
 
-// Chat de Granola: saludo en serif, compositor grande y recientes. El modelo aún
+// Chat: saludo en serif, compositor grande y recientes. El modelo aún
 // no está conectado al chat, así que enviar solo lo explica.
 export function ChatView({ initial, onOpenNote }: { initial?: string; onOpenNote: (id: string) => void }) {
   const t = useT();

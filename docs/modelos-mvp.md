@@ -14,12 +14,12 @@ Liquid publicó LFM3 el 27 de octubre de 2026: seis modelos de clase 2B sobre un
 |---|---|---|---|---|
 | **LFM3-1.7B** | Texto, 256K de contexto, 16 idiomas (incluye español), razonamiento activable, tool calling, salida estructurada | **LLM principal** (enhance, chat, recipes) y LLM pequeño (dictado, títulos) | 0,97 GB MLX / 1,10 GB Q4_K_M / 1,05 GB QAD-Q4_0 | GGUF, MLX 4/8-bit, ONNX, FP8, NVFP4 |
 | **LFM3-Audio-2B** | ASR + TTS + chat de voz; 18 locales en ASR, streaming (encoder causal, TTFT 50 ms, chunks de 0,96 s) **pero el modo live solo en inglés** | Alternativa de STT "todo Liquid"; TTS si algún día hace falta leer notas | 1,10 GB Q4 + 0,16 GB mmproj / 1,75 GB MLX | GGUF (llama.cpp mtmd), MLX 4-bit (MLX-VLM), ONNX, CoreML vía FluidAudio |
-| **LFM2-2.6B-Transcript** | Resumen de transcripciones de reuniones de 30-60 min: key points, decisiones, action items; prompt con cabecera de metadatos y líneas por hablante | Es literalmente el "enhance notes" de Granola, pero **solo inglés** y base LFM2 antigua. Útil como referencia de prompt y como tier opcional para usuarios en inglés | 1,56 GB Q4_K_M | GGUF, ONNX, MLX comunidad |
+| **LFM2-2.6B-Transcript** | Resumen de transcripciones de reuniones de 30-60 min: key points, decisiones, action items; prompt con cabecera de metadatos y líneas por hablante | Es justo el resumen de reuniones que hace falta, pero **solo inglés** y base LFM2 antigua. Útil como referencia de prompt y como tier opcional para usuarios en inglés | 1,56 GB Q4_K_M | GGUF, ONNX, MLX comunidad |
 | **LFM2.5-Embedding-350M** | Embeddings de texto, 32K | Alternativa a EmbeddingGemma 2 si se quiere pila 100 % Liquid | 0,23 GB Q4 | GGUF, MLX, ONNX comunidad |
 | **LFM2.5-ColBERT-350M** | Retrieval de interacción tardía | Reranker para las citas del chat (fase 3, fuera del MVP) | 0,23 GB Q4 | GGUF, MLX |
 | LFM3-Omni-2B | Audio + imagen + vídeo → texto o voz | Entender snapshots de pantalla compartida junto al audio (fase 5) | 1,10 GB + 0,27 GB mmproj | GGUF, MLX, ONNX |
 | LFM2.5-VL-1.6B-Extract / 450M-Extract | JSON estructurado a partir de imágenes | Extraer texto y datos de los snapshots de pantalla (fase 5) | 0,4-1 GB | GGUF |
-| d1-omni-600M / d1-2B | Clasificación, routing, scoring | Decisiones baratas: "¿esto es una reunión?", "¿merece follow-up email?" (Granola lo hace con heurísticas) | 0,3-1 GB | GGUF, MLX |
+| d1-omni-600M / d1-2B | Clasificación, routing, scoring | Decisiones baratas: "¿esto es una reunión?", "¿merece follow-up email?" (hoy con heurísticas) | 0,3-1 GB | GGUF, MLX |
 
 Lo que no encaja: los modelos JP/ENJP (japonés), Math, PII-Extract-JP y los d1 de API.
 

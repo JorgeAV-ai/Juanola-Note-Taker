@@ -10,7 +10,7 @@ import { AskAnythingBar } from "@/components/AskAnythingBar";
 
 const PAGE = 5;
 
-// Home de Granola: «Coming up» con el calendario y las notas por día. Con
+// Inicio: la agenda del calendario y las notas por día. Con
 // `space`, la vista del espacio My notes (solo las notas).
 export function Home({ onOpenNote, onNavigate, space }: { onOpenNote: (id: string) => void; onNavigate: (r: Route) => void; space?: boolean }) {
   const t = useT();

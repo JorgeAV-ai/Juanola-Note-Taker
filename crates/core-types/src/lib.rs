@@ -1,5 +1,5 @@
 //! Modelos de dominio compartidos por todos los crates.
-//! Reflejan uno a uno los conceptos de Granola: Workspace, Space, Folder, Note,
+//! Conceptos: Workspace, Space, Folder, Note,
 //! Transcript/Segment, Person, Company, Template, Recipe, Chat.
 
 use chrono::{DateTime, Utc};
@@ -40,7 +40,7 @@ pub struct Space {
 pub struct Folder {
     pub id: Id,
     pub space_id: Id,
-    /// Subcarpetas: un solo nivel, como en Granola.
+    /// Subcarpetas: un solo nivel.
     pub parent_id: Option<Id>,
     pub name: String,
     pub icon: Option<String>,
@@ -128,7 +128,7 @@ pub struct Company {
 pub struct Template {
     pub id: Id,
     pub name: String,
-    /// Las tres partes que documenta Granola.
+    /// Tres partes: propósito, estilo y secciones.
     pub purpose: String,
     pub style: String,
     /// Apartados de las notas, en orden. En la base de datos se guarda como

@@ -1,16 +1,4 @@
-//! Servidor MCP local con las mismas 9 tools que Granola:
-//! query_granola_meetings, list_meetings, list_meeting_folders, get_meetings,
-//! get_meeting_attachment, get_meeting_transcript, get_account_info,
-//! switch_workspace, sign_out.
+//! Servidor MCP local (sin implementar): tools para consultar las reuniones
+//! guardadas en este Mac. Sin cuentas, así que no hay tools de sesión.
 
-pub const TOOLS: &[&str] = &[
-    "query_granola_meetings",
-    "list_meetings",
-    "list_meeting_folders",
-    "get_meetings",
-    "get_meeting_attachment",
-    "get_meeting_transcript",
-    "get_account_info",
-    "switch_workspace",
-    "sign_out",
-];
+pub const TOOLS: &[&str] = &["search_meetings", "list_meetings", "list_folders", "get_meeting", "get_transcript"];

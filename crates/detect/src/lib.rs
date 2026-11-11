@@ -1,6 +1,6 @@
 //! Detección de reuniones: qué app está usando el micrófono, a qué app de
-//! videollamada corresponde y cuándo avisar. Produce los títulos exactos de
-//! Granola para las notificaciones.
+//! videollamada corresponde y cuándo avisar. Produce los títulos de las
+//! notificaciones.
 //!
 //! - [`mic_users`] pregunta al sistema qué procesos tienen la entrada de audio
 //!   abierta (en macOS 14.2+, objetos de proceso de Core Audio; no pide permisos).
@@ -55,7 +55,7 @@ pub enum DetectEvent {
     MicReleased { app: DetectedApp },
 }
 
-/// Título de la notificación ad hoc, igual que en Granola.
+/// Título de la notificación ad hoc.
 pub fn notification_title(app: &MeetingApp) -> &'static str {
     match app {
         MeetingApp::SlackHuddle => "Huddle detected",
@@ -369,7 +369,7 @@ mod tests {
     }
 
     #[test]
-    fn titles_match_granola() {
+    fn notification_titles() {
         assert_eq!(notification_title(&MeetingApp::SlackHuddle), "Huddle detected");
         assert_eq!(notification_title(&MeetingApp::FaceTime), "Call detected");
         assert_eq!(notification_title(&MeetingApp::Zoom), "Meeting detected");

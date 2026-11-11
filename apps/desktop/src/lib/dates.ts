@@ -1,4 +1,4 @@
-// Fechas al estilo de Granola: «Today», «Yesterday», «Fri 17 Jul» (o «Hoy»,
+// Fechas cortas: «Today», «Yesterday», «Fri 17 Jul» (o «Hoy»,
 // «Ayer», «vie 17 jul»); horas en 24 h. Siguen el idioma de la interfaz.
 import { dateLocale, t } from "./i18n";
 

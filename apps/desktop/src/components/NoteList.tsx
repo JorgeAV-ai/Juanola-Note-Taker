@@ -3,7 +3,7 @@ import type { Note } from "@/lib/ipc";
 import { groupByDay, timeLabel } from "@/lib/dates";
 import { useT } from "@/lib/i18n";
 
-// Notas agrupadas por día, como en el Home de Granola: icono en un cuadrado,
+// Notas agrupadas por día: icono en un cuadrado,
 // título, «Me» debajo y la hora a la derecha.
 export function NoteList({ notes, onOpen, empty }: { notes: Note[]; onOpen: (id: string) => void; empty: string }) {
   useT();

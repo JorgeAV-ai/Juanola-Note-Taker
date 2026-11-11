@@ -23,7 +23,7 @@ const AiMark = Mark.create({
 });
 
 // Lo que el usuario escribe o pega, aunque sea en mitad de una frase de la IA,
-// pasa a ser texto suyo (negro), como en Granola.
+// pasa a ser texto suyo (negro).
 const UserEdits = Extension.create({
   name: "userEdits",
   addProseMirrorPlugins() {

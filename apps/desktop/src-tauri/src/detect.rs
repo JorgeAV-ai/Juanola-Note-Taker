@@ -1,4 +1,4 @@
-//! Detección de reuniones y avisos, como Granola:
+//! Detección de reuniones y avisos:
 //!
 //! - **Ad hoc**: otra app abre el micrófono (Zoom, Teams, Meet en el
 //!   navegador…) → «Meeting detected» con «Take Notes». Si hay un evento del

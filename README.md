@@ -13,14 +13,14 @@
 
 Native Rust core. 100% on-device. Open-source models. Your meetings never leave your machine.
 
-Juanola is an open-source, local-first take on [Granola](https://www.granola.ai): it listens to your meetings (mic + system audio), transcribes them live, and turns your rough notes into polished, structured summaries — all without sending a single byte to the cloud.
+Juanola is an open-source, local-first meeting note taker: it listens to your meetings (mic + system audio), transcribes them live, and turns your rough notes into clean, structured summaries with every line linked back to the transcript — all without sending a single byte to the cloud.
 
 ## Why Juanola?
 
 - 🪶 **Lightest** — Rust core + Tauri v2 instead of a heavy Electron shell. Tiny footprint, instant startup.
 - 🚀 **Fastest** — Live speech-to-text on MLX and local LLM inference on llama.cpp + Metal: draft text appears as people talk and each sentence is finalised a few seconds later, and an hour-long meeting is enhanced in about two minutes on an M4 Pro.
 - 🔒 **Safest** — Everything runs on your device. No accounts, no uploads, no telemetry. You choose the models.
-- 🧠 **Smart** — Enhanced notes that keep your words in black and the AI's in grey, with every line linked to the moment in the transcript. Chat, recipes and briefs are on the roadmap.
+- 🧠 **Smart** — Summaries that keep your words apart from the AI's, with every line linked to the moment in the transcript. Chat, recipes and briefs are on the roadmap.
 - 🔌 **Open** — Local MCP server and REST API so your own tools and agents can use your notes.
 
 ## Project layout
@@ -73,8 +73,7 @@ Checks run by CI: `cargo fmt --all --check`, `cargo clippy --workspace --all-tar
 
 ## Status
 
-Early preview, macOS only. Working today: dual audio capture, live transcription, enhanced notes with citations, call detection and Apple Calendar, folders, search and trash. Next: templates in the app, chat, echo cancellation and Windows.
+Early preview, macOS only. Working today: dual audio capture, live transcription, summaries with citations, call detection and Apple Calendar, folders, search and trash. Next: templates in the app, chat, echo cancellation and Windows.
 
 Documentation (in Spanish) lives in [docs/](docs/README.md): current state in [HANDOFF.md](docs/HANDOFF.md), the roadmap in [plan.md](docs/plan.md) and every measured experiment in [experimentos.md](docs/experimentos.md).
 
-Juanola is an independent project, inspired by Granola and not affiliated with it.

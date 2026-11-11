@@ -1,4 +1,4 @@
-//! Proveedores de calendario y la lógica de Granola sobre los eventos:
+//! Proveedores de calendario y la lógica sobre los eventos:
 //! qué cuenta como reunión, el enlace de la videollamada, qué evento está en
 //! curso cuando se detecta una llamada y cuándo avisar antes de empezar.
 //!
@@ -31,7 +31,7 @@ pub enum Access {
     Unsupported,
 }
 
-/// Filtro de Granola: oculta rechazados, OOO, Focus Time, Working Location.
+/// Filtro de reuniones: oculta rechazados, OOO, Focus Time, Working Location.
 pub fn is_meeting(ev: &CalendarEvent) -> bool {
     let t = ev.title.to_lowercase();
     let noise = ["out of office", "focus time", "working location", "fuera de la oficina", "tiempo de concentración"];
@@ -88,7 +88,7 @@ pub fn event_for_call(events: &[CalendarEvent], now: DateTime<Utc>) -> Option<&C
         .min_by_key(|e| (e.start - now).num_seconds().abs())
 }
 
-/// Eventos por los que avisar en `now`, como Granola: 1 minuto antes de
+/// Eventos por los que avisar en `now`: 1 minuto antes de
 /// empezar y solo si tienen 2 o más asistentes (el usuario incluido).
 pub fn due_reminders(events: &[CalendarEvent], now: DateTime<Utc>) -> Vec<&CalendarEvent> {
     events

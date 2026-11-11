@@ -28,7 +28,7 @@ const MIC_TEXT: Record<Permission, Key> = {
   unknown: "settings.mic.unknown",
 };
 
-// Ajustes con la disposición de Granola: navegación propia a la izquierda,
+// Ajustes: navegación propia a la izquierda,
 // botón para volver a Home, título en serif y tarjetas con filas.
 export function SettingsView({ section, onNavigate }: { section: SettingsSection; onNavigate: (r: Route) => void }) {
   const t = useT();

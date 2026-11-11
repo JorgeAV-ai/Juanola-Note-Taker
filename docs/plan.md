@@ -1,194 +1,159 @@
-# Plan: réplica de Granola en Rust con modelos open source
+# Plan: notas de reuniones con IA local, en Rust y con modelos open source
 
-Fecha: 6 de noviembre de 2026. Investigación hecha sobre la documentación oficial de Granola (docs.granola.ai, 135 páginas indexadas), su web de producto y precios, reseñas de 2026, y el código de los tres clones open source escritos en Rust + Tauri (anarlog, antes Hyprnote; Meetily; Open Granola).
+Fecha: 6 de noviembre de 2026; reescrito el 11 de noviembre con el alcance y el vocabulario propios de JuanolaNT.
 
 Los modelos concretos quedan fuera de este plan: cada sección de IA define un "slot" (qué hace, qué formato de pesos necesita el runtime y qué latencia exige) y tú eliges el modelo que lo ocupa.
 
-> **Estado (10 nov).** Este es el plan de partida (6 nov), y su inventario de Granola (§1) sigue siendo la referencia de qué replicar. Lo que ya se decidió y construyó no se repite aquí: el stack y los runtimes en uso están en [HANDOFF.md](HANDOFF.md) («Código, crates y runtimes»), los modelos elegidos en [modelos-mvp.md](modelos-mvp.md) y el avance de cada fase en §12.
+> **Estado (11 nov).** Este es el plan de partida. Lo que ya se decidió y construyó no se repite aquí: el stack y los runtimes en uso están en [HANDOFF.md](HANDOFF.md) («Código, crates y runtimes»), los modelos elegidos en [modelos-mvp.md](modelos-mvp.md) y el avance de cada fase en §12.
 
 ---
 
 ## 0. Resumen ejecutivo
 
-**Qué es Granola hoy.** Un notepad de reuniones sin bot: captura micrófono + audio del sistema del propio ordenador, transcribe en tiempo real en la nube (AssemblyAI entre sus proveedores, según su propio post-mortem de seguridad), y al terminar fusiona tus notas crudas con la transcripción en unas "notas mejoradas" (texto tuyo en negro, texto de la IA en gris, cada bullet enlazado al momento del transcript). Encima de eso: Chat con una reunión, una carpeta o todo el historial; Recipes (prompts guardados invocados con `/`); Templates; Spaces y Folders; People & Companies; Briefs pre-reunión; follow-up emails; Voice Typing (dictado en cualquier app); speaker tags vía Accesibilidad; MCP y API; apps móviles y watch.
+**Qué es JuanolaNT.** Un cuaderno de reuniones sin bot: captura el micrófono y el audio del sistema del propio ordenador, transcribe en vivo y, al terminar, une las notas del usuario con la transcripción en un **resumen** en el que cada línea apunta al momento de la reunión del que sale. Todo corre en el equipo: transcripción, resumen, búsqueda y, más adelante, chat. Sin cuenta, sin servidor y sin telemetría.
 
-**Dato clave para la UI.** Granola es una app Electron (lo confirman sus propias ofertas de empleo "Product Engineer (Desktop/Electron)" y el teardown de Desktop Insights: Electron 41, build universal de ~540 MB). Su interfaz es HTML/CSS. Por tanto, la manera más fiable de clonar la UI "exactamente igual" es renderizarla también en un webview, con el núcleo (audio, ASR, LLM, datos, calendario, detección de reuniones) en Rust.
+**Decisión de arquitectura.** Tauri v2 + núcleo Rust (workspace de crates) + frontend web con editor TipTap/ProseMirror. El editor de texto rico es el componente más caro de construir, y en web está resuelto; todo lo demás (audio, ASR, LLM, datos, calendario, detección de reuniones) va en Rust. Las alternativas evaluadas están en la sección 3.
 
-**Decisión de arquitectura recomendada.** Tauri v2 + núcleo Rust (workspace de crates) + frontend web con editor TipTap/ProseMirror. Es exactamente el stack de anarlog y Meetily, los dos clones con más tracción, y minimiza el riesgo en el punto más caro: el editor de texto rico. Hay dos alternativas evaluadas en la sección 3 (Dioxus para "UI también en Rust"; GPUI para 100 % nativo), con sus costes.
+**Qué implica hacerlo en local.** ASR en streaming, diarización, LLM y embeddings corren en el equipo. Eso obliga a gestionar modelos (descarga, verificación, elección según el hardware) y a cuidar el rendimiento en GPU y CPU, y permite cosas que una app en la nube no ofrece: funcionar sin conexión, editar la transcripción, importar audio y exportar todo en formatos abiertos.
 
-**Qué cambia respecto a Granola.** Todo lo que Granola hace en la nube pasa a local: ASR en streaming, diarización, LLM, embeddings. Eso obliga a decisiones que Granola no tiene (gestión de modelos, GPU por plataforma, rendimiento en CPU) y permite cosas que Granola no ofrece (guardar audio, editar transcripts, importar archivos, funcionar offline).
-
-**Fases.** Seis fases, de un MVP grabable y "enhanceable" a la paridad completa. Detalle en la sección 12.
+**Fases.** Seis fases, de un MVP que graba y resume a un producto completo. Detalle en la sección 12.
 
 ---
 
-## 1. Inventario de Granola (lo que hay que replicar)
+## 1. Alcance del producto
 
-### 1.1 Plataformas y planes
+### 1.1 Plataformas
 
-| Plataforma | Estado en Granola |
+| Plataforma | Plan |
 |---|---|
-| macOS 14+ | App principal (Electron). Captura mic + system audio. |
-| Windows 10+ | App completa desde junio 2025 (Electron). Sin menú de audio propio. |
-| iOS / Android / Apple Watch | Solo reuniones presenciales y llamadas telefónicas (iOS). Sin captura de Zoom/Meet. |
-| Web (notes.granola.ai) | Solo ver y editar notas compartidas, sin transcribir. |
+| macOS 14+ (Apple Silicon) | Plataforma principal: captura de micrófono y audio del sistema, STT en MLX. |
+| Windows 10/11 | Después del MVP: WASAPI loopback y modelos ONNX/GGUF. |
+| Linux | Extra: PipeWire/Pulse. |
+| Móvil | Fuera de alcance por ahora. |
 
-Planes: Basic (gratis, historial de 30 días, chat solo "Auto"), Business (14 $/usuario/mes), Enterprise (35 $). El plan no afecta a este proyecto salvo para decidir qué es "core" (todo lo de Basic + Business).
+### 1.2 Inicio
 
-### 1.2 Pantalla de inicio (Home)
+- **Agenda**: las próximas reuniones del calendario, paginadas. Un clic crea la nota de esa reunión. Se ocultan los eventos rechazados y las entradas de ausencia, concentración o ubicación de trabajo.
+- **Notas por día**: filas con título, hora y asistentes (los que sobran se colapsan en «+N»).
+- **Barra lateral**: buscar, Inicio, Mis notas, Chat, carpetas, Papelera y Ajustes. Solo lo que tiene sentido en una app local sin cuentas.
+- **Preguntar**: barra abajo para preguntar sobre las reuniones; abre el chat.
+- Búsqueda con `⌘K`.
 
-Cinco áreas, según la guía oficial "Granola 101":
+### 1.3 La nota durante la reunión
 
-1. **Coming up**: próximas reuniones del calendario, cinco a la vez, con flechas para paginar. Clic crea la nota de esa reunión. Oculta eventos rechazados y entradas tipo Out of Office / Focus Time / Working Location.
-2. **Your notes** (lista cronológica "Recent meetings"): filas, no tarjetas. Cada fila: título, hora, asistentes (los extra colapsados en "+N"). Hover muestra checkbox para multiselección (Shift+clic para rangos, "Select all") y menú de tres puntos (Add to folder, Move to trash…).
-3. **Sidebar izquierda**: dos Spaces fijos, **My notes** (privado) y **Team space** (nombre del workspace); espacios custom (admins); carpetas con icono y descripción, botón **+** junto a cada space, subcarpetas de un nivel por drag & drop; **Customer calls**; **Recipes**; icono **Views** abajo a la izquierda (People, Companies); icono de **Trash** al final solo cuando hay algo en la papelera; nombre del workspace abajo a la izquierda que abre el menú (switcher de workspaces, Add workspace, Settings, Manage templates, Manage spaces, cuenta).
-4. **Barra "Ask anything"** (Granola Chat) en la parte inferior; con `/` abre el menú de recipes.
-5. **Banners**: "Suggested follow-up emails" (3 días), "Connect Gmail", nota demo en el primer arranque.
+- Lienzo limpio, título editable en línea.
+- Editor con Markdown ligero: encabezados, viñetas, casillas, negrita, cursiva, imágenes.
+- Control de grabación abajo: nivel de audio, Pausar/Reanudar y Parar; abre el panel de la transcripción en vivo (Yo / Ellos por canal), con copiar todo, búsqueda e idioma de la reunión.
+- Aviso claro si falla el permiso de micrófono o de audio del sistema.
 
-Paleta de comandos: `⌘K` / `Ctrl+K` ("Go to people", "Go to companies", etc.).
+### 1.4 La nota después
 
-### 1.3 Vista de nota (durante la reunión)
+- Al parar se genera el resumen. Se puede volver a las notas propias o al resumen.
+- En el resumen se distingue lo que escribió el usuario de lo que añade el modelo; lo que el usuario edita pasa a ser suyo.
+- Cada línea del modelo lleva una cita que abre el fragmento exacto de la transcripción.
+- Plantillas: Auto por defecto y plantillas propias (ver [plantillas.md](plantillas.md)); regenerar pide confirmación si hay ediciones.
+- Copiar el resumen en Markdown y, más adelante, exportar.
 
-- Lienzo en blanco estilo Apple Notes, sin toolbar superior. Título editable inline.
-- Editor con Markdown ligero: `#` encabezados, `-`/`*` bullets, `[]` checkbox, `**negrita**`, `*cursiva*`, ⌘B/⌘I/⌘U, pegar o arrastrar imágenes JPEG/PNG.
-- `/` en la nota abre el menú contextual de **templates** (se aplica al generar).
-- **Píldora de grabación** abajo-centro, encima del composer del chat: barras verdes animadas mientras captura; botón **Stop/Resume**; icono de forma de onda a la izquierda del "Ask anything" que abre/cierra el **panel de transcript** (drawer de ~360-420 px): burbujas grises a la izquierda = audio del sistema ("Them"), verdes a la derecha = micrófono ("Me"); **Copy all** arriba a la derecha; clic en un chunk permite copiar o borrar; búsqueda; selector de micrófono al pie (Auto sigue al mic de la app de reunión). Aviso naranja si la transcripción falla.
-- **Indicador flotante de reunión**: cuando otra app tiene el foco, la píldora se "despega" y flota en el borde derecho de la pantalla con un asa de arrastre abajo; clic vuelve a la nota. Se desactiva en Settings > Preferences > General.
-- **Imágenes / snapshots** (solo macOS 14+): stack "Images" al pie de la nota, muestra "Capturing", clic expande, hover + × borra; "Turn off for this meeting"; "Paused screen capture" cuando la ventana de la reunión no es visible.
-- **Chat en vivo** (`⌘J` / `Ctrl+J`): preguntas sobre lo hablado hasta el momento ("What did I miss?"), prompts rápidos. Historial efímero de la reunión.
-- **Brief** (Business+): arriba del panel de chat, 2-3 bullets, clic para expandir, pulgar abajo para feedback, banner "Connect Gmail".
-- Cambio de idioma de transcripción desde los controles de la reunión.
+### 1.5 Chat
 
-### 1.4 Vista de nota (después)
+- Preguntas sobre una reunión, una carpeta o todo el historial, con citas a la fuente. Todo con el modelo local.
+- Historial de chats. Sugerencias rápidas (tareas, correo de seguimiento).
 
-- Auto-stop al detectar fin de llamada (longitud del transcript, app de llamada en uso, hora de fin del evento, 15 min sin audio, suspensión). Botón Stop manual. Resume desde el panel de transcript.
-- **Enhance notes**: genera automáticamente al parar. Pestañas **My notes** / **Enhanced** (icono de tres líneas horizontales vuelve a las notas crudas). Estados "Transcribing", "Enhancing notes", "Generate notes".
-- Texto del usuario en negro, texto IA en gris; ediciones del usuario vuelven a negro.
-- Cada bullet IA lleva una **lupa** al hover que abre un popover con el fragmento del transcript de origen.
-- Botón **✨** arriba a la derecha: selector de template (defaults por tipo de usuario: 1:1, Stand-up, Weekly team meeting, Customer interview…; "Auto" por defecto; "All templates…"); **🔁** regenera con el mismo template.
-- **Shared**: muestra quién tiene acceso; **Copy link** con dropdown de acceso (Private / Only my company / Anyone with the link); roles Viewer (lee notas, hover de contexto, chat; no transcript) y Collaborator (edita y aplica templates); **Request access** / **Grant access**. Menú **⋯**: Copy enhanced notes (Markdown), Send notes via email, enviar a Slack / Notion / HubSpot / Attio / Affinity / Salesforce / Zapier.
-- Acciones rápidas post-reunión: List actions, Write follow-up email, Draft project plan.
-- Edición de asistentes. "View draft" del follow-up email arriba de la nota.
+### 1.6 Plantillas y prompts guardados
 
-### 1.5 Granola Chat
+- Plantilla en tres partes: propósito, estilo y secciones.
+- Prompts guardados que se lanzan sobre una o varias reuniones (fase 3).
 
-- Siempre abajo ("Ask anything"). Alcance implícito según dónde estés: home = todas las reuniones; nota individual; carpeta/space; selección múltiple; persona o empresa.
-- Botón de adjuntar archivos; seleccionar texto de la nota antes de preguntar lo enfoca; "rewrite…" reescribe secciones de la nota.
-- Historial de chats con papelera al hover. Privado aunque la nota esté compartida.
-- Selector de modelo bajo el cuadro ("Models": Auto en Basic; lista en Business; indicador "Thought for Xs" expandible).
-- **Workflows / Chat actions** (Settings > Connectors): redactar y enviar email (Gmail), mensaje Slack, crear evento (Google Calendar) con borrador editable y confirmación explícita.
-- Citas con enlaces a la fuente.
+### 1.7 Organización
 
-### 1.6 Recipes
+- Carpetas de un nivel; una nota puede estar en varias. Papelera con restaurar y borrar para siempre.
+- Personas a partir de los asistentes del calendario (fase 4).
 
-- Menú `/` en el chat: recipes por defecto, mías y del equipo. Pestaña **Recipes** en el sidebar con secciones **Discover**, **My recipes**, **Workspace recipes** y buscador (título y texto).
-- Formulario: Name (es el atajo), Prompt, Availability (Single meetings / Multiple meetings), Advanced settings (modelo). Compartir: Private / Anyone in your workspace / Anyone with link. Remix crea copia editable. Sin variables ni placeholders.
+### 1.8 Ajustes
 
-### 1.7 Templates
+- Preferencias (idioma de la interfaz, idioma de las reuniones, arranque), audio y permisos, calendario, notificaciones, **Modelos** (descarga, estado y espacio) y datos (carpeta local, exportar, retención).
 
-- Prompt en tres partes: propósito y contexto; longitud y estilo; estructura de secciones. Privados por defecto, "private to me" → compartir con la organización (requiere dominio corporativo). "Manage templates" desde el menú del workspace. No hay template por defecto distinto de Auto.
+### 1.9 Notificaciones y detección de reuniones
 
-### 1.8 Spaces, Folders, People & Companies, Customer calls
+- Ventanas propias de la app en la esquina superior derecha.
+- **Calendario**: aviso un minuto antes, solo para eventos con dos o más asistentes; abre la videollamada y la nota y empieza a transcribir.
+- **Llamadas sin evento**: se detecta que otra app usa el micrófono (Slack, FaceTime, WhatsApp, Zoom, Teams, Meet…) y se ofrece tomar notas. Si ocurre poco después de un evento, se asocia a él.
+- Nunca graba sin una nota abierta.
 
-Ver 1.2. Además: auto-add de reuniones recurrentes a una carpeta ("Auto-add future meetings?"), una nota puede estar en varias carpetas, miembros por email, auto-post de carpetas a Slack/HubSpot/Attio/Zapier ("Integrations" en la cabecera de carpeta). People & Companies se construyen solo desde asistentes de eventos de calendario, con foto, cargo y empresa enriquecidos en segundo plano; no se pueden añadir a mano. Customer calls: vista agregada del equipo con "Sharing is on / Stop adding my calls", × por nota, recipes "Gather product feedback", "Weekly revenue review".
+### 1.10 Hablantes
 
-### 1.9 Settings (menú del workspace > Settings)
+Por defecto «Yo» y «Ellos» por canal. Más adelante: nombres por Accesibilidad en las apps de escritorio de videollamada y diarización acústica como respaldo.
 
-- **Profile**: puesto y contexto para la IA; **Generate CSV** (export de todas las notas, título + resumen + transcript, por email en horas).
-- **Preferences**: General (Reposition Granola for meetings, indicador flotante), Features (Suggested follow-up emails, Take snapshots of shared screens), Language (Transcription language: English / Multi-language; Summary language: English / Auto; Personal jargon, 30 términos), Data & sharing (opt-out de entrenamiento, Auto deletion period for transcripts: 1 día … 1 año / Off, con cooldown de una semana), Labs (canal beta), Speaker tags (on por defecto).
-- **Calendar**: toggles por calendario; cómo aparecen en Coming up.
-- **Notifications**: global y por app.
-- **Voice typing**: Enable, Shortcut, Language, Microphone, Sound > Mute other audio, Screen context, Dictation styles, historial.
-- **Templates**, **Recipes**, **Spaces**, **Connectors** (Gmail, Slack, Google Calendar), **Integrations** (Zapier, Notion, HubSpot, Attio, Affinity, Slack), **Workspace** (General: nombre, logo, auto-join por dominio, Data security, Workspace jargon 50 términos, Danger zone; Members: roles Admin/Member, invitaciones), **Billing**, **Troubleshooting** (Run check de red).
+### 1.11 Dictado
 
-### 1.10 Notificaciones y detección de reuniones
+Atajo global para dictar en cualquier app con el STT local; limpieza opcional con el LLM pequeño (fase 5).
 
-- Ventanas propias de la app en la esquina superior derecha (no notificaciones nativas).
-- **Calendario**: 1 minuto antes, solo eventos con 2+ asistentes; barra sólida de color a la izquierda; clic abre la URL de la videollamada y la nota, y empieza a transcribir.
-- **Ad hoc**: detecta uso del micrófono por otra app. Títulos "Huddle detected" (Slack), "Call detected" (FaceTime, WhatsApp), "Meeting detected" (resto); cuerpo con el nombre de la app y botón **Take Notes**; línea discontinua a la izquierda. Si ocurre en los 15 min posteriores a un evento, lo asocia a ese evento.
-- Nunca graba sin una nota abierta. Si abres una nota antes de la hora, empieza a la hora programada.
+### 1.12 Consentimiento
 
-### 1.11 Speaker tags
+Recordatorio para pedir permiso antes de transcribir a otros.
 
-Por defecto "Me" / "Them". Con permiso de Accesibilidad lee el nombre del participante y el indicador de "hablando" de las apps de escritorio de Zoom Workplace y Microsoft Teams, y de Google Meet en Chrome (o con su extensión). Solo durante la transcripción. No funciona para Zoom en Windows ni en Zoom web (según sus propios docs). Móvil hasta 10 hablantes presenciales por diarización.
+### 1.13 MCP, API e integraciones (fase 6)
 
-### 1.12 Voice Typing (beta, Mac y Windows, gratis)
-
-Mantener `fn` (Mac) o `Ctrl izq + Win` (Windows) y hablar; soltar pega el texto en el cursor. Doble toque = modo manos libres hasta 20 min; Esc cancela. Píldora con forma de onda abajo en pantalla. Limpia muletillas, puntúa, formatea listas, adapta el estilo a la app destino (lee contexto por Accesibilidad; opcional). "Mute other audio" por defecto. Hasta tres idiomas o auto-detect. No sirve para dictar dentro de una reunión.
-
-### 1.13 Transparencia y consentimiento
-
-Mensaje automático en el chat de Zoom/Teams/Meet al empezar, marca de agua en el vídeo (macOS 14+, Windows 11), "Heads Up" por add-on de calendario, recordatorio de consentimiento en presenciales y al empezar snapshots.
-
-### 1.14 Integraciones, MCP y API
-
-- Nativas: Slack, Notion, HubSpot, Attio, Affinity, Gmail, Google Calendar, Outlook. Vía Zapier: Salesforce, Asana, Jira, Linear, GitHub, Google Docs/Drive, OneNote…
-- MCP (Streamable HTTP + OAuth 2.0 con registro dinámico): `query_granola_meetings`, `list_meetings`, `list_meeting_folders`, `get_meetings`, `get_meeting_attachment`, `get_meeting_transcript`, `get_account_info`, `switch_workspace`, `sign_out`.
-- API REST: List/Search/Get Notes, Get Transcript, List Folders, List Spaces, Webhooks, Audit, Legal Holds.
-
-### 1.15 Lo que Granola NO hace (oportunidades)
-
-No guarda audio ni permite reproducirlo, no permite editar el transcript, no importa archivos de audio, no soporta Apple Calendar, no tiene template por defecto distinto de Auto, no funciona offline, no exporta en Markdown/JSON desde la app (solo CSV por email). Todo esto es trivial o natural en una app local y se marca como "extra" en el roadmap.
+- Servidor MCP local para consultar reuniones, carpetas y transcripciones desde otros clientes.
+- API REST local y exportaciones; integraciones opcionales con claves del usuario.
 
 ---
 
-## 2. Qué cambia al pasar a modelos open source y local
+## 2. Diseño local
 
-| Capacidad | Granola | Este proyecto |
-|---|---|---|
-| ASR en streaming | Proveedor cloud (AssemblyAI y otros) | Modelo local en streaming sobre dos canales (mic y sistema) con VAD |
-| Re-transcripción de calidad | No existe | Pase batch opcional al terminar con un modelo mayor (Meetily lo llama "Enhance transcript") |
-| Diarización | Nombres por Accesibilidad; "Me/Them" como fallback | Igual, más diarización acústica local opcional dentro del canal "Them" |
-| Enhance / Chat / Recipes / Briefs | Modelos de OpenAI y Anthropic | LLM local (GGUF) con salida estructurada; opcional endpoint OpenAI-compatible externo para quien quiera |
-| Búsqueda | Chat + buscador | FTS local (tantivy) + embeddings locales para RAG en Chat |
-| Briefs con web + email | Búsqueda web y Gmail en servidor | Fuentes locales (notas, calendario) por defecto; web y Gmail opcionales y bajo clave propia |
-| Sync, compartir, web view, móvil | Backend de Granola | Local-first. Un servidor opcional self-hosted (fase 6) para compartir enlaces y sync E2E |
-| Audio | Se borra tras transcribir | Se guarda por defecto (configurable), permite reproducir y re-transcribir |
+| Capacidad | En JuanolaNT |
+|---|---|
+| ASR en streaming | Modelo local en streaming sobre dos canales (micrófono y sistema) con VAD |
+| Re-transcripción de calidad | Pase batch opcional al terminar con un modelo mayor |
+| Hablantes | «Yo / Ellos» por canal; nombres por Accesibilidad y diarización acústica como mejora |
+| Resumen, chat, prompts | LLM local (GGUF) con salida estructurada; endpoint OpenAI-compatible opcional |
+| Búsqueda | FTS local (tantivy) y embeddings locales para el chat |
+| Compartir y sincronizar | Local-first; servidor opcional self-hosted en fase 6 |
+| Audio | No se guarda por defecto; guardado opcional para re-transcribir |
 
-El resultado debe sentirse idéntico en la UI, pero el "motor" tiene además un gestor de modelos (descarga, verificación, selección de backend GPU) que Granola no necesita. En la UI eso vive en Settings > Models, una sección nueva que en Granola no existe.
+El "motor" incluye un gestor de modelos (descarga, verificación, elección del backend de GPU), que en la interfaz vive en Ajustes › Modelos.
 
 ---
 
 ## 3. Decisión de stack
 
-### 3.1 Opción recomendada: Tauri v2 + Rust core + frontend web (React + TipTap)
+### 3.1 Opción elegida: Tauri v2 + Rust core + frontend web (React + TipTap)
 
 **Por qué.**
-- Granola es Electron: su UI está hecha con tecnologías web. Replicarla píxel a píxel es directo con el mismo medio.
-- El editor de notas (Markdown ligero, imágenes, slash menu, dos tonos de texto, enlaces bullet→transcript) es el componente más caro de construir. TipTap/ProseMirror lo resuelve con extensiones; en Rust nativo no existe nada equivalente maduro (ver 3.3).
-- Es el stack de anarlog (ex-Hyprnote, ~9.5k estrellas, MIT) y Meetily (~31k estrellas, MIT): hay código de referencia para captura de audio, plugins de Tauri, descarga de modelos y empaquetado.
-- Tauri v2 tiene plugins oficiales para todo lo periférico que Granola usa: global-shortcut, notification, tray, autostart, updater, single-instance, window-state, deep-link, store, clipboard, dialog, sql, stronghold.
+- El editor de notas (Markdown ligero, imágenes, menú `/`, marca de texto del modelo, enlaces de cada línea a la transcripción) es el componente más caro de construir. TipTap/ProseMirror lo resuelve con extensiones; en Rust nativo no existe nada equivalente maduro (ver 3.3).
+- Hay proyectos open source con el mismo stack (anarlog, Meetily) con código de referencia para captura de audio, plugins de Tauri, descarga de modelos y empaquetado.
+- Tauri v2 tiene plugins oficiales para lo periférico: global-shortcut, notification, tray, autostart, updater, single-instance, window-state, deep-link, store, clipboard, dialog.
 - Todo el valor diferencial (audio, ASR, diarización, LLM, datos, calendario, detección, MCP) está en Rust puro, reutilizable desde cualquier UI futura.
 
-**Coste.** El frontend es TypeScript. Si "hacerlo en Rust" es un requisito duro del 100 % del código, ver 3.2.
+**Coste.** El frontend es TypeScript.
 
-### 3.2 Alternativa: Dioxus 0.7/0.8 (UI escrita en Rust, renderizada en webview) — descartada (decisión cerrada)
+### 3.2 Alternativa: Dioxus 0.7/0.8 (UI en Rust sobre webview) — descartada
 
-Permite escribir la UI en Rust con sintaxis tipo React y seguir usando CSS idéntico al de Granola. Problema: el editor de texto rico. Habría que embeber ProseMirror vía JS interop (lo que vuelve a meter JS) o escribir un editor propio. Dioxus Native (renderer Blitz sin webview) sigue en alpha y con soporte CSS incompleto a fecha de hoy; no es opción para una UI "exactamente igual". Viable solo si se acepta el editor vía interop.
+Permite escribir la UI en Rust con sintaxis tipo React. Problema: el editor de texto rico; habría que embeber ProseMirror vía interop JS o escribir un editor propio. Dioxus Native sigue en alpha.
 
-### 3.3 Alternativa: 100 % nativo (GPUI + gpui-component, o Iced) — descartada (decisión cerrada)
+### 3.3 Alternativa: 100 % nativo (GPUI + gpui-component, o Iced) — descartada
 
-GPUI es el framework de Zed y rinde muy bien, pero en 2026 el propio GPUI no trae widget de entrada de texto rico; `gpui-component` y `twrite` aportan un editor de texto/Markdown, no un editor WYSIWYG por bloques con imágenes, menús `/` y decoraciones por tramo. Habría que construir el editor desde cero. Es la opción más cara (estimación: el editor por sí solo duplica el esfuerzo total) y la que menos garantiza paridad visual. Descartada salvo que el rendimiento nativo sea prioritario sobre la paridad.
+GPUI rinde muy bien, pero no trae un editor WYSIWYG por bloques con imágenes, menús `/` y decoraciones por tramo. Habría que construirlo desde cero: el editor por sí solo duplicaría el esfuerzo total.
 
-### 3.4 Stack concreto (opción recomendada)
+### 3.4 Stack concreto
 
 > Lista de partida, con alternativas por capa. Lo que se usa de verdad está en [HANDOFF.md](HANDOFF.md), «Código, crates y runtimes» (por ejemplo, el STT en Mac va con `mlxrs` y Qwen3-ASR, no con sherpa-onnx ni whisper).
 
 **Rust (núcleo, workspace de crates)**
 - Runtime: `tokio`. Errores: `thiserror`/`anyhow`. Logs: `tracing`.
-- Audio: `cpal` (mic en los tres SO; WASAPI loopback en Windows; PipeWire/Pulse `.monitor` en Linux), `screencapturekit` (system audio en macOS 13+), Core Audio process taps vía `objc2`/`coreaudio-sys` (macOS 14.2+, sin permiso de grabación de pantalla), `rubato` (resampling a 16 kHz mono), `hound`/`symphonia` (WAV/MP3/FLAC), `webrtc-audio-processing` o `aec` propio para cancelación de eco entre canales.
-- ASR y voz: `sherpa-onnx` (streaming y offline, VAD Silero/TEN, diarización, embeddings de hablante, puntuación; wrapper Rust oficial), `whisper-rs` (whisper.cpp con Metal/CoreML/CUDA/Vulkan) o `transcribe-rs` (multi-motor: Parakeet, Moonshine, Whisper…). Diarización: `speakrs` (pipeline pyannote community-1 en Rust con CoreML/ONNX).
-- LLM: `llama-cpp-2` (GGUF, Metal/CUDA/Vulkan; gramáticas GBNF y JSON schema) como backend por defecto; `mistral.rs` como backend alternativo puro Rust; cliente OpenAI-compatible (`reqwest`) para Ollama/LM Studio/servidores externos.
-- Embeddings: `fastembed` (ONNX, CPU) o el propio llama.cpp con un modelo de embeddings GGUF; índice vectorial en `sqlite-vec` o `usearch`.
-- Datos: `sqlx` (SQLite, migraciones), `tantivy` (FTS), `keyring` (secretos en el llavero del SO), `serde`/`serde_json`.
-- Calendario: Google Calendar REST con `oauth2` + loopback PKCE; Microsoft Graph igual; `eventkit-rs` para Apple Calendar (extra). 
-- Detección de reuniones: `side-huddle` (detecta Teams/Zoom/Meet por bundle id, proceso y título de ventana en los tres SO) y monitorización de uso del micrófono (Core Audio `kAudioDevicePropertyDeviceIsRunningSomewhere` en macOS; `IAudioSessionManager2` en Windows; PipeWire en Linux).
-- Accesibilidad (speaker tags, contexto para Voice Typing): `accessibility-sys` / `objc2-application-services` en macOS; UI Automation vía `windows` crate en Windows.
-- MCP: `rmcp` (SDK oficial, Streamable HTTP). API: `axum`.
-- Tauri: `tauri` 2 + `tauri-specta` (tipos TS generados desde Rust) + plugins oficiales listados arriba.
+- Audio: `cpal` (micrófono en los tres SO; WASAPI loopback en Windows; PipeWire/Pulse `.monitor` en Linux), `screencapturekit` (audio del sistema en macOS 13+), Core Audio process taps vía `objc2`/`coreaudio-sys` (macOS 14.2+), `rubato` (resampling a 16 kHz mono), `hound`/`symphonia`, cancelación de eco entre canales.
+- ASR y voz: `sherpa-onnx`, `whisper-rs` o `transcribe-rs`; diarización con `speakrs`.
+- LLM: `llama-cpp-2` (GGUF, Metal/CUDA/Vulkan; GBNF y JSON schema) por defecto; `mistral.rs` como alternativa; cliente OpenAI-compatible (`reqwest`) para Ollama/LM Studio.
+- Embeddings: `fastembed` o llama.cpp con un modelo GGUF; índice en `sqlite-vec` o `usearch`.
+- Datos: `sqlx` (SQLite, migraciones), `tantivy` (FTS), `keyring`, `serde`.
+- Calendario: EventKit en macOS; Google Calendar y Microsoft Graph con OAuth PKCE.
+- Detección de reuniones: uso del micrófono por proceso (Core Audio en macOS; `IAudioSessionManager2` en Windows; PipeWire en Linux) y apps de videollamada por bundle id.
+- Accesibilidad (nombres de hablante, contexto del dictado): `objc2-application-services` en macOS; UI Automation en Windows.
+- MCP: `rmcp`. API: `axum`.
+- Tauri: `tauri` 2 + `tauri-specta` + plugins oficiales.
 
 **Frontend**
-- React + TypeScript + Vite + Tailwind. Editor: TipTap (extensiones: StarterKit, TaskList, Image, Placeholder, slash-menu, marca personalizada `ai-text` para el gris, nodo `transcript-ref` para la lupa). Estado: Zustand o TanStack Query sobre los comandos de Tauri. Animaciones: Framer Motion para la píldora.
+- React + TypeScript + Vite + Tailwind. Editor: TipTap (StarterKit, TaskList, Image, Placeholder, menú `/`, marca para el texto del modelo, nodo de cita a la transcripción). Estado: Zustand.
 
 ---
 
@@ -199,49 +164,48 @@ juanola/
 ├─ apps/
 │  └─ desktop/            # Tauri v2 (src-tauri + src)
 ├─ crates/
-│  ├─ core-types/         # Modelos de dominio (Note, Transcript, Segment, Meeting, Person, Company, Folder, Space, Recipe, Template)
-│  ├─ db/                 # SQLite (sqlx), migraciones, repos, eventos reactivos
+│  ├─ core-types/         # Modelos de dominio (Note, Transcript, Segment, Meeting, Person, Folder, Template)
+│  ├─ db/                 # SQLite (sqlx), migraciones, repos
 │  ├─ search/             # tantivy FTS + índice vectorial
-│  ├─ audio-capture/      # Captura mic + system por SO, mezcla, AEC, resample, VU meters
-│  ├─ audio-store/        # Grabación a disco (opcional), chunking, snapshots
-│  ├─ stt/                # Trait `Transcriber` (streaming/batch) + backends sherpa-onnx, whisper.cpp
-│  ├─ diarize/            # Trait `Diarizer` + backend speakrs/sherpa; fusión con speaker tags
-│  ├─ llm/                # Trait `ChatModel` (stream, JSON schema) + backends llama.cpp, mistral.rs, openai-compatible
-│  ├─ embed/              # Trait `Embedder` + fastembed/llama
-│  ├─ enhance/            # Pipelines: enhance notes, templates, recipes, chat RAG, briefs, follow-up, rewrite
-│  ├─ prompts/            # Plantillas de prompts (askama/minijinja) versionadas
-│  ├─ calendar/           # Google, Microsoft, Apple; cache local, "Coming up", recurrencia
-│  ├─ detect/             # Detección de reunión (apps, mic en uso), auto-stop
-│  ├─ speaker-tags/       # Accesibilidad: Zoom/Teams/Meet → (nombre, hablando) con timestamps
-│  ├─ dictation/          # Voice Typing: hotkey, captura, STT, limpieza LLM, pegado, contexto de app
-│  ├─ models/             # Registro de modelos, descarga (HF), verificación SHA, selección de backend GPU
-│  ├─ mcp-server/         # rmcp: mismas 9 tools que Granola
-│  ├─ api-server/         # axum: REST local equivalente a la API de Granola
-│  └─ integrations/       # Slack, Notion, HubSpot, Attio, Affinity, Zapier webhooks, Gmail
-├─ plugins/               # Tauri plugins finos que exponen cada crate al frontend (patrón anarlog)
-└─ models.toml            # Catálogo de modelos por slot (lo rellenas tú)
+│  ├─ audio-capture/      # Captura mic + sistema por SO, resample, niveles
+│  ├─ audio-store/        # Grabación a disco (opcional)
+│  ├─ stt/                # Transcripción en streaming y batch
+│  ├─ diarize/            # Diarización y fusión con nombres por Accesibilidad
+│  ├─ llm/                # Trait `ChatModel` + backends llama.cpp, openai-compatible
+│  ├─ embed/              # Trait `Embedder`
+│  ├─ enhance/            # Pipelines: resumen, plantillas, chat, seguimiento
+│  ├─ prompts/            # Plantillas de prompts versionadas
+│  ├─ calendar/           # Proveedores de calendario, agenda, recurrencia
+│  ├─ detect/             # Detección de reuniones (mic en uso, apps)
+│  ├─ speaker-tags/       # Accesibilidad: nombres de hablante con timestamps
+│  ├─ dictation/          # Dictado: hotkey, captura, STT, limpieza, pegado
+│  ├─ models/             # Catálogo, descarga (HF), verificación SHA, elección de backend
+│  ├─ mcp-server/         # rmcp: consultar reuniones desde otros clientes
+│  ├─ api-server/         # axum: REST local
+│  └─ integrations/       # Integraciones opcionales
+└─ models.toml            # Catálogo de modelos por slot
 ```
 
 **Principios.**
-- Local-first: SQLite + ficheros en `~/Library/Application Support/<app>` (o equivalente). Sin cuenta obligatoria.
+- Local-first: SQLite y ficheros en `~/Library/Application Support/<app>` (o equivalente). Sin cuenta.
 - Traits por capacidad (`Transcriber`, `Diarizer`, `ChatModel`, `Embedder`) para que cambiar de modelo o runtime sea configuración, no código.
-- Actores por reunión (`ractor` o canales tokio): un supervisor por sesión de grabación coordina captura → VAD → STT → diarización → persistencia → eventos al frontend. anarlog usa exactamente `ractor` + un supervisor.
-- Todo lo que cruza a la UI va tipado con `tauri-specta`.
+- Un supervisor por sesión de grabación coordina captura → VAD → STT → persistencia → eventos al frontend.
+- Todo lo que cruza a la UI va tipado.
 
 ---
 
-## 5. Captura de audio (el punto más delicado por plataforma)
+## 5. Captura de audio
 
-Granola captura dos fuentes y las mantiene separadas en el transcript (Me/Them). Replicar exactamente eso:
+Dos fuentes separadas en la transcripción («Yo» y «Ellos»):
 
 | SO | Micrófono | Audio del sistema | Permisos | Notas |
 |---|---|---|---|---|
-| macOS 14.2+ | `cpal` (CoreAudio) | **Core Audio process tap** sobre el dispositivo de salida por defecto (`AudioHardwareCreateProcessTap`) | Micrófono + prompt de "tap" (sin Screen Recording, sin punto naranja) | Recomendado. Granola pide "Screen & System Audio Recording" porque usa ScreenCaptureKit; el tap es más limpio. |
-| macOS 13 – 14.1 | `cpal` | `screencapturekit` (SCStream solo audio) | Micrófono + Screen & System Audio Recording | Fallback. |
-| Windows 10/11 | `cpal` (WASAPI) | WASAPI loopback del render device por defecto (`wasapi` crate o cpal con loopback) | Automáticos | Opcional: process loopback (`ActivateAudioInterfaceAsync` con `PROCESS_LOOPBACK`) para capturar solo Zoom/Teams y excluir música, algo que Granola no puede. |
-| Linux | `cpal` (PipeWire/Pulse) | fuente `.monitor` del sink por defecto, o `pw-record` como sidecar | Ninguno | Extra respecto a Granola (que no tiene Linux). |
+| macOS 14.2+ | `cpal` (CoreAudio) | **Core Audio process tap** sobre la salida por defecto (`AudioHardwareCreateProcessTap`) | Micrófono + permiso de audio del sistema | Recomendado. |
+| macOS 13 – 14.1 | `cpal` | `screencapturekit` (SCStream solo audio) | Micrófono + grabación de pantalla y audio | Respaldo. |
+| Windows 10/11 | `cpal` (WASAPI) | WASAPI loopback de la salida por defecto | Automáticos | Opcional: process loopback para capturar solo la app de la llamada. |
+| Linux | `cpal` (PipeWire/Pulse) | fuente `.monitor` del sink por defecto | Ninguno | Extra. |
 
-Pipeline común: dos streams → resample a 16 kHz mono (`rubato`) → AEC para quitar del canal mic lo que suena por los altavoces (si no hay auriculares) → VU meters a 20 Hz para las barras animadas → VAD por canal → ventanas a STT. Seguimiento de cambios de dispositivo (Bluetooth, docks) con reconexión automática, y el selector de micrófono "Auto" que sigue al dispositivo que usa la app de reunión (detectable por `kAudioDevicePropertyDeviceIsRunningSomewhere` en macOS).
+Pipeline común: dos streams → resample a 16 kHz mono → cancelación de eco si no hay auriculares → niveles a 20 Hz → VAD por canal → ventanas al STT. Reconexión automática al cambiar de dispositivo (Bluetooth, docks).
 
 ---
 
@@ -251,138 +215,131 @@ Pipeline común: dos streams → resample a 16 kHz mono (`rubato`) → AEC para 
 
 | Slot | Función | Requisitos | Formato / runtime |
 |---|---|---|---|
-| **VAD** | Cortar habla por canal, alimentar auto-stop (15 min sin audio) | <10 ms por frame en CPU | ONNX en sherpa-onnx (Silero, TEN) |
-| **STT streaming** | Transcript en vivo, 2 canales en paralelo, latencia < 1-2 s | Multilingüe (Granola: 31 idiomas, modo Multi-language), decode parcial + final | ONNX en sherpa-onnx (transducer streaming, Moonshine streaming…) o whisper.cpp con LocalAgreement (`yamabiko-whisper`) |
-| **STT batch** (opcional) | Re-transcripción de calidad al terminar o bajo demanda | Sin límite estricto de latencia; GPU si existe | GGML (whisper.cpp) u ONNX (Parakeet, Canary, Whisper…) |
-| **Puntuación / capitalización** | Si el modelo streaming no la da | CPU | ONNX en sherpa-onnx (CT-Transformer) |
-| **Diarización** | Separar hablantes dentro del canal "Them" cuando no hay speaker tags, y en presencial | Offline al terminar (pyannote-like) y, opcionalmente, online por embeddings | `speakrs` (community-1, CoreML/ONNX) o sherpa-onnx (segmentación pyannote 3.0 + embeddings 3D-Speaker) |
-| **Embeddings de hablante** | Re-identificar "Me" entre reuniones, nombrar hablantes recurrentes | CPU | ONNX en sherpa-onnx |
-| **Jargon / hotwords** | Equivalente a Personal/Workspace jargon | Hotwords en transducer (sherpa-onnx) o prompt inicial (whisper) | — |
+| **VAD** | Cortar habla por canal; parada automática por silencio | <10 ms por frame en CPU | Silero (MLX u ONNX) |
+| **STT streaming** | Transcripción en vivo, 2 canales en paralelo, latencia de pocos segundos | Multilingüe, parciales y finales | MLX en Mac; ONNX o whisper.cpp en el resto |
+| **STT batch** (opcional) | Re-transcripción de calidad al terminar | Sin límite estricto de latencia | GGML u ONNX |
+| **Puntuación** | Si el modelo streaming no la da | CPU | ONNX |
+| **Diarización** | Separar hablantes dentro de «Ellos» y en reuniones presenciales | Offline al terminar | `speakrs` o sherpa-onnx |
+| **Embeddings de hablante** | Reconocer hablantes recurrentes | CPU | ONNX |
+| **Vocabulario** | Términos y nombres propios del usuario | Contexto en el prompt del STT | — |
 
-Fusión de hablantes: prioridad a speaker tags por Accesibilidad (nombre + intervalo "hablando"); si no hay, diarización acústica; si no, "Me/Them". La UI pinta igual que Granola: nombre encima de la burbuja.
+Hablantes: primero nombres por Accesibilidad; si no hay, diarización acústica; si no, «Yo / Ellos».
 
-Gestión de modelos: catálogo `models.toml` por slot con URL de Hugging Face, SHA256, tamaño, backends soportados; descarga en segundo plano con progreso en Settings > Models; selección automática del backend (Metal/CoreML en Apple Silicon, CUDA/Vulkan en Windows/Linux, CPU como fallback) con un benchmark de arranque de 5 s para elegir el modelo por defecto que el hardware aguanta en tiempo real.
+Gestión de modelos: catálogo `models.toml` por slot con repo de Hugging Face, SHA-256, tamaño y backends; descarga con progreso en Ajustes › Modelos; elección automática según plataforma y memoria.
 
 ---
 
-## 7. LLM: enhance, chat, recipes, briefs, follow-ups (slots de modelo)
+## 7. LLM: resumen, chat, prompts y seguimiento (slots de modelo)
 
-> El enhance tal como funciona hoy (Markdown con citas en vez de JSON, pasadas de detalle, post-proceso en código) está en [HANDOFF.md](HANDOFF.md), «El enhance hoy»; el punto 1 de abajo es el diseño de partida.
+> El resumen tal como funciona hoy (Markdown con citas, pasadas de detalle, post-proceso en código) está en [HANDOFF.md](HANDOFF.md), «El enhance hoy»; el punto 1 de abajo es el diseño de partida.
 
 | Slot | Función | Requisitos |
 |---|---|---|
-| **LLM principal** | Enhance notes, templates, chat RAG, recipes, rewrite, follow-up emails, briefs | Contexto ≥ 32k (una hora de reunión son ~10-15k tokens de transcript), salida estructurada (JSON schema / GBNF), streaming |
-| **LLM pequeño** | Limpieza de dictado (Voice Typing), títulos, extracción de action items en vivo | Latencia < 1 s para 100 tokens |
-| **Embeddings de texto** | Búsqueda semántica y RAG en Chat sobre carpetas/historial | CPU, multilingüe |
-| **Reranker** (opcional) | Mejorar citas en Chat | CPU |
+| **LLM principal** | Resumen, plantillas, chat, prompts guardados, correos de seguimiento | Contexto ≥ 32k (una hora de reunión son ~10-15k tokens), salida estructurada, streaming |
+| **LLM pequeño** | Limpieza del dictado, títulos, tareas en vivo | Latencia < 1 s para 100 tokens |
+| **Embeddings de texto** | Búsqueda semántica y chat | CPU, multilingüe |
+| **Reranker** (opcional) | Mejores citas en el chat | CPU |
 
-Runtime por defecto `llama-cpp-2` (GGUF). Ofrecer además "Custom OpenAI-compatible endpoint" en Settings para Ollama/LM Studio/servidor propio, como hacen anarlog y Meetily.
+Runtime por defecto `llama-cpp-2` (GGUF). Opcional: endpoint OpenAI-compatible propio en Ajustes.
 
 **Pipelines (crate `enhance`).**
-1. **Enhance notes**: entrada = notas crudas (ProseMirror JSON → Markdown con ids de bloque), transcript segmentado con timestamps y hablante, metadatos del evento (título, asistentes, descripción), template elegido, perfil del usuario, idioma de resumen. Salida JSON validada: lista de secciones → bullets, cada bullet con `source: {kind: "user_note"|"transcript", block_id | [t0,t1]}` y `is_user_text`. El frontend pinta negro/gris y la lupa a partir de `source`. Para transcripts largos, map-reduce por ventanas con solapamiento.
-2. **Chat**: scope → recuperación (FTS + vectorial) → prompt con citas numeradas → streaming. Soporta multiselección, adjuntos (PDF/texto extraídos localmente), "rewrite" que devuelve un patch de la nota.
-3. **Recipes**: prompt estático del usuario + scope. Igual que chat.
-4. **Templates**: se inyectan en el prompt de enhance como "propósito / estilo / estructura".
-5. **Briefs**: job nocturno (o al abrir la nota) para eventos con asistentes externos: notas previas con esas personas/empresa + descripción del evento (+ Gmail/web si el usuario conecta claves). 2-3 bullets.
-6. **Follow-up email**: tras enhance, si hay invitado externo y ≤ 10 personas; borrador editable; envío vía Gmail API (conector opcional) o `mailto:`.
-7. **Live chat** ("What did I miss?"): sobre el transcript parcial, sin persistir.
+1. **Resumen**: entrada = notas del usuario (ProseMirror → Markdown con ids de bloque), transcripción segmentada con tiempos y canal, datos del evento, plantilla, perfil e idioma. Salida validada: secciones → viñetas, cada una con su fuente (nota del usuario o tramo de la transcripción). El frontend pinta la distinción y las citas a partir de esa fuente.
+2. **Chat**: alcance → recuperación (FTS + vectorial) → prompt con citas numeradas → streaming.
+3. **Prompts guardados**: prompt del usuario + alcance, como el chat.
+4. **Plantillas**: se inyectan en el prompt del resumen como propósito / estilo / secciones.
+5. **Correo de seguimiento**: borrador editable; envío por `mailto:` o un conector opcional.
+6. **Chat en vivo**: sobre la transcripción parcial, sin persistir.
 
 ---
 
 ## 8. Datos
 
-**SQLite** (sqlx, WAL): `workspaces`, `spaces`, `folders`, `folder_notes`, `notes` (título, prosemirror_json, enhanced_json, template_id, status, created_at, calendar_event_id, trashed_at), `transcripts`, `segments` (note_id, channel mic/system, speaker_id, t0, t1, text, confidence), `speakers`, `people`, `companies`, `note_people`, `calendar_events`, `templates`, `recipes`, `chats`, `chat_messages`, `snapshots`, `settings`, `models`, `jobs`.
+**SQLite** (sqlx, WAL): `workspaces`, `spaces`, `folders`, `folder_notes`, `notes`, `segments` (note_id, canal, hablante, t0, t1, texto, confianza), `speakers`, `people`, `calendar_events`, `templates`, `chats`, `settings`, `models`. (`workspaces` y `spaces` quedan como estructura interna; la interfaz no los muestra.)
 
-**Búsqueda**: tantivy sobre título, notas, enhanced y segments; vectores en `sqlite-vec` por chunk de ~300 tokens. Granola no tiene buscador de transcript; aquí sí (es trivial).
+**Búsqueda**: tantivy sobre título, notas, resumen y segmentos; vectores por chunk de ~300 tokens.
 
-**Ficheros**: `audio/<note_id>/{mic,system}.flac` (opcional, borrable por política de retención igual que la de transcripts: 1 día … 1 año / Off), `snapshots/<note_id>/*.png`, `models/<slot>/<name>/`.
+**Ficheros**: `audio/<note_id>/` solo si el usuario activa guardar audio; `models/<slot>/<name>/`.
 
-**Retención**: job diario que aplica "Auto deletion period for transcripts" y la papelera de 30 días.
+**Retención**: papelera y borrado automático configurable de transcripciones.
 
 ---
 
 ## 9. Calendario, detección y notificaciones
 
-- **Google Calendar**: OAuth PKCE con loopback, `events.list` con `syncToken`, polling cada 2-5 min más push opcional. **Microsoft Graph**: idem (`/me/calendarView`, delta). **Apple Calendar** vía EventKit como extra. Filtrar rechazados y OOO/Focus/Working Location. Vincular recurrentes por `recurringEventId` o título exacto (igual que Granola). Multi-cuenta.
-- **Notificaciones**: ventanas Tauri propias, sin decoración, siempre encima, esquina superior derecha, con los dos estilos (barra sólida / línea discontinua) y los textos exactos ("Meeting detected", "Take Notes"). Lógica: 1 min antes y 2+ asistentes; detección de mic en uso → título según app; asociación a evento en ventana de 15 min.
-- **Auto-stop**: evento terminado + app de reunión cerrada + sin voz 15 min + suspensión.
-- **Reposición de ventana** al empezar una reunión (toggle) e indicador flotante arrastrable (ventana Tauri transparente sin foco).
+- **Calendario**: EventKit en macOS; Google y Microsoft con OAuth PKCE y sincronización incremental. Filtro de rechazados y ausencias; recurrentes vinculados por id.
+- **Notificaciones**: ventanas propias, sin decoración, siempre encima, esquina superior derecha. Un minuto antes y con 2+ asistentes; para llamadas sin evento, título según la app; asociación a un evento cercano.
+- **Parada automática**: evento terminado + app de la llamada cerrada + silencio prolongado + suspensión.
 
 ---
 
-## 10. Especificación de UI (paridad)
+## 10. Interfaz
 
-El objetivo es paridad 1:1. Las fuentes públicas describen la estructura pero no dan medidas ni tokens de diseño, así que la **fase 0** incluye una auditoría con la app real: instalar Granola, capturar cada pantalla y estado en claro y oscuro, medir tipografía, espaciados, radios, colores (acento verde, grises del texto IA) y animaciones (barras de la píldora, transiciones del drawer), y guardar todo en `design/` como referencia. Con eso se construye un sistema de tokens CSS y un Storybook con cada componente al lado de su captura.
+Identidad propia de JuanolaNT: el icono del rombo, el fondo del DMG y la paleta «regaliz» (papel crema, negro regaliz y acento eucalipto). Vocabulario propio: Resumen, Agenda, Preguntar, Mis notas, Carpetas.
 
-Componentes a implementar (todos ya descritos en la sección 1):
+Componentes:
 
-- Shell: sidebar colapsable, header mínimo sin toolbar, área principal, barra Ask anything fija abajo, menú de workspace abajo-izquierda, soporte de modo oscuro, atajos (`⌘K`, `⌘J`, `⌘N`, Esc).
-- Home: Coming up (paginado de 5), Recent meetings (filas, hover, checkbox, +N), banners.
-- Nota: editor TipTap con dos tonos, lupa con popover de transcript, tabs My notes/Enhanced, botón ✨ con picker y 🔁, Shared/Copy link/⋯, Images stack, Brief, View draft.
-- Píldora de grabación + drawer de transcript (burbujas, Copy all, búsqueda, selector de mic, Stop/Resume) + indicador flotante.
-- Chat: panel, historial, selector de modelo, citas, adjuntos, menú `/` de recipes, acciones con borrador y confirmación.
-- Recipes (Discover / My / Workspace, formulario), Templates (manage), Spaces y Folders (crear, icono, descripción, compartir, Integrations), People y Companies, Customer calls, Trash.
-- Settings con todas las secciones de 1.9 más **Models** (nueva).
-- Onboarding: sign-in opcional, permisos (micrófono, system audio, Accesibilidad), calendario, descarga de modelos, nota demo.
-- Voice Typing: píldora inferior independiente de la ventana principal.
-- Tray/menu bar: entrada discreta.
+- Estructura: barra lateral plegable, área principal, barra de preguntar abajo, modo oscuro y atajos (`⌘K`, `⌘N`, `⌘,`, Esc).
+- Inicio: agenda paginada y notas por día.
+- Nota: editor TipTap con la marca del texto del modelo, citas con el fragmento de la transcripción, alternar notas propias / resumen, plantillas y regenerar.
+- Control de grabación + panel de transcripción (Yo / Ellos, copiar todo, búsqueda, idioma).
+- Chat: historial, citas y sugerencias.
+- Carpetas, Papelera y Ajustes (con **Modelos**).
+- Primer arranque: permisos (micrófono, audio del sistema, calendario) y descarga de modelos.
 
 ---
 
 ## 11. MCP, API, integraciones, compartir
 
-- **MCP local** (`rmcp`, Streamable HTTP en `localhost`, token local): las 9 tools de Granola con los mismos nombres y formas, para que Claude, ChatGPT, Cursor o Claude Code se conecten igual que a Granola.
-- **API REST local** (`axum`) con los mismos endpoints (List/Search/Get Notes, Get Transcript, List Folders/Spaces, Webhooks).
-- **Integraciones**: Slack (chat.postMessage), Notion (pages), HubSpot/Attio/Affinity (notas en registros), Zapier (webhooks), Gmail (drafts/send), Google Calendar (events.insert). Todas con OAuth propio del usuario y claves en `keyring`.
-- **Compartir**: fase 6, servidor opcional self-hosted (axum + Postgres o SQLite + S3) con enlaces de solo-notas (sin transcript, igual que Granola web), roles Viewer/Collaborator, sync cifrada E2E entre dispositivos. Hasta entonces: export Markdown/HTML/PDF y "Copy enhanced notes".
+- **MCP local** (`rmcp`, en `localhost` con token local): buscar y listar reuniones, carpetas y transcripciones.
+- **API REST local** (`axum`): notas, búsqueda, transcripción, carpetas.
+- **Integraciones** opcionales con claves del usuario en `keyring`.
+- **Compartir**: fase 6, servidor opcional self-hosted con enlaces de solo lectura y sincronización cifrada. Hasta entonces: exportar Markdown/HTML/PDF y copiar el resumen.
 
 ---
 
 ## 12. Roadmap por fases
 
-Estado a 10 nov: ✅ hecho · 🟡 en parte · ⬜ sin empezar. Todo lo hecho es en Mac; Windows y Linux están sin empezar.
+Estado a 11 nov: ✅ hecho · 🟡 en parte · ⬜ sin empezar. Todo lo hecho es en Mac; Windows y Linux están sin empezar.
 
-**Fase 0 — Auditoría y cimientos (2-3 semanas)** 🟡 workspace, esquema SQLite, gestor de modelos con descarga desde HF y diseño a partir de capturas de Granola hechos; CI, firma y notarización, y `tauri-specta`, pendientes.
-- Instalar Granola, capturar todas las pantallas y estados, extraer tokens de diseño.
-- Workspace Rust + Tauri v2 + tauri-specta; CI para macOS (arm64, x64), Windows, Linux; firma y notarización.
-- Esquema SQLite inicial, gestor de modelos con descarga desde HF y `models.toml`.
-- Decisión y prueba de los modelos por slot (tú eliges; aquí se mide latencia en CPU y GPU en los equipos objetivo).
+**Fase 0 — Cimientos** 🟡 workspace, esquema SQLite, gestor de modelos con descarga desde HF, CI y releases hechos; firma, notarización y `tauri-specta`, pendientes.
+- Workspace Rust + Tauri v2; CI para macOS (y más adelante Windows y Linux); firma y notarización.
+- Esquema SQLite inicial, gestor de modelos con `models.toml`.
+- Elección y medición de los modelos por slot.
 
-**Fase 1 — MVP grabable (4-6 semanas)** ✅ en Mac (captura dual, STT en dos canales, editor, enhance con lupa, Home, papelera, ajustes y modelos), salvo el auto-stop por silencio y el fallback ScreenCaptureKit.
-- Captura dual en macOS (process tap + SCK fallback) y Windows (WASAPI loopback); VU meters.
-- STT streaming en dos canales con VAD; transcript con burbujas Me/Them; Stop/Resume; auto-stop básico.
-- Editor TipTap con Markdown ligero e imágenes; nota con título inline.
-- Enhance notes con LLM local: dos tonos + lupa a transcript; template Auto.
-- Home con Recent meetings; New Note; papelera.
-- Settings: Models, Language, Preferences básicas.
+**Fase 1 — MVP que graba y resume** ✅ en Mac (captura dual, STT en dos canales, editor, resumen con citas, Inicio, papelera, ajustes y modelos), salvo la parada automática por silencio y el respaldo con ScreenCaptureKit.
+- Captura dual en macOS y Windows; niveles.
+- STT streaming en dos canales con VAD; transcripción Yo / Ellos; Pausar / Reanudar.
+- Editor TipTap con Markdown ligero e imágenes.
+- Resumen con LLM local y citas a la transcripción; plantilla Auto.
+- Inicio con notas por día; nota nueva; papelera.
+- Ajustes: Modelos, idioma, preferencias básicas.
 
-**Fase 2 — Calendario y detección (3-4 semanas)** 🟡 detección de llamadas, calendario de macOS (EventKit), Coming up, avisos y Take Notes hechos; Google y Microsoft directos, reposición de ventana, indicador flotante y tray, pendientes.
-- Google y Microsoft Calendar, Coming up, notificaciones propias (ambos estilos), asociación evento↔nota, recurrentes.
-- Detección de mic en uso y de apps de reunión; títulos exactos; Take Notes.
-- Reposición de ventana, indicador flotante arrastrable, tray.
+**Fase 2 — Calendario y detección** 🟡 detección de llamadas, calendario de macOS (EventKit), agenda, avisos y «Tomar notas» hechos; Google y Microsoft directos, indicador flotante y tray, pendientes.
+- Google y Microsoft Calendar, avisos propios, asociación evento↔nota, recurrentes.
+- Detección del micrófono en uso y de apps de videollamada.
+- Indicador flotante y tray.
 
-**Fase 3 — Templates, Chat, Recipes (4-5 semanas)** 🟡 núcleo de plantillas y cinco integradas hechos, sin conectar a la app ([plantillas.md](plantillas.md)); búsqueda ⌘K por texto hecha; chat, recipes y embeddings sin empezar.
-- Picker ✨ y 🔁, Manage templates, `/` en nota.
-- FTS + embeddings; Chat con scopes (home, nota, carpeta, selección, persona/empresa), citas, historial, selector de modelo, adjuntos, rewrite, live chat ⌘J.
-- Recipes: menú `/`, pestaña con Discover/My/Workspace, formulario, Remix.
+**Fase 3 — Plantillas, chat y prompts guardados** 🟡 núcleo de plantillas y cinco integradas hechos, sin conectar a la app ([plantillas.md](plantillas.md)); búsqueda ⌘K por texto hecha; chat, prompts guardados y embeddings sin empezar.
+- Elegir plantilla y regenerar; gestionar plantillas; `/` en la nota.
+- FTS + embeddings; chat por nota, carpeta o historial, con citas e historial.
+- Prompts guardados.
 
-**Fase 4 — Organización (3 semanas)** 🟡 carpetas de My notes y papelera hechas; lo demás sin empezar.
-- Spaces (My notes / Team space / custom), Folders con subcarpetas, auto-add de recurrentes, multiselección.
-- People & Companies desde asistentes; Customer calls.
-- Export Markdown/HTML/CSV; retención y auto-deletion; papelera 30 días.
+**Fase 4 — Organización** 🟡 carpetas y papelera hechas; lo demás sin empezar.
+- Subcarpetas, auto-añadir recurrentes a una carpeta, multiselección.
+- Personas desde los asistentes.
+- Exportar Markdown/HTML/CSV; retención y borrado automático.
 
-**Fase 5 — Speaker tags, Voice Typing, snapshots, briefs (4-6 semanas)** ⬜
-- Accesibilidad para Zoom/Teams/Meet → nombres en transcript; diarización acústica como fallback.
-- Voice Typing: hotkey global, píldora, modo manos libres, Esc, limpieza LLM, contexto de app, Mute other audio.
-- Snapshots de pantalla compartida (macOS, ScreenCaptureKit) con stack Images.
-- Briefs y follow-up emails (fuentes locales; Gmail opcional).
-- Mensaje automático de consentimiento y marca de agua (transparencia).
+**Fase 5 — Hablantes, dictado y seguimiento** ⬜
+- Nombres por Accesibilidad en las apps de videollamada; diarización acústica como respaldo.
+- Dictado con atajo global, modo manos libres y limpieza con el LLM.
+- Correos de seguimiento.
+- Recordatorio de consentimiento.
 
-**Fase 6 — Ecosistema (abierto)** ⬜
-- MCP y API locales; integraciones Slack/Notion/CRM/Zapier.
-- Servidor opcional self-hosted para compartir enlaces y sync E2E; vista web de notas.
-- Linux como plataforma soportada; importación de audio/SRT/VTT; edición de transcript (extras sobre Granola).
-- Móvil (fuera de alcance de Rust puro; evaluar Tauri Mobile o nativo más adelante).
+**Fase 6 — Ecosistema** ⬜
+- MCP y API locales; integraciones.
+- Servidor opcional self-hosted para compartir y sincronizar.
+- Linux; importar audio/SRT/VTT; editar la transcripción.
+- Móvil (evaluar más adelante).
 
 ---
 
@@ -390,24 +347,19 @@ Estado a 10 nov: ✅ hecho · 🟡 en parte · ⬜ sin empezar. Todo lo hecho es
 
 | Riesgo | Mitigación |
 |---|---|
-| Latencia del STT local en CPU sin GPU | Slot streaming con modelos pequeños cuantizados; batch de calidad al terminar; benchmark de arranque que degrada automáticamente |
-| Captura de audio del sistema en macOS < 14.2 y permisos TCC | Doble ruta (tap / SCK) y onboarding que explica el permiso exacto, como Granola |
-| cpal y loopback WASAPI inestables | Usar `wasapi` crate directo en Windows (anarlog y Vexa lo hacen) |
-| Enhance de 1 h de reunión en modelos de 8-32k de contexto | Map-reduce por ventanas; segmentos con ids para mantener la trazabilidad bullet→transcript |
-| Accesibilidad para speaker tags cambia con cada versión de Zoom/Teams | Selectores por versión y fallback a diarización; mismo problema que tiene Granola |
-| Paridad visual sin acceso al código de Granola | Fase 0 con capturas reales, Storybook comparativo, revisión píxel a píxel por pantalla |
-| Tamaño del bundle (modelos + runtimes GPU) | Modelos se descargan tras instalar; runtimes por feature flags de Cargo por plataforma |
-| Licencias de modelos y de código de referencia | Clones MIT/Apache-2 (anarlog, Meetily, Open Granola) se pueden leer y adaptar; verificar licencia de cada modelo elegido |
+| Latencia del STT local en CPU sin GPU | Modelos pequeños cuantizados en streaming; batch de calidad al terminar; elección por hardware |
+| Captura de audio del sistema en macOS < 14.2 y permisos TCC | Doble ruta (tap / SCK) y un primer arranque que explica cada permiso |
+| cpal y loopback WASAPI inestables | `wasapi` directo en Windows |
+| Resumen de 1 h de reunión con contexto limitado | Ventanas con solapamiento; segmentos con ids para mantener las citas |
+| Nombres por Accesibilidad que cambian con cada versión de Zoom/Teams | Selectores por versión y diarización como respaldo |
+| Tamaño del bundle (modelos + runtimes GPU) | Los modelos se descargan tras instalar; runtimes por feature flags |
+| Licencias de modelos y de código de referencia | Verificar la licencia de cada modelo; el código de referencia open source (MIT/Apache-2) se lee y se adapta con atribución |
 
 ---
 
 ## 14. Fuentes
 
-Granola (oficial): [granola.ai](https://www.granola.ai/), [pricing](https://www.granola.ai/pricing), [enterprise](https://www.granola.ai/enterprise), [integrations](https://www.granola.ai/integrations), [Granola 101](https://docs.granola.ai/help-center/getting-started/granola-101), [setup](https://docs.granola.ai/help-center/getting-started/setting-up-granola-for-the-first-time), [calendar sync](https://docs.granola.ai/help-center/getting-started/syncing-your-calendars), [how transcription works](https://docs.granola.ai/help-center/taking-notes/transcription), [transcription issues](https://docs.granola.ai/help-center/troubleshooting/transcription-issues), [writing notes](https://docs.granola.ai/help-center/taking-notes/taking-notes-in-granola), [AI-enhanced notes](https://docs.granola.ai/help-center/taking-notes/ai-enhanced-notes), [templates](https://docs.granola.ai/help-center/taking-notes/customise-notes-with-templates), [templates vs recipes](https://www.granola.ai/blog/meeting-recipes-repeatable-formats), [chat](https://docs.granola.ai/help-center/getting-more-from-your-notes/chatting-with-your-meetings), [chat workflows](https://docs.granola.ai/help-center/getting-more-from-your-notes/workflows-in-chat), [model selection](https://docs.granola.ai/help-center/getting-more-from-your-notes/understanding-model-selection-in-granola-chat), [recipes](https://docs.granola.ai/help-center/getting-more-from-your-notes/recipes), [spaces & folders](https://docs.granola.ai/help-center/sharing/folders/spaces-and-folders), [people & companies](https://docs.granola.ai/help-center/people-and-companies), [customer calls](https://docs.granola.ai/help-center/sharing/customer-calls), [sharing](https://docs.granola.ai/help-center/sharing/sharing-notes), [exporting](https://docs.granola.ai/help-center/sharing/exporting-notes), [workspaces](https://docs.granola.ai/help-center/workspaces), [preferences](https://docs.granola.ai/help-center/customising-granola/profile-and-preferences), [multi-language](https://docs.granola.ai/help-center/customising-granola/multi-language), [jargon](https://docs.granola.ai/help-center/customising-granola/customising-transcription), [notifications](https://docs.granola.ai/help-center/taking-notes/notifications), [speaker tags](https://docs.granola.ai/help-center/taking-notes/speaker-attribution), [snapshots](https://docs.granola.ai/help-center/taking-notes/capture-shared-screens), [briefs](https://docs.granola.ai/help-center/taking-notes/pre-meeting-briefs), [follow-up emails](https://docs.granola.ai/help-center/taking-notes/follow-up-emails), [deleting notes](https://docs.granola.ai/help-center/taking-notes/deleting-notes), [auto-deletion](https://docs.granola.ai/help-center/consent-security-privacy/transcript-auto-deletion), [voice typing](https://docs.granola.ai/help-center/voice-typing/intro), [MCP](https://docs.granola.ai/help-center/sharing/integrations/mcp), [feature requests](https://docs.granola.ai/help-center/feature-requests), [Windows](https://www.granola.ai/blog/granola-for-windows-setup-teams-and-zoom-capture-and-what-it-controls), [Android](https://www.granola.ai/blog/granola-for-android-ai-meeting-notes-for-mixed-device-teams), [llms.txt índice](https://docs.granola.ai/llms.txt).
-
-Granola (terceros): [TechCrunch Serie C](https://techcrunch.com/2026/03/25/granola-raises-125m-hits-1-5b-valuation-as-it-expands-from-meeting-notetaker-to-enterprise-ai-app/), [Desktop Insights (Electron)](https://desktopinsights.com/apps/granola), [oferta Electron](https://jobs.firstminute.capital/companies/granola/jobs/49915456-electron-engineer-windows), [Granola UX reference](https://cdn.jsdelivr.net/npm/@agent-native/core@0.124.6/corpus/templates/clips/desktop/design-refs/granola-ux.md), [Zapier](https://zapier.com/blog/granola-ai/), [Wonder Tools](https://wondertools.substack.com/p/granolaguide), [TheSweetBits](https://thesweetbits.com/tools/granola-ai-review/), [zackproser](https://zackproser.com/blog/granola-ai-review), [Jamie](https://www.meetjamie.ai/blog/granola-review), [HappyScribe](https://www.happyscribe.com/blog/granola-ai-review), [Bluedot](https://www.bluedothq.com/blog/granola-review), [tl;dv](https://tldv.io/blog/granola-review/).
-
-Clones open source: [anarlog / Hyprnote](https://github.com/fastrepl/hyprnote) y [docs](https://docs.anarlog.so), [Meetily](https://github.com/Zackriya-Solutions/meetily), [Open Granola](https://github.com/anshuman-pandey/open-granola), [Vexa desktop](https://github.com/Vexa-ai/vexa-desktop), [hex](https://github.com/anomalyco/hex).
+Proyectos open source de referencia: [anarlog / Hyprnote](https://github.com/fastrepl/hyprnote) y [docs](https://docs.anarlog.so), [Meetily](https://github.com/Zackriya-Solutions/meetily), [Vexa desktop](https://github.com/Vexa-ai/vexa-desktop), [hex](https://github.com/anomalyco/hex).
 
 Rust, audio: [screencapturekit](https://crates.io/crates/screencapturekit), [scrybe-meeting-capture-mac (tap vs SCK)](https://docs.rs/scrybe-meeting-capture-mac/latest/scrybe_capture_mac/), [recall.ai sobre system audio](https://www.recall.ai/blog/how-to-get-access-to-system-audio), [cpal](https://crates.io/crates/cpal), [cpal loopback issue](https://github.com/RustAudio/cpal/issues/476), [wasapi](https://docs.rs/wasapi), [dual-track WASAPI](https://dev.to/madnessbrains_i/building-a-dual-track-audio-pipeline-on-windows-mic-system-audio-without-joining-the-call-1d7a), [side-huddle (detección)](https://docs.rs/crate/side-huddle/0.2.1/source/src/lib.rs).
 

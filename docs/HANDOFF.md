@@ -9,9 +9,9 @@ Eres el modelo que continúa este proyecto. Este documento dice **dónde está e
 
 ## Qué es
 
-Réplica de Granola (notepad de reuniones con IA, sin bot: captura micrófono + audio del sistema, transcribe en vivo y, al terminar, fusiona las notas del usuario con la transcripción en «notas mejoradas») hecha en Rust con modelos open source locales. UI en Tauri v2 + React + TipTap, con la estructura y las funciones de Granola (que es Electron). Núcleo en un workspace de crates Rust.
+Cuaderno de reuniones con IA local, sin bot: captura micrófono + audio del sistema, transcribe en vivo y, al terminar, une las notas del usuario con la transcripción en un resumen con citas. Hecho en Rust con modelos open source locales. UI en Tauri v2 + React + TipTap; núcleo en un workspace de crates Rust.
 
-**Nombre: Juanola** (desde el 6 nov 2026). Crates `juanola-*`, binario `juanola-stt-worker`, identificador `dev.juanola.desktop`, variables de entorno `JUANOLA_*`. «Granola» en docs y comentarios es el producto que se replica; también se mantienen la tool MCP `query_granola_meetings` (replica su API) y el test `titles_match_granola`. La carpeta del repo sigue llamándose `granola-rs`.
+**Nombre: Juanola** (desde el 6 nov 2026). Crates `juanola-*`, binario `juanola-stt-worker`, identificador `dev.juanola.desktop`, variables de entorno `JUANOLA_*`. El producto se presenta como **JuanolaNT**. La carpeta local del repo sigue llamándose `granola-rs` (el remoto es `Juanola-Note-Taker`).
 
 Proyecto en `/Users/jorgeav/toys/granola-rs`. Rama de trabajo `feat/plantillas-fase0` (sobre `main`), con commits sin subir.
 
