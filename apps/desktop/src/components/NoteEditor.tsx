@@ -7,6 +7,7 @@ import TaskItem from "@tiptap/extension-task-item";
 import Image from "@tiptap/extension-image";
 import Underline from "@tiptap/extension-underline";
 import { FormatMenu } from "@/components/FormatMenu";
+import { t } from "@/lib/i18n";
 
 // Una nota nueva llega como `{type: "doc", content: []}`: sin ningún bloque,
 // ProseMirror no tiene párrafo donde poner «Write notes» y pinta en su lugar
@@ -25,7 +26,7 @@ export function NoteEditor({ initial, onChange }: { initial: unknown; onChange: 
     extensions: [
       StarterKit,
       Underline,
-      Placeholder.configure({ placeholder: "Write notes" }),
+      Placeholder.configure({ placeholder: t("note.writeNotes") }),
       TaskList,
       TaskItem.configure({ nested: true }),
       Image.configure({ inline: false, allowBase64: true }),

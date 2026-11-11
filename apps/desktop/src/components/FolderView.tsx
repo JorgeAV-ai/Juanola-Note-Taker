@@ -14,11 +14,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { NoteList } from "@/components/NoteList";
+import { useT } from "@/lib/i18n";
 
 // Carpeta: nombre editable en serif, sus notas por día y borrar la carpeta
 // (las notas no se borran: quedan sin carpeta). «+ New note» de la barra
 // superior crea la nota dentro.
 export function FolderView({ id, onOpenNote, onNewNote, onDeleted }: { id: string; onOpenNote: (id: string) => void; onNewNote: () => void; onDeleted: () => void }) {
+  const t = useT();
   const folder = useLibrary((s) => s.folders.find((f) => f.id === id));
   const reload = useLibrary((s) => s.reload);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -52,34 +54,34 @@ export function FolderView({ id, onOpenNote, onNewNote, onDeleted }: { id: strin
           className="note-title min-w-0 flex-1 bg-transparent font-serif text-[34px] font-normal leading-tight outline-none"
           key={folder.name}
           defaultValue={folder.name}
-          aria-label="Nombre de la carpeta"
+          aria-label={t("nav.folderName")}
           onBlur={(e) => rename(e.currentTarget.value)}
           onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
         />
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="ghost" className="delete-folder text-ink-2">
-              <Trash2 /> Borrar carpeta
+              <Trash2 /> {t("folder.delete")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent className="note-confirm">
-            <AlertDialogTitle>¿Borrar «{folder.name}»?</AlertDialogTitle>
-            <AlertDialogDescription>Sus notas no se borran: quedan en Home, sin carpeta.</AlertDialogDescription>
+            <AlertDialogTitle>{t("folder.deleteTitle", { name: folder.name })}</AlertDialogTitle>
+            <AlertDialogDescription>{t("folder.deleteDesc")}</AlertDialogDescription>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
               <AlertDialogAction destructive onClick={remove}>
-                Borrar carpeta
+                {t("folder.delete")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
-      <p className="mb-6 px-1 text-[14px] text-muted">{notes.length === 1 ? "1 nota" : `${notes.length} notas`}</p>
+      <p className="mb-6 px-1 text-[14px] text-muted">{notes.length === 1 ? t("folder.count1") : t("folder.countN", { n: notes.length })}</p>
       {error && <div className="note-error mb-4 text-[13.5px] text-danger">{error}</div>}
-      <NoteList notes={notes} onOpen={onOpenNote} empty="Carpeta vacía. Crea una nota con «+ New note» o muévela desde la propia nota." />
+      <NoteList notes={notes} onOpen={onOpenNote} empty={t("folder.empty")} />
       {notes.length === 0 && (
         <Button className="mt-4" onClick={onNewNote}>
-          Nueva nota aquí
+          {t("folder.newHere")}
         </Button>
       )}
     </div>

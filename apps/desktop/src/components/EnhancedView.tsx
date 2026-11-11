@@ -10,6 +10,7 @@ import type { Citation, EnhancedNotes } from "@/lib/ipc";
 import { fromDoc, toDoc } from "@/lib/enhancedDoc";
 import { excerpt, useTranscript } from "@/state/transcript";
 import { FormatMenu } from "@/components/FormatMenu";
+import { useT } from "@/lib/i18n";
 
 const clock = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
@@ -53,6 +54,7 @@ const UserEdits = Extension.create({
 
 // Cita al final de la viñeta: lupa que abre el fragmento de la transcripción.
 function CitationView({ node }: NodeViewProps) {
+  const t = useT();
   const src = node.attrs.source as Citation | null;
   const lines = useTranscript((s) => s.lines);
   const [open, setOpen] = useState(false);
@@ -74,17 +76,17 @@ function CitationView({ node }: NodeViewProps) {
   if (!src || src.kind !== "transcript") return <NodeViewWrapper as="span" />;
   return (
     <NodeViewWrapper as="span" className="cite-wrap" contentEditable={false} ref={wrap}>
-      <button className="cite" title="Ver en la transcripción" aria-label="Ver en la transcripción" onMouseDown={(e) => e.preventDefault()} onClick={() => setOpen((o) => !o)}>
+      <button className="cite" title={t("note.viewInTranscript")} aria-label={t("note.viewInTranscript")} onMouseDown={(e) => e.preventDefault()} onClick={() => setOpen((o) => !o)}>
         <ZoomIn className="size-[17px]" />
       </button>
       {open && (
         <span className="cite-pop">
           <span className="cite-label">
-            Transcript · {clock(src.start)}–{clock(src.end)}
+            {t("note.transcript")} · {clock(src.start)}–{clock(src.end)}
           </span>
           {excerpt(lines, src.start, src.end).map((l) => (
             <span className="cite-line" key={l.id}>
-              <b>{l.channel === "mic" ? "Me" : "Them"}:</b> {l.text}
+              <b>{l.channel === "mic" ? t("common.me") : t("common.them")}:</b> {l.text}
             </span>
           ))}
         </span>

@@ -2,13 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+  <!-- Idiomas de la app: macOS elige el preferido del usuario entre estos para
+       los textos de los permisos (es.lproj/InfoPlist.strings) y el WebView lo
+       expone en navigator.languages. -->
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>en</string>
+    <string>es</string>
+  </array>
   <key>NSMicrophoneUsageDescription</key>
-  <string>Juanola necesita el micrófono para transcribir tus reuniones en tu equipo.</string>
+  <string>Juanola needs the microphone to transcribe your meetings on this Mac.</string>
   <key>NSAudioCaptureUsageDescription</key>
-  <string>Juanola captura el audio del sistema para transcribir a los demás participantes.</string>
+  <string>Juanola captures system audio to transcribe the other participants.</string>
   <key>NSCalendarsUsageDescription</key>
-  <string>Juanola lee tu calendario para mostrar las próximas reuniones.</string>
+  <string>Juanola reads your calendar to show your upcoming meetings.</string>
   <key>NSCalendarsFullAccessUsageDescription</key>
-  <string>Juanola lee tu calendario para mostrar las próximas reuniones.</string>
+  <string>Juanola reads your calendar to show your upcoming meetings.</string>
 </dict>
 </plist>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FileText, Search } from "lucide-react";
 import { ipc, type Note } from "@/lib/ipc";
 import { shortDate } from "@/lib/dates";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
@@ -32,6 +33,7 @@ function snippet(text: string, q: string): [string, string, string] | null {
 // Búsqueda de Granola (⌘K): campo arriba, «ESC», y resultados con el
 // fragmento que coincide resaltado.
 export function SearchDialog({ open, onOpenChange, onOpenNote }: { open: boolean; onOpenChange: (o: boolean) => void; onOpenNote: (id: string) => void }) {
+  const t = useT();
   const [q, setQ] = useState("");
   const [notes, setNotes] = useState<Note[]>([]);
   const [sel, setSel] = useState(0);
@@ -44,13 +46,13 @@ export function SearchDialog({ open, onOpenChange, onOpenNote }: { open: boolean
   }, [open]);
 
   const results = useMemo(() => {
-    const t = q.trim();
-    if (!t) return notes.slice(0, 6).map((n) => ({ n, snip: null as [string, string, string] | null }));
+    const term = q.trim();
+    if (!term) return notes.slice(0, 6).map((n) => ({ n, snip: null as [string, string, string] | null }));
     return notes
       .map((n) => {
-        const title = n.title || "Untitled";
-        const inTitle = title.toLowerCase().includes(t.toLowerCase());
-        const snip = snippet(noteText(n), t);
+        const title = n.title || t("common.untitled");
+        const inTitle = title.toLowerCase().includes(term.toLowerCase());
+        const snip = snippet(noteText(n), term);
         return inTitle || snip ? { n, snip } : null;
       })
       .filter((x): x is { n: Note; snip: [string, string, string] | null } => !!x);
@@ -64,12 +66,12 @@ export function SearchDialog({ open, onOpenChange, onOpenNote }: { open: boolean
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="search-dialog" aria-describedby={undefined}>
-        <DialogTitle className="sr-only">Buscar</DialogTitle>
+        <DialogTitle className="sr-only">{t("common.search")}</DialogTitle>
         <div className="flex items-center gap-3 border-b border-line px-7 py-5">
           <input
             autoFocus
             className="search-input min-w-0 flex-1 bg-transparent text-[18px] outline-none placeholder:text-muted"
-            placeholder="Search notes"
+            placeholder={t("search.placeholder")}
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
@@ -88,15 +90,15 @@ export function SearchDialog({ open, onOpenChange, onOpenNote }: { open: boolean
             <div className="mb-2 flex items-center gap-3 rounded-2xl bg-hover/70 px-4 py-3.5 text-[16px]">
               <Search className="size-5 text-ink-2" />
               <span className="flex-1">
-                Search <b className="font-semibold">{q.trim()}</b>
+                {t("search.searchFor")} <b className="font-semibold">{q.trim()}</b>
               </span>
               <span className="text-[14px] text-muted">
-                {results.length} {results.length === 1 ? "result" : "results"}
+                {results.length} {results.length === 1 ? t("search.result1") : t("search.resultN")}
               </span>
             </div>
           )}
-          <div className="px-4 pb-1 pt-2 text-[14px] text-muted">{q.trim() ? "More results" : "Recent"}</div>
-          {results.length === 0 && <p className="px-4 py-3 text-[14.5px] text-muted">Nada coincide con «{q.trim()}».</p>}
+          <div className="px-4 pb-1 pt-2 text-[14px] text-muted">{q.trim() ? t("search.more") : t("search.recent")}</div>
+          {results.length === 0 && <p className="px-4 py-3 text-[14.5px] text-muted">{t("search.none", { q: q.trim() })}</p>}
           {results.map(({ n, snip }, i) => (
             <button
               key={n.id}
@@ -108,7 +110,7 @@ export function SearchDialog({ open, onOpenChange, onOpenNote }: { open: boolean
               <FileText className="mt-0.5 size-5 shrink-0 text-ink-2" strokeWidth={1.5} />
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline gap-3">
-                  <span className="flex-1 truncate text-[16px]">{n.title || "Untitled"}</span>
+                  <span className="flex-1 truncate text-[16px]">{n.title || t("common.untitled")}</span>
                   <span className="shrink-0 text-[14px] text-muted">{shortDate(new Date(n.created_at))}</span>
                 </span>
                 {snip && (

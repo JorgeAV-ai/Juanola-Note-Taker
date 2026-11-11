@@ -1,0 +1,5 @@
+/* Textos de los permisos de macOS en castellano (los de Info.plist son los ingleses). */
+"NSMicrophoneUsageDescription" = "Juanola necesita el micrófono para transcribir tus reuniones en este Mac.";
+"NSAudioCaptureUsageDescription" = "Juanola captura el audio del sistema para transcribir a los demás participantes.";
+"NSCalendarsUsageDescription" = "Juanola lee tu calendario para mostrar las próximas reuniones.";
+"NSCalendarsFullAccessUsageDescription" = "Juanola lee tu calendario para mostrar las próximas reuniones.";
