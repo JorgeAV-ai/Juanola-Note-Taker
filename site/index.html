@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Juanola — the AI note taker that never leaves your Mac</title>
-<meta name="description" content="Juanola listens to your meetings, transcribes them live and turns your rough notes into clean, cited summaries. Native Rust, open-source models, 100% on-device.">
-<meta property="og:title" content="Juanola — meeting notes that never leave your Mac">
-<meta property="og:description" content="Live transcription and enhanced notes, entirely on-device. Native Rust and open-source models.">
+<title>Juanola — private meeting notes, on your Mac</title>
+<meta name="description" content="An AI note taker that runs entirely on your Mac. Your meeting audio, transcripts and notes never touch a server: no cloud, no account, no telemetry. Open source.">
+<meta property="og:title" content="Juanola — private meeting notes, on your Mac">
+<meta property="og:description" content="Transcription and AI notes that run entirely on-device. No cloud, no account, no telemetry. Open source, so you can check.">
 <meta property="og:type" content="website">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <script>document.documentElement.classList.add("js")</script>
@@ -39,7 +39,7 @@
 html { scroll-behavior: smooth; }
 body {
   margin: 0; background: var(--canvas); color: var(--ink);
-  font: 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  font: 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: clip;
 }
 /* grano de papel */
 body::before {
@@ -91,6 +91,8 @@ h1 em { font-style: italic; color: var(--olive-ink); }
 .titlebar { display: flex; align-items: center; gap: 7px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
 .titlebar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line); }
 .titlebar span { margin-left: auto; font: 12px var(--mono); color: var(--muted); }
+.offline { display: inline-flex; align-items: center; gap: 7px; color: var(--olive-ink) !important; }
+.offline b { width: 7px; height: 7px; border-radius: 50%; background: var(--leaf); box-shadow: 0 0 0 3px rgb(63 143 104 / .18); }
 .note { padding: 26px 30px 92px; }
 .note h2 { font: 500 30px/1.15 var(--serif); margin: 0 0 6px; letter-spacing: -.01em; }
 .chips { display: flex; gap: 8px; margin-bottom: 22px; font-size: 12.5px; }
@@ -112,7 +114,7 @@ h1 em { font-style: italic; color: var(--olive-ink); }
 }
 .tip small { display: block; font: 11px var(--mono); color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .08em; }
 .tip mark { background: var(--mark); color: inherit; padding: 0 2px; border-radius: 3px; }
-@media (max-width: 560px) { .tip { position: static; width: auto; margin: 0 16px 12px; transform: none; } .note { padding: 22px 20px 18px; } }
+@media (max-width: 620px) { .tip { position: static; width: auto; margin: 0 16px 12px; transform: none; } .note { padding: 22px 20px 18px; } }
 .pill {
   position: absolute; left: 30px; bottom: 22px; display: flex; align-items: center; gap: 12px;
   padding: 9px 16px 9px 14px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 13px; color: var(--ink-2);
@@ -125,7 +127,7 @@ h1 em { font-style: italic; color: var(--olive-ink); }
 .licorice i { position: absolute; inset: 0 -16px; background: repeating-linear-gradient(90deg, transparent 0 5px, rgb(255 255 255 / .16) 5px 8px); transform: skewX(-35deg); animation: twist .7s linear infinite; }
 @keyframes twist { from { translate: -8px 0; } to { translate: 0 0; } }
 
-@media (max-width: 560px) { .pill { position: static; width: max-content; margin: 0 16px 18px; } }
+@media (max-width: 620px) { .pill { position: static; width: max-content; margin: 0 16px 18px; } }
 
 /* franja */
 .strip { border-block: 1px solid var(--line); background: var(--sidebar); }
@@ -148,7 +150,7 @@ h2.big em { color: var(--olive-ink); }
 .step code, .specs code { font: 13px var(--mono); background: var(--hover); padding: 1px 6px; border-radius: 5px; }
 
 /* banda oscura de privacidad */
-.dark { background: var(--licorice); color: var(--on-dark); position: relative; overflow: hidden; }
+.dark { background: var(--licorice); color: var(--on-dark); position: relative; overflow: clip; }
 .dark .kicker { color: var(--on-dark-2); }
 .dark h2.big em { color: #7cc49d; }
 .dark .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px 72px; align-items: end; }
@@ -187,6 +189,62 @@ td small { display: block; color: var(--muted); font-size: 13px; }
 footer { border-top: 1px solid var(--line); padding: 28px 0 40px; font-size: 13.5px; color: var(--muted); }
 footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
 
+
+/* privacidad: flujo de datos */
+.sub { color: var(--ink-2); max-width: 34em; margin: 18px 0 0; font-size: 18px; }
+.mono { font: 12px var(--mono); }
+.flow { display: grid; grid-template-columns: 1fr 280px; gap: 0; margin-top: 52px; align-items: stretch; }
+@media (max-width: 920px) { .flow { grid-template-columns: 1fr; } }
+.mac { border: 1.5px solid var(--ink); border-radius: 22px; padding: 22px; background: var(--surface); position: relative; z-index: 1; }
+.mac-label { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font: 600 13px var(--mono); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 18px; }
+.mac-label .mono { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--muted); }
+.pipe { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; counter-reset: s; }
+@media (max-width: 720px) { .pipe { grid-template-columns: 1fr 1fr; } }
+.pipe li { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 14px 16px; }
+.pipe li:not(:last-child)::after { content: "→"; position: absolute; right: -13px; top: 50%; translate: 0 -50%; color: var(--leaf); font-weight: 600; z-index: 2; }
+@media (max-width: 720px) { .pipe li:nth-child(2)::after { content: none; } }
+.pipe small { display: block; font: 11px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.pipe b { display: block; font: 600 16px/1.3 var(--sans); margin: 6px 0 4px; }
+.pipe span { font-size: 13.5px; color: var(--ink-2); line-height: 1.45; display: block; }
+.store { display: grid; grid-template-columns: 1fr 1.3fr; gap: 14px; margin-top: 14px; }
+@media (max-width: 720px) { .store { grid-template-columns: 1fr; } }
+.drop { border: 1px dashed var(--faint); border-radius: 14px; padding: 14px 16px; font-size: 14px; color: var(--ink-2); }
+.drop b { color: var(--ink); }
+.db { border-radius: 14px; padding: 14px 16px; background: var(--bubble-me); }
+.db .mono { display: block; color: var(--ink-2); overflow-wrap: anywhere; }
+.db b { display: block; font: 600 18px var(--mono); margin: 4px 0 2px; color: var(--olive-ink); }
+.db > span:last-child { font-size: 14px; color: var(--ink-2); }
+.net { padding: 22px 22px 22px 34px; border: 1.5px dashed var(--faint); border-left: 0; border-radius: 0 22px 22px 0; margin-block: 28px; background: transparent; }
+@media (max-width: 920px) { .net { border: 1.5px dashed var(--faint); border-top: 0; border-radius: 0 0 22px 22px; margin: 0 24px; padding: 30px 20px 20px; } }
+.net .mac-label { color: var(--muted); }
+.wire { list-style: none; margin: 0; padding: 0; font-size: 14.5px; }
+.wire li { padding: 9px 0; border-top: 1px solid var(--line); }
+.wire li:first-child { border-top: 0; }
+.wire .once b { display: block; color: var(--olive-ink); font-weight: 600; }
+.wire .once span { font-size: 13px; color: var(--muted); }
+.wire .never { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--faint); }
+.wire .never::before { content: "✕"; display: inline-block; width: 22px; color: #b5523b; text-decoration: none; }
+
+/* verificación */
+.checks { list-style: none; padding: 0; margin: 56px 0 0; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid rgb(255 255 255 / .18); }
+@media (max-width: 1000px) { .checks { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .checks { grid-template-columns: 1fr; } }
+.checks li { padding: 24px 22px 6px 0; }
+.checks li + li { padding-left: 22px; border-left: 1px solid rgb(255 255 255 / .1); }
+@media (max-width: 1000px) { .checks li, .checks li + li { padding: 22px 0 8px; border-left: 0; border-bottom: 1px solid rgb(255 255 255 / .1); } }
+.checks .n { font: italic 400 40px/1 var(--serif); color: #7cc49d; }
+.checks h3 { font: 600 17px/1.3 var(--sans); margin: 10px 0 6px; color: var(--on-dark); }
+.dark .checks p { margin: 0; font-size: 15px; }
+.checks code { font: 12.5px var(--mono); background: rgb(255 255 255 / .08); padding: 1px 6px; border-radius: 5px; color: var(--on-dark); }
+
+/* comparación */
+table.vs { margin-top: 44px; min-width: 460px; }
+table.vs td:last-child, table.vs th:last-child { text-align: left; font-family: var(--sans); font-size: 15px; white-space: normal; }
+table.vs td:first-child { color: var(--ink-2); width: 34%; }
+table.vs td:nth-child(2) { color: var(--muted); }
+table.vs td:last-child { font-weight: 600; color: var(--olive-ink); }
+table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--leaf); }
+
 /* aparición al hacer scroll */
 .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
 .js .reveal.in { opacity: 1; transform: none; }
@@ -209,7 +267,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       Juanola
     </a>
     <nav>
-      <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="#privacy">Privacy</a>
+      <a class="hide-sm" href="#verify">Verify it</a>
       <a class="hide-sm" href="#models">Models</a>
       <a href="https://github.com/JorgeAV-ai/Juanola-Note-Taker">GitHub</a>
     </nav>
@@ -219,9 +278,9 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <main>
   <div class="wrap hero">
     <div>
-      <div class="eyebrow"><span class="rec"></span> 100% on-device · open source</div>
-      <h1>Meeting notes that <em>never leave</em> your Mac.</h1>
-      <p class="lede">Juanola listens to your calls, transcribes them live and turns your rough notes into clean, structured summaries, every line linked back to the moment it was said. No bot joins the meeting. Nothing is uploaded.</p>
+      <div class="eyebrow"><span class="rec"></span> On-device AI · no cloud · open source</div>
+      <h1>What's said in your meetings <em>stays on your Mac</em>.</h1>
+      <p class="lede">Juanola transcribes your calls and writes up your notes with AI that runs on your own Mac. Your audio, transcripts and notes are never sent to a server. There's no account, no telemetry and no bot in the call, and it keeps working with the Wi‑Fi off.</p>
       <div class="ctas">
         <a class="btn btn-primary" href="https://github.com/JorgeAV-ai/Juanola-Note-Taker/releases">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.47.83-.72 0-1.82-.81-2.99-.79-1.54.02-2.96.9-3.75 2.27-1.6 2.78-.41 6.89 1.15 9.14.76 1.1 1.67 2.34 2.86 2.3 1.15-.05 1.58-.74 2.97-.74s1.78.74 2.99.72c1.24-.02 2.02-1.12 2.77-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.42-3.66ZM14.1 5.86c.63-.77 1.06-1.84.94-2.9-.91.04-2.02.61-2.67 1.37-.58.67-1.1 1.76-.96 2.8 1.02.08 2.06-.52 2.69-1.27Z"/></svg>
@@ -233,7 +292,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     </div>
 
     <div class="window" role="img" aria-label="A Juanola note: your notes in black, the AI's additions in grey, with a citation open on the transcript">
-      <div class="titlebar"><i></i><i></i><i></i><span>Weekly planning</span></div>
+      <div class="titlebar"><i></i><i></i><i></i><span class="offline"><b></b> offline · 0 bytes sent</span></div>
       <div class="note">
         <h2>Weekly planning</h2>
         <div class="chips"><span class="chip">My notes</span><span class="chip on">Enhanced</span><span class="chip">Today · 10:00</span></div>
@@ -257,65 +316,128 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
         <small>Transcript · 04:12</small>
         “Monthly recurring revenue is at <mark>$412000</mark>. Last month we closed at 398 thousand…”
       </div>
-      <div class="pill"><span class="bars"><i></i><i></i><i></i><i></i><i></i></span> Enhancing notes <span class="licorice"><i></i></span></div>
+      <div class="pill"><span class="bars"><i></i><i></i><i></i><i></i><i></i></span> Enhancing on this Mac <span class="licorice"><i></i></span></div>
     </div>
   </div>
 
   <div class="strip">
     <div class="wrap">
-      <span>Mic + system audio</span><span>No bot in your call</span><span>Native Rust + Tauri</span><span>Open-source models</span><span>Works offline</span>
+      <span>No cloud processing</span><span>Audio never saved</span><span>No account</span><span>No telemetry</span><span>No bot in your call</span><span>Works in airplane mode</span>
     </div>
   </div>
 
-  <section id="how">
+  <section id="privacy">
     <div class="wrap">
       <div class="reveal">
-        <div class="kicker">How it works</div>
-        <h2 class="big">Jot a few words. Get the meeting, <em>written up</em>.</h2>
+        <div class="kicker">Where your data goes</div>
+        <h2 class="big">Every step runs <em>inside your Mac</em>.</h2>
+        <p class="sub">Most AI note takers send your audio to a server to be transcribed and summarised. Juanola does both on your Mac's GPU, so the meeting never has to go anywhere.</p>
       </div>
-      <div class="steps reveal">
-        <div class="step">
-          <div class="n">1</div>
-          <h3>It listens on two channels</h3>
-          <p>Your microphone and your Mac's system audio are captured separately, so “Me” and “Them” never get mixed up. Zoom, Meet, Teams, Slack: no bot, no invite, no plugin.</p>
+
+      <div class="flow reveal" role="img" aria-label="Data flow: microphone and system audio go to voice detection, then transcription, then the notes model, then a local database, all inside your Mac. The only connection to the internet is a one-time model download.">
+        <div class="mac">
+          <div class="mac-label"><span>Your Mac</span><span class="mono">everything below runs here</span></div>
+          <ol class="pipe">
+            <li><small>01 · capture</small><b>Mic + system audio</b><span>Captured as two separate channels, for “Me” and “Them”.</span></li>
+            <li><small>02 · listen</small><b>Silero VAD</b><span>Detects speech, on MLX.</span></li>
+            <li><small>03 · transcribe</small><b>Qwen3-ASR</b><span>Runs on Apple's GPU via MLX.</span></li>
+            <li><small>04 · write up</small><b>LFM3-1.7B</b><span>Runs with llama.cpp on Metal.</span></li>
+          </ol>
+          <div class="store">
+            <div class="drop"><b>Audio</b> stays in memory while it's transcribed and is then thrown away. It's never written to disk.</div>
+            <div class="db"><span class="mono">~/Library/Application Support/dev.juanola.desktop/</span><b>juanola.sqlite</b><span>Your transcripts and notes, in one file you own.</span></div>
+          </div>
         </div>
-        <div class="step">
-          <div class="n">2</div>
-          <h3>It transcribes as you talk</h3>
-          <p>Qwen3-ASR runs on Apple's GPU through MLX and puts text on screen a fraction of a second after it's spoken. It reads your meeting's title, attendees and glossary to get names right.</p>
-        </div>
-        <div class="step">
-          <div class="n">3</div>
-          <h3>It enhances your notes</h3>
-          <p>When the call ends, a local LLM merges what you wrote with what was said. Your words stay black, its additions are grey, and the <code>⌕</code> on every line opens the exact moment in the transcript.</p>
+        <div class="net">
+          <div class="mac-label"><span>The internet</span></div>
+          <ul class="wire">
+            <li class="once"><b>↓ Models, once</b><span>About 3.5 GB from huggingface.co, checked against SHA-256</span></li>
+            <li class="never">Meeting audio</li>
+            <li class="never">Transcripts</li>
+            <li class="never">Notes</li>
+            <li class="never">Usage data and crash reports</li>
+          </ul>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="dark">
+  <section class="dark" id="verify">
     <svg class="gem" viewBox="0 0 64 100" aria-hidden="true"><path d="M32 5 L58 49 L33 95 L6 51 Z" fill="#fff"/></svg>
-    <div class="wrap grid">
-      <div class="reveal">
-        <div class="kicker">Privacy, by construction</div>
-        <h2 class="big">Your meetings are <em>yours</em>. Not training data.</h2>
-        <p>Every model runs on your machine. Transcripts and notes live in a local SQLite file you can open, back up or delete. The only network call is the one-time model download from Hugging Face.</p>
+    <div class="wrap">
+      <div class="grid">
+        <div class="reveal">
+          <div class="kicker">Don't take our word for it</div>
+          <h2 class="big">Privacy you can <em>check</em> for yourself.</h2>
+        </div>
+        <p class="reveal">“We don't look at your data” is a promise. With Juanola there's nothing to promise, because your data never reaches anyone. You can confirm it in five minutes.</p>
       </div>
-      <ul class="nos reveal">
-        <li>No account <span>nothing to sign up for</span></li>
-        <li>No uploads <span>audio never leaves the Mac</span></li>
-        <li>No telemetry <span>not even crash reports</span></li>
-        <li>No subscription <span>MIT licensed</span></li>
-      </ul>
+      <ol class="checks reveal">
+        <li><span class="n">1</span><h3>Turn the Wi‑Fi off</h3><p>Once the models are downloaded, record a meeting in airplane mode. You still get the transcript and the enhanced notes.</p></li>
+        <li><span class="n">2</span><h3>Watch the network</h3><p>Run Little Snitch, LuLu or <code>nettop</code> while you record. Juanola makes no connections.</p></li>
+        <li><span class="n">3</span><h3>Read the code</h3><p>It's MIT-licensed. Only one module can reach the internet, <code>crates/models</code>, and all it does is download the models.</p></li>
+        <li><span class="n">4</span><h3>A locked-down interface</h3><p>The app's content security policy blocks the interface from loading or sending anything outside your Mac.</p></li>
+        <li><span class="n">5</span><h3>Delete everything</h3><p>Your transcripts and notes are a single SQLite file. Delete it, or delete a note and empty the trash, and no copy is left anywhere else.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="reveal">
+        <div class="kicker">The difference</div>
+        <h2 class="big">Cloud note takers vs. <em>on-device</em>.</h2>
+      </div>
+      <div class="table-scroll reveal">
+        <table class="vs">
+          <thead><tr><th></th><th>A typical cloud note taker</th><th>Juanola</th></tr></thead>
+          <tbody>
+            <tr><td>Where your audio is processed</td><td>On the vendor's servers</td><td>On your Mac's GPU</td></tr>
+            <tr><td>Where transcripts and notes live</td><td>In the vendor's cloud</td><td>In one file on your Mac</td></tr>
+            <tr><td>Is the recording kept?</td><td>Often, on their servers</td><td>No, it's never written to disk</td></tr>
+            <tr><td>Could it be used for training?</td><td>Depends on the terms</td><td>No, it never leaves your Mac</td></tr>
+            <tr><td>Account required</td><td>Yes</td><td>No</td></tr>
+            <tr><td>A bot joins the call</td><td>Often</td><td>Never</td></tr>
+            <tr><td>Works offline</td><td>No</td><td>Yes</td></tr>
+            <tr><td>Can you audit it?</td><td>No</td><td>Yes, it's open source</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" style="padding-top:0">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="kicker">How it works</div>
+        <h2 class="big">Private doesn't mean <em>worse</em> notes.</h2>
+      </div>
+      <div class="steps reveal">
+        <div class="step">
+          <div class="n">1</div>
+          <h3>It listens on two channels</h3>
+          <p>Your microphone and your Mac's system audio are captured separately, so “Me” and “Them” never get mixed up. It works with Zoom, Meet, Teams and Slack, with no bot, invite or plugin.</p>
+        </div>
+        <div class="step">
+          <div class="n">2</div>
+          <h3>It transcribes as you talk</h3>
+          <p>Text appears a fraction of a second after it's spoken. The meeting's title, attendees and glossary come from your calendar on this Mac and help get names right.</p>
+        </div>
+        <div class="step">
+          <div class="n">3</div>
+          <h3>It enhances your notes</h3>
+          <p>When the call ends, a local model merges what you wrote with what was said. Your words stay black and its additions are grey. The <code>⌕</code> on every line opens the exact moment in the transcript.</p>
+        </div>
+      </div>
     </div>
   </section>
 
   <section id="models">
     <div class="wrap specs">
       <div class="reveal">
-        <div class="kicker">What runs on your Mac</div>
+        <div class="kicker">The models on your Mac</div>
         <h2 class="big">Small models, <em>measured</em> on real work.</h2>
-        <p style="color:var(--ink-2);max-width:28em">About 3.5 GB in total, downloaded once from inside the app and checked against their SHA-256. Every change to the pipeline is measured against scripted meetings and logged, kept or thrown out.</p>
+        <p style="color:var(--ink-2);max-width:28em">Open-weight models, about 3.5 GB in total. They’re downloaded once from inside the app and checked against their SHA-256, and after that they run with no connection. Every change to the pipeline is measured against scripted meetings and logged, kept or thrown out.</p>
       </div>
       <div class="table-scroll reveal">
         <table>
@@ -363,7 +485,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   </section>
 
   <div class="cta wrap reveal">
-    <h2>Take better notes.<br>Keep them to yourself.</h2>
+    <h2>Better notes.<br>Nobody else listening.</h2>
     <div class="ctas">
       <a class="btn btn-primary" href="https://github.com/JorgeAV-ai/Juanola-Note-Taker/releases">Download the preview</a>
       <a class="btn btn-ghost" href="https://github.com/JorgeAV-ai/Juanola-Note-Taker">Star on GitHub</a>
