@@ -17,7 +17,7 @@ Estados: ✅ adoptado · ❌ descartado (medido) · ⚗️ funciona pero queda c
 
 ## Ablation del pipeline (10 nov)
 
-En marcha: el pipeline completo frente al mismo pipeline sin cada pieza adoptada, en las seis reuniones en castellano e inglés (plantilla y Auto, 3 semillas). Resultado pendiente.
+Parado a medias: el pipeline completo frente al mismo pipeline sin cada pieza adoptada, en las seis reuniones en castellano e inglés (plantilla y Auto, 3 semillas). Hay 4 de 6 reuniones, todas en castellano. Provisional: el mínimo de tareas de Auto y las pasadas de detalle pesan mucho; el tope de citas no se nota; la gramática solo añade tiempo. Tablas, lectura y cómo reanudar en [ablation/README.md](ablation/README.md).
 
 # Resumen por área
 

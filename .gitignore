@@ -25,3 +25,4 @@ third_party/llama-cpp-sys-2/llama.cpp/
 # configuración local de herramientas y cachés de compilación
 .claude/
 *.tsbuildinfo
+runs/
