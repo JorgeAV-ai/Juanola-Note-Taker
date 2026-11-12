@@ -346,6 +346,48 @@ pub async fn list_templates(state: State<'_, AppState>, language: Option<String>
     Ok(all)
 }
 
+/// Crea o sustituye una plantilla del usuario y la devuelve como queda
+/// guardada. Las integradas no se pueden editar (se duplican).
+#[tauri::command]
+pub async fn save_template(state: State<'_, AppState>, template: Template) -> Res<Template> {
+    if is_builtin(template.id) {
+        return Err("las plantillas integradas no se pueden editar; duplícala".into());
+    }
+    let mut t = template;
+    t.is_builtin = false;
+    t.name = t.name.trim().to_owned();
+    if t.name.is_empty() {
+        return Err("la plantilla necesita un nombre".into());
+    }
+    for s in &mut t.structure {
+        s.heading = s.heading.trim().to_owned();
+        s.hint = s.hint.trim().to_owned();
+    }
+    repo::templates::upsert(&state.db, &t).await.map_err(e)?;
+    Ok(t)
+}
+
+/// Borra una plantilla del usuario; las notas que la usaban vuelven a Auto.
+#[tauri::command]
+pub async fn delete_template(state: State<'_, AppState>, id: Id) -> Res<()> {
+    if is_builtin(id) {
+        return Err("las plantillas integradas no se pueden borrar".into());
+    }
+    repo::templates::delete(&state.db, id).await.map_err(e)
+}
+
+/// Fija la plantilla de la nota sin generar el resumen (menú `/` del editor);
+/// `None` es Auto.
+#[tauri::command]
+pub async fn set_note_template(state: State<'_, AppState>, id: Id, template_id: Option<Id>) -> Res<()> {
+    if let Some(tid) = template_id {
+        if !is_builtin(tid) && repo::templates::get(&state.db, tid).await.map_err(e)?.is_none() {
+            return Err("la plantilla no existe".into());
+        }
+    }
+    repo::notes::set_template(&state.db, id, template_id).await.map_err(e)
+}
+
 /// La plantilla `id` lista para el enhance, o `None` si ya no existe (borrada).
 async fn load_template(state: &AppState, id: Id, summary_language: &str) -> Res<Option<Template>> {
     if is_builtin(id) {

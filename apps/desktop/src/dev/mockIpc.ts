@@ -64,6 +64,8 @@ const TEMPLATES = [
   tpl(1, "1:1", "1:1", [["Cómo está", "How they're doing"], ["Temas tratados", "Topics discussed"], ["Feedback", "Feedback"], ["Próximos pasos", "Next steps"]]),
   tpl(3, "Reunión semanal de equipo", "Weekly team meeting", [["Métricas y estado", "Metrics and status"], ["Temas tratados", "Topics discussed"], ["Decisiones", "Decisions"], ["Próximos pasos", "Next steps"]]),
 ];
+const userTemplates: Template[] = [];
+const allTemplates = (lang: string) => [...TEMPLATES.map((f) => f(lang)), ...userTemplates];
 const templateFallback = new URLSearchParams(location.search).get("template") === "fallback";
 
 // Modelos: con `?models=missing` en la URL faltan dos, para probar el diálogo.
@@ -270,12 +272,29 @@ export function installMockIpc() {
           emit("recording://state", { note_id: recordingNote, state: "stopped" });
           return 3; // frases guardadas: así el mock sigue con el enhance
         case "list_templates":
-          return TEMPLATES.map((f) => f((a.language as string) ?? "es"));
+          return allTemplates((a.language as string) ?? "es");
+        case "save_template": {
+          const tp = { ...(a.template as Template), is_builtin: false };
+          if (TEMPLATES.some((f) => f("es").id === tp.id)) throw "las plantillas integradas no se pueden editar; duplícala";
+          const i = userTemplates.findIndex((x) => x.id === tp.id);
+          if (i >= 0) userTemplates[i] = tp;
+          else userTemplates.push(tp);
+          return tp;
+        }
+        case "delete_template": {
+          const i = userTemplates.findIndex((x) => x.id === a.id);
+          if (i >= 0) userTemplates.splice(i, 1);
+          for (const n of notes) if (n.template_id === a.id) n.template_id = null;
+          return null;
+        }
+        case "set_note_template":
+          note(a.id)!.template_id = (a.templateId as string | null) ?? null;
+          return null;
         case "enhance_note": {
           if (models.some((m) => m.slot === "llm_main" && !m.installed)) throw "Faltan modelos por descargar.";
           const n = note(a.id)!;
           if (a.template !== undefined) n.template_id = a.template === "auto" ? null : (a.template as string);
-          const chosen = TEMPLATES.map((f) => f("es")).find((x) => x.id === n.template_id);
+          const chosen = allTemplates("es").find((x) => x.id === n.template_id);
           // Con plantilla: un apartado por título, con las viñetas del resumen
           // de ejemplo repartidas (o «No se habló de esto»).
           const all = enhanced.sections.flatMap((s) => s.bullets);

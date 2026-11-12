@@ -39,7 +39,7 @@ type Tab = "mine" | "enhanced";
 // fecha y asistentes, carpeta, más) y abajo la píldora de grabación junto a
 // «Ask anything». Al parar la grabación se generan las notas mejoradas; si el
 // usuario ya las había editado, se pregunta antes de sustituirlas.
-export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?: number; onTrashed: () => void }) {
+export function NoteView({ id, autostart, onTrashed, onManageTemplates }: { id: string; autostart?: number; onTrashed: () => void; onManageTemplates: () => void }) {
   const t = useT();
   const [note, setNote] = useState<Note | null>(null);
   const [tab, setTab] = useState<Tab>("mine");
@@ -187,6 +187,10 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
                           {tpl.id === currentTemplate?.id && <Check />}
                         </DropdownMenuItem>
                       ))}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="manage-templates" onSelect={onManageTemplates}>
+                        <span className="flex-1 text-ink-2">{t("note.manageTemplates")}</span>
+                      </DropdownMenuItem>
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
                 </DropdownMenuContent>
@@ -263,7 +267,18 @@ export function NoteView({ id, autostart, onTrashed }: { id: string; autostart?:
 
       <div className="flex-1">
         {tab === "mine" || !note.enhanced_doc ? (
-          <NoteEditor key={`${id}-${t("note.writeNotes")}`} initial={note.raw_doc} onChange={(doc) => ipc.setNoteRawDoc(id, doc).catch((e) => setError(String(e)))} />
+          <NoteEditor
+            key={`${id}-${t("note.writeNotes")}`}
+            initial={note.raw_doc}
+            onChange={(doc) => ipc.setNoteRawDoc(id, doc).catch((e) => setError(String(e)))}
+            templates={templates}
+            onPickTemplate={(tpl) =>
+              ipc
+                .setNoteTemplate(id, tpl.id)
+                .then(() => setNote((n) => (n ? { ...n, template_id: tpl.id } : n)))
+                .catch((e) => setError(String(e)))
+            }
+          />
         ) : (
           <EnhancedView
             notes={note.enhanced_doc}

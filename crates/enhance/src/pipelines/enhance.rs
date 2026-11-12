@@ -719,6 +719,16 @@ fn best_heading(heading: &str, headings: &[&str]) -> Option<usize> {
         .map(|(i, _)| i)
 }
 
+/// Como [`best_heading`], pero cada apartado puede tener varios títulos (uno
+/// integrado, en sus seis idiomas); cuenta el que mejor encaja.
+fn best_heading_alts(heading: &str, alts: &[Vec<&str>]) -> Option<usize> {
+    alts.iter()
+        .enumerate()
+        .filter_map(|(i, hs)| hs.iter().filter_map(|h| heading_match(heading, h)).max().map(|q| (i, q)))
+        .max_by_key(|(i, q)| (*q, std::cmp::Reverse(*i)))
+        .map(|(i, _)| i)
+}
+
 /// Palabras para colocar viñetas y notas: sin tildes y con las cifras
 /// normalizadas («112k» y «112.000» → 112000).
 fn place_words(s: &str) -> std::collections::HashSet<String> {
@@ -1135,9 +1145,16 @@ fn resolve(
         }
         let bullet = Bullet { is_action_item: false, done: false, ..bullet };
         let candidates: Vec<usize> = (0..sections.len()).filter(|&i| Some(i) != tasks_idx).collect();
+        // Un apartado integrado vale con su título en cualquier idioma.
         let by_heading = user_heading.filter(|h| *h != b.text).and_then(|h| {
-            let heads: Vec<&str> = candidates.iter().map(|&i| sections[i].heading.as_str()).collect();
-            best_heading(h, &heads).map(|k| candidates[k])
+            let heads: Vec<Vec<&str>> = candidates
+                .iter()
+                .map(|&i| {
+                    let own = sections[i].heading.as_str();
+                    crate::templates::heading_variants(own).map_or_else(|| vec![own], |v| v.to_vec())
+                })
+                .collect();
+            best_heading_alts(h, &heads).map(|k| candidates[k])
         });
         let bw = place_words(&b.text);
         let by_words = || {
@@ -2161,6 +2178,28 @@ mod tests {
             Some(Citation::UserNote { block_id, .. }) => assert_eq!(block_id, "b2.0"),
             other => panic!("{other:?}"),
         }
+    }
+
+    #[test]
+    fn user_headings_in_another_language() {
+        // El menú «/» escribió los títulos en inglés (idioma de la interfaz) y
+        // la reunión es en castellano: cada nota va al apartado bajo el que se
+        // escribió, aunque sus palabras apunten a otro.
+        let segs = three_segs();
+        let blocks = [
+            ub("b0", "Metrics and status", BlockKind::Heading(3)),
+            ub("b0.0", "nada de rebajas", BlockKind::ListItem),
+            ub("b1", "Decisions", BlockKind::Heading(3)),
+            ub("b1.0", "MRR sube", BlockKind::ListItem),
+        ];
+        let f = fit_to_template(parse_markdown("## Métricas y estado\n- El MRR sube un 4 % [1]\n"), &weekly());
+        let (notes, _) =
+            resolve(f.sections, &segs, &blocks, Id::nil(), Layout::Template { sections: &weekly(), language: "español" }).unwrap();
+        let first = |h: &str| notes.sections.iter().find(|s| s.heading == h).map(|s| s.bullets[0].text.as_str());
+        assert_eq!(first("Métricas y estado"), Some("nada de rebajas"));
+        assert_eq!(first("Decisiones"), Some("MRR sube"), "por título, no por palabras («MRR» está en Métricas)");
+        assert_eq!(crate::templates::heading_variants("Decisions").map(|v| v[0]), Some("Decisiones"));
+        assert_eq!(crate::templates::heading_variants("Riesgos"), None);
     }
 
     #[test]

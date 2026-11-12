@@ -15,6 +15,12 @@
 /* Editor de notas crudas */
 .editor .ProseMirror { min-height: 50vh; outline: none; line-height: 1.7; font-size: 15px; }
 .editor .ProseMirror p { margin: 0 0 4px; }
+/* Títulos de las notas (# en Markdown o los apartados que pone el menú «/»), como los del resumen. */
+.editor .ProseMirror h1, .editor .ProseMirror h2, .editor .ProseMirror h3 { font-weight: 600; margin: 22px 0 4px; line-height: 1.4; }
+.editor .ProseMirror h1 { font-size: 21px; }
+.editor .ProseMirror h2 { font-size: 18.5px; }
+.editor .ProseMirror h3 { font-size: 16.5px; }
+.editor .ProseMirror > :first-child { margin-top: 0; }
 .editor .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--muted); float: left; pointer-events: none; height: 0; }
 
 /* Notas mejoradas: «#» en el margen, viñetas, texto de la IA en gris */

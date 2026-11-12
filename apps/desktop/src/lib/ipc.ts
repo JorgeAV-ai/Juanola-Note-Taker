@@ -196,6 +196,10 @@ export const ipc = {
   enhanceNote: (id: string, template?: TemplateChoice) => invoke<EnhancedNotes>("enhance_note", { id, template }),
   /** `language`: «es»/«en» (interfaz) o el nombre del idioma del resumen («inglés»). */
   listTemplates: (language?: string) => invoke<Template[]>("list_templates", { language }),
+  saveTemplate: (template: Template) => invoke<Template>("save_template", { template }),
+  deleteTemplate: (id: string) => invoke<void>("delete_template", { id }),
+  /** Fija la plantilla sin generar el resumen; `null` es Auto. */
+  setNoteTemplate: (id: string, templateId: string | null) => invoke<void>("set_note_template", { id, templateId }),
   openPrivacySettings: (kind: SettingsAction) => invoke<void>("open_privacy_settings", { kind }),
   comingUp: () => invoke<CalendarEvent[]>("coming_up"),
   calendarAccess: () => invoke<CalendarAccess>("calendar_access"),

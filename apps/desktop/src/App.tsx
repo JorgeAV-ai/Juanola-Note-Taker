@@ -107,7 +107,13 @@ export default function App() {
       view = <Home onOpenNote={openNote} onNavigate={setRoute} space />;
       break;
     case "note":
-      view = <NoteView key={route.id} id={route.id} autostart={route.autostart} onTrashed={() => setRoute({ kind: "home" })} />;
+      view = <NoteView
+          key={route.id}
+          id={route.id}
+          autostart={route.autostart}
+          onTrashed={() => setRoute({ kind: "home" })}
+          onManageTemplates={() => setRoute({ kind: "settings", section: "templates" })}
+        />;
       break;
     case "folder":
       view = <FolderView key={route.id} id={route.id} onOpenNote={openNote} onNewNote={() => newNote(route.id)} onDeleted={() => setRoute({ kind: "home" })} />;

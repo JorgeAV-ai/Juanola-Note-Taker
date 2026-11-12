@@ -83,7 +83,7 @@ Cifras de referencia (3 semillas): reuniones de 1 hora, cobertura de hechos 61-9
 
 Por orden de valor, según lo hablado con el usuario:
 
-1. **Plantillas en la app** (fase 2 de [plantillas.md](plantillas.md) §7): hecha en `feat/plantillas-app` y con `JUANOLA_AUTOTEST=1` en verde (12 nov). Lo siguiente es la fase 3: el editor de plantillas del usuario.
+1. **Plantillas en la app** (fase 2 de [plantillas.md](plantillas.md) §7): fases 2 y 3 hechas en `feat/plantillas-app` (12 nov): submenú, aviso de caída a Auto, Ajustes › Plantillas para las del usuario y menú `/` en las notas; `JUANOLA_AUTOTEST=1` y `=ui` en verde. Medido el 12 nov (experimentos.md, «Plantillas del usuario y menú `/`»): con plantillas del usuario la cobertura aguanta pero «Otros temas» sube a 5-31 % y, sin descripciones, las notas se colocan peor; los títulos de `/` en otro idioma que la reunión mandaban las notas a otro apartado (5-11 de 15); arreglado reconociendo los títulos integrados en los seis idiomas (15 de 15).
 2. **Ver el resumen antes:** mostrarlo a los ~20 s y añadir los detalles después; más adelante, procesar durante la reunión. Ojo: con el enhance en la GPU, el STT en vivo se queda más de un minuto atrás (medido); tendría que ceder la GPU o esperar a los silencios.
 3. **Validar con grabaciones reales** en castellano e inglés: todo lo medido es con guiones y voces de `say` ([eval-dataset.md](eval-dataset.md), capa D).
 4. **Audio:** cancelación de eco sin auriculares (candidato: LocalVQE, ver experimentos) y fallback ScreenCaptureKit para macOS 13-14.5.
