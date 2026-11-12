@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AudioLines, BellRing, BookA, Boxes, CalendarDays, ChevronLeft, FolderOpen, Globe, HardDrive, House, Info, Languages, Mic, SlidersHorizontal, Speaker } from "lucide-react";
+import { AudioLines, BellRing, BookA, Boxes, CalendarDays, ChevronLeft, FolderOpen, Globe, HardDrive, House, Info, Languages, LayoutTemplate, Mic, SlidersHorizontal, Speaker } from "lucide-react";
 import type { Route } from "@/App";
 import { ipc, type AudioDevice, type CalendarAccess, type DetectionSettings, type Permission } from "@/lib/ipc";
 import { LANGUAGES, languageLabel, saveLanguage, savedLanguage } from "@/lib/language";
@@ -10,11 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ModelActions, ModelList } from "@/components/ModelsDialog";
 import { useModels } from "@/state/models";
+import { TemplatesSettings } from "@/components/TemplatesSettings";
 
-export type SettingsSection = "preferences" | "audio" | "models" | "calendar" | "data";
+export type SettingsSection = "preferences" | "templates" | "audio" | "models" | "calendar" | "data";
 
 const SECTIONS: [SettingsSection, Key, ReactNode][] = [
   ["preferences", "settings.preferences", <SlidersHorizontal key="p" />],
+  ["templates", "settings.templates", <LayoutTemplate key="t" />],
   ["audio", "settings.audio", <AudioLines key="a" />],
   ["models", "settings.models", <Boxes key="m" />],
   ["calendar", "settings.calendar", <CalendarDays key="c" />],
@@ -68,6 +70,7 @@ export function SettingsView({ section, onNavigate }: { section: SettingsSection
         <div className="min-h-0 flex-1 overflow-auto">
           <div className="mx-auto max-w-[760px] px-10 pb-16">
             {section === "preferences" && <Preferences />}
+            {section === "templates" && <TemplatesSettings />}
             {section === "audio" && <Audio />}
             {section === "models" && <Models />}
             {section === "calendar" && <Calendar />}

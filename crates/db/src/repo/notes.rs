@@ -127,6 +127,12 @@ pub async fn set_enhanced_doc(db: &Db, id: Id, doc: Option<&serde_json::Value>) 
     .await
 }
 
+/// Plantilla de la nota; `None` es Auto. No cambia `updated_at`: elegir
+/// plantilla no edita la nota, la regenera.
+pub async fn set_template(db: &Db, id: Id, template_id: Option<Id>) -> Result<(), DbError> {
+    touch(db, "UPDATE notes SET template_id = ? WHERE id = ?", id, template_id.map(|t| t.to_string())).await
+}
+
 pub async fn set_status(db: &Db, id: Id, status: NoteStatus) -> Result<(), DbError> {
     touch(db, "UPDATE notes SET status = ? WHERE id = ?", id, Some(status_str(status).to_owned())).await
 }

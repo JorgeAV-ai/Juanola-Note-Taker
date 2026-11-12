@@ -3,7 +3,7 @@
 // llamadas quedan en `window.__ipcCalls` para inspeccionarlas.
 import { mockIPC } from "@tauri-apps/api/mocks";
 import { emit } from "@tauri-apps/api/event";
-import type { CalendarEvent, DetectionSettings, EnhancedNotes, Folder, MeetingNotice, ModelStatus, Note, Segment } from "../lib/ipc";
+import type { CalendarEvent, DetectionSettings, EnhancedNotes, Folder, MeetingNotice, ModelStatus, Note, Segment, Template } from "../lib/ipc";
 
 const NOTE_ID = "00000000-0000-4000-8000-000000000001";
 const now = new Date().toISOString();
@@ -48,6 +48,25 @@ const notes: Note[] = [
     trashed_at: null,
   },
 ];
+
+// Plantillas integradas (las dos primeras bastan para probar el menú). Con
+// `?template=fallback`, el enhance con plantilla avisa de que se usó Auto.
+const tpl = (n: number, es: string, en: string, sections: [string, string][]): ((lang: string) => Template) => (lang) => ({
+  id: `6a75616e-6f6c-4100-8000-00000000000${n}`,
+  name: lang === "en" || lang === "inglés" ? en : es,
+  purpose: "",
+  style: "",
+  structure: sections.map(([hes, hen], i) => ({ heading: lang === "en" || lang === "inglés" ? hen : hes, hint: "", kind: i === sections.length - 1 ? "tasks" : "topics" })),
+  is_builtin: true,
+  shared_with_workspace: false,
+});
+const TEMPLATES = [
+  tpl(1, "1:1", "1:1", [["Cómo está", "How they're doing"], ["Temas tratados", "Topics discussed"], ["Feedback", "Feedback"], ["Próximos pasos", "Next steps"]]),
+  tpl(3, "Reunión semanal de equipo", "Weekly team meeting", [["Métricas y estado", "Metrics and status"], ["Temas tratados", "Topics discussed"], ["Decisiones", "Decisions"], ["Próximos pasos", "Next steps"]]),
+];
+const userTemplates: Template[] = [];
+const allTemplates = (lang: string) => [...TEMPLATES.map((f) => f(lang)), ...userTemplates];
+const templateFallback = new URLSearchParams(location.search).get("template") === "fallback";
 
 // Modelos: con `?models=missing` en la URL faltan dos, para probar el diálogo.
 const modelsMissing = new URLSearchParams(location.search).get("models") === "missing";
@@ -252,9 +271,51 @@ export function installMockIpc() {
         case "stop_recording":
           emit("recording://state", { note_id: recordingNote, state: "stopped" });
           return 3; // frases guardadas: así el mock sigue con el enhance
-        case "enhance_note":
+        case "list_templates":
+          return allTemplates((a.language as string) ?? "es");
+        case "save_template": {
+          const tp = { ...(a.template as Template), is_builtin: false };
+          if (TEMPLATES.some((f) => f("es").id === tp.id)) throw "las plantillas integradas no se pueden editar; duplícala";
+          const i = userTemplates.findIndex((x) => x.id === tp.id);
+          if (i >= 0) userTemplates[i] = tp;
+          else userTemplates.push(tp);
+          return tp;
+        }
+        case "delete_template": {
+          const i = userTemplates.findIndex((x) => x.id === a.id);
+          if (i >= 0) userTemplates.splice(i, 1);
+          for (const n of notes) if (n.template_id === a.id) n.template_id = null;
+          return null;
+        }
+        case "set_note_template":
+          note(a.id)!.template_id = (a.templateId as string | null) ?? null;
+          return null;
+        case "enhance_note": {
           if (models.some((m) => m.slot === "llm_main" && !m.installed)) throw "Faltan modelos por descargar.";
-          return new Promise((r) => setTimeout(() => r(note(a.id)?.enhanced_doc ?? enhanced), 2500));
+          const n = note(a.id)!;
+          if (a.template !== undefined) n.template_id = a.template === "auto" ? null : (a.template as string);
+          const chosen = allTemplates("es").find((x) => x.id === n.template_id);
+          // Con plantilla: un apartado por título, con las viñetas del resumen
+          // de ejemplo repartidas (o «No se habló de esto»).
+          const all = enhanced.sections.flatMap((s) => s.bullets);
+          const result: EnhancedNotes =
+            chosen && !templateFallback
+              ? {
+                  sections: chosen.structure.map((s, i) => {
+                    const mine = all.filter((b) => (s.kind === "tasks" ? b.is_action_item : !b.is_action_item && i === 0));
+                    return { heading: s.heading, bullets: mine.length ? mine : [{ text: "No se habló de esto", is_user_text: false, is_action_item: false, source: null }] };
+                  }),
+                }
+              : enhanced;
+          emit("note://status", { note_id: a.id, status: "enhancing" });
+          return new Promise((r) =>
+            setTimeout(() => {
+              n.enhanced_doc = result;
+              emit("note://status", { note_id: a.id, status: "ready", ...(chosen && templateFallback && { notice: "template_fallback" }) });
+              r(result);
+            }, 2500),
+          );
+        }
         case "frontend_error":
           console.error(`[frontend_error] ${a.message}`);
           return null;

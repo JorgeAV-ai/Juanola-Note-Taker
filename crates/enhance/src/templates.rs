@@ -188,6 +188,13 @@ pub fn builtin_template(id: Id, language: &str) -> Option<Template> {
     BUILTINS.iter().find(|b| b.id == id).map(|b| build(b, lang))
 }
 
+/// El título de un apartado integrado en los seis idiomas, si `heading` es uno
+/// de ellos en cualquier idioma. El menú `/` escribe los títulos en el idioma
+/// de la interfaz y el resumen usa el de la reunión: así se reconocen igual.
+pub fn heading_variants(heading: &str) -> Option<&'static [&'static str; 6]> {
+    BUILTINS.iter().flat_map(|b| b.sections.iter()).map(|(h, _, _)| h).find(|h| h.contains(&heading))
+}
+
 pub fn is_builtin(id: Id) -> bool {
     BUILTINS.iter().any(|b| b.id == id)
 }

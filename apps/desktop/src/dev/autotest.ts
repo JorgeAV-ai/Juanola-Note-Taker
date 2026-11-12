@@ -3,10 +3,11 @@
 // el log de la app con el prefijo `autotest`:
 //   nota nueva → Start → audio del sistema con `say` → Stop → Enhanced →
 //   lupa de cita → edición a mano (se guarda como texto del usuario) → tarea →
-//   cambio de pestaña → Pause/Resume → segunda grabación en la misma nota.
+//   cambio de pestaña → Pause/Resume → segunda grabación en la misma nota →
+//   regenerar con la plantilla «Reunión semanal de equipo».
 import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
-import { events, ipc, type EnhancedNotes, type RecordingState } from "../lib/ipc";
+import { events, ipc, type EnhancedNotes, type NoteStatusEvent, type RecordingState } from "../lib/ipc";
 import { t } from "../lib/i18n";
 
 const log = (line: string) => invoke("autotest_log", { line }).catch(() => {});
@@ -246,6 +247,67 @@ async function flow() {
   check(newer.some((s) => s.channel === "system"), "segunda sesión transcrita", newer.map((s) => s.text).join(" ").slice(0, 160));
   const err = document.querySelector(".note-error, .pill-msg.error");
   check(!err, "sin errores en pantalla", err?.textContent ?? "");
+
+  await templateStep(id);
+}
+
+// Id fijo de «Reunión semanal de equipo» (crates/enhance/src/templates.rs).
+const WEEKLY_TEAM = "6a75616e-6f6c-4100-8000-000000000003";
+// Apartados que añade el pipeline fuera de la plantilla.
+const EXTRA_HEADINGS = new Set(["Otros temas", "Other topics", "Tus notas", "Your notes"]);
+
+// Regenera la nota con la plantilla desde el submenú «Plantilla» y comprueba
+// que los títulos siguen la plantilla, en su orden, y que no hubo caída a Auto.
+async function templateStep(id: string) {
+  let ready: NoteStatusEvent | null = null;
+  const un = await events.noteStatus((e) => {
+    if (e.note_id === id && e.status !== "enhancing") ready = e;
+  });
+  try {
+    press(document.querySelector(".enhance-menu"));
+    const sub = await waitFor("submenú Plantilla", () => document.querySelector<HTMLElement>(".template-menu"), 3000);
+    sub?.click();
+    const item = await waitFor("plantilla en el submenú", () => document.querySelector<HTMLElement>(`[data-template-id="${WEEKLY_TEAM}"]`), 3000);
+    if (!check(!!item, "submenú con «Reunión semanal de equipo»")) return;
+    item!.click();
+    await sleep(400);
+    button(".note-confirm button", t("note.regenerate"))?.click();
+    await waitFor("enhance con plantilla empezado", () => document.querySelector(".enhancing") || document.querySelector(".note-error"), 10_000);
+    const t0 = performance.now();
+    await waitFor("enhance con plantilla terminado", () => (!document.querySelector(".enhancing") && ready) || document.querySelector(".note-error"), 240_000);
+    const err = document.querySelector(".note-error");
+    // `ready` lo asigna el listener: TypeScript no lo ve y lo deja en `null`.
+    const got = ready as NoteStatusEvent | null;
+    if (!check(!err && got?.status === "ready", "enhance con plantilla sin error", err?.textContent ?? `${((performance.now() - t0) / 1000).toFixed(1)} s`)) return;
+    check(got?.notice !== "template_fallback", "plantilla aplicada sin caer a Auto");
+    check(!!document.querySelector(".note-notice") === (got?.notice === "template_fallback"), "aviso de caída a Auto solo si la hubo");
+
+    const saved = await ipc.getNote(id);
+    check(saved?.template_id === WEEKLY_TEAM, "plantilla guardada en la nota", String(saved?.template_id));
+    const headings = (saved?.enhanced_doc?.sections ?? []).map((s) => s.heading);
+    // Los títulos de la plantilla van en el idioma del resumen: se prueba con los dos.
+    const options = await Promise.all(["español", "inglés"].map((l) => ipc.listTemplates(l)));
+    const expected = options.map((list) => list.find((x) => x.id === WEEKLY_TEAM)?.structure.map((s) => s.heading) ?? []);
+    const own = headings.filter((h) => !EXTRA_HEADINGS.has(h));
+    const ordered = expected.some((exp) => {
+      let i = 0;
+      return own.every((h) => {
+        while (i < exp.length && exp[i] !== h) i++;
+        return i++ < exp.length;
+      });
+    });
+    check(own.length > 0 && ordered, "títulos: subconjunto ordenado de la plantilla", headings.join(" · "));
+    check(expected.some((exp) => exp.every((h) => own.includes(h))), "todos los apartados de la plantilla presentes", headings.join(" · "));
+    // El menú marca la plantilla actual.
+    press(document.querySelector(".enhance-menu"));
+    (await waitFor("submenú Plantilla", () => document.querySelector<HTMLElement>(".template-menu"), 3000))?.click();
+    const marked = await waitFor("plantilla marcada", () => document.querySelector(`[data-template-id="${WEEKLY_TEAM}"] svg`), 3000);
+    check(!!marked, "el submenú marca la plantilla de la nota");
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await sleep(300);
+  } finally {
+    un();
+  }
 }
 
 // Solo enhance + editor sobre la nota transcrita más reciente (sin audio: no
@@ -464,6 +526,89 @@ async function sidebarFlow() {
   button(".note-confirm button", t("folder.delete"))?.click();
   await sleep(500);
   check(!document.querySelector(`.sidebar-item.folder[data-folder-id="${folderId}"]`), "carpeta borrada");
+
+  await templatesFlow();
+}
+
+// Escribe en un <input> controlado por React (el setter nativo + evento input).
+function typeInto(el: HTMLInputElement | null | undefined, value: string) {
+  if (!el) return;
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, value);
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+// Plantillas del usuario contra la base de datos real (sin modelo): duplicar
+// una integrada, validación, guardar, «/» en una nota nueva, borrar y limpieza.
+async function templatesFlow() {
+  const name = `Autotest plantilla ${Date.now() % 100000}`;
+  document.querySelector<HTMLButtonElement>(".nav-settings")?.click();
+  (await waitFor("Ajustes › Plantillas", () => button(".settings-nav", t("settings.templates")), 3000))?.click();
+  const dup = await waitFor("duplicar la semanal", () => document.querySelector<HTMLButtonElement>(`.template-row[data-template-id="${WEEKLY_TEAM}"] .duplicate-template`), 3000);
+  if (!check(!!dup, "plantillas integradas listadas con «Duplicar»")) return;
+  dup!.click();
+  const nameInput = await waitFor("editor de plantilla", () => document.querySelector<HTMLInputElement>(".template-editor .tpl-name"), 2000);
+  if (!nameInput) return;
+  const headings = () => Array.from(document.querySelectorAll<HTMLInputElement>(".tpl-heading"));
+  const original = headings().map((h) => h.value);
+  check(original.length === 4, "la copia trae los apartados de la integrada", original.join(" · "));
+  typeInto(nameInput, name);
+  // Título repetido (cambia mayúsculas y puntuación): no se guarda.
+  typeInto(headings()[1], `${original[2].toUpperCase()}!`);
+  await sleep(100);
+  document.querySelector<HTMLButtonElement>(".save-template")?.click();
+  await sleep(300);
+  const err = document.querySelector(".template-editor .note-error")?.textContent ?? "";
+  check(!!err && !!document.querySelector(".template-editor"), "un título repetido no se guarda", err);
+  typeInto(headings()[1], "Riesgos");
+  await sleep(100);
+  document.querySelector<HTMLButtonElement>(".save-template")?.click();
+  const row = await waitFor("plantilla guardada en la lista", () => Array.from(document.querySelectorAll<HTMLElement>(".template-row")).find((r) => r.textContent?.includes(name)), 3000);
+  const tplId = row?.dataset.templateId;
+  if (!check(!!tplId, "plantilla nueva en «Tus plantillas»")) return;
+  const saved = (await ipc.listTemplates("es")).find((x) => x.id === tplId);
+  const expected = [original[0], "Riesgos", original[2], original[3]];
+  check(!!saved && !saved.is_builtin && saved.structure.map((s) => s.heading).join("|") === expected.join("|"), "guardada en la base de datos con sus apartados", saved?.structure.map((s) => s.heading).join(" · "));
+
+  // «/» en una nota nueva pone los apartados y fija la plantilla.
+  document.querySelector<HTMLButtonElement>(".back-home")?.click();
+  (await waitFor("botón New note", () => document.querySelector<HTMLButtonElement>(".new-note"), 3000))?.click();
+  const noteEl = await waitFor("vista de nota", () => document.querySelector<HTMLElement>(".note[data-note-id]"), 5000);
+  if (!noteEl) return;
+  const noteId = noteEl.dataset.noteId!;
+  try {
+    await ipc.setNoteTitle(noteId, "Autotest plantillas");
+    const pm = await waitFor("editor de notas", () => document.querySelector<HTMLElement>(".editor .ProseMirror"), 3000);
+    type Ed = { chain: () => { focus: () => { insertContent: (c: string) => { run: () => boolean } } } };
+    const ed = (pm as unknown as { editor?: Ed } | null)?.editor;
+    ed?.chain().focus().insertContent(`/${name.split(" ")[1]}`).run();
+    const opt = await waitFor("menú «/» con la plantilla", () => document.querySelector<HTMLElement>(`.slash-menu [data-template-id="${tplId}"]`), 3000);
+    if (!check(!!opt, "«/» muestra la plantilla del usuario")) return;
+    opt!.click();
+    await sleep(300);
+    const inEditor = Array.from(document.querySelectorAll(".editor h3")).map((h) => h.textContent);
+    check(inEditor.join("|") === expected.join("|"), "«/» inserta los apartados como títulos", inEditor.join(" · "));
+    check(!document.querySelector(".slash-menu"), "el menú «/» se cierra al elegir");
+    const fixed = (await ipc.getNote(noteId))?.template_id;
+    check(fixed === tplId, "«/» fija la plantilla en la nota", String(fixed));
+
+    // Borrar la plantilla desde Ajustes: la nota vuelve a Auto.
+    document.querySelector<HTMLButtonElement>(".back-home")?.click();
+    await waitFor("Home", () => document.querySelector(".nav-settings"), 3000);
+    document.querySelector<HTMLButtonElement>(".nav-settings")?.click();
+    (await waitFor("Ajustes › Plantillas", () => button(".settings-nav", t("settings.templates")), 3000))?.click();
+    (await waitFor("botón borrar plantilla", () => document.querySelector<HTMLButtonElement>(`.template-row[data-template-id="${tplId}"] .delete-template`), 3000))?.click();
+    const confirm = await waitFor("confirmación de borrado", () => button(".template-confirm button", t("tpl.delete")), 2000);
+    check(!!confirm, "borrar una plantilla pide confirmación");
+    confirm?.click();
+    await sleep(500);
+    check(!document.querySelector(`.template-row[data-template-id="${tplId}"]`), "plantilla borrada de la lista");
+    check((await ipc.getNote(noteId))?.template_id === null, "la nota que la usaba vuelve a Auto");
+  } finally {
+    await ipc.trashNote(noteId).catch(() => {});
+    await ipc.deleteNoteForever(noteId).catch(() => {});
+    if (tplId) await ipc.deleteTemplate(tplId).catch(() => {});
+    document.querySelector<HTMLButtonElement>(".back-home")?.click();
+  }
 }
 
 // JUANOLA_AUTOTEST=detect: avisos de reunión y calendario. Muestra un aviso de

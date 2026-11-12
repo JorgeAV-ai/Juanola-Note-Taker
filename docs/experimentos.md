@@ -86,6 +86,8 @@ En marcha: el pipeline completo frente al mismo pipeline sin cada pieza adoptada
 | Ventas: «Situación y problemas» / «Dudas sobre la oferta» (y sus cruces) | 93-100 %, pero con más copiadas o alguna tarea perdida | ❌ | 9 nov | «Plantillas: iteraciones», iteración 6 |
 | Ventas: descripción con «un competidor más barato» | 100 %, pero calcada del guion (sobreajuste) | ❌ | 9 nov | «Plantillas: iteraciones», iteración 6 |
 | Semanal: «Cifras y resultados · Qué se decidió» o «Cifras de la semana · Acuerdos» | 65-92 % y 80-86 % frente a 78-83 %: dentro del ruido | ❌ | 9 nov | «Plantillas: iteraciones», iteración 6 |
+| Plantillas escritas por el usuario (mismo reparto, otras palabras; con y sin descripciones) | Cobertura y tareas como la integrada; «Otros temas» del 0 % al 5-31 %; sin descripciones, notas del usuario en su apartado 8 de 18 en la semanal | medido | 12 nov | «Plantillas del usuario y menú `/` (12 nov)» |
+| Títulos del menú `/` en otro idioma: reconocer el título integrado en los seis idiomas (`heading_variants`) | La nota va al apartado que eligió el usuario: de 11 y 5 de 15 a 15 y 15 de 15; nada más cambia | ✅ | 12 nov | «Plantillas del usuario y menú `/` (12 nov)» |
 
 **Lecciones que se repiten:**
 - El título pesa más que la descripción.
@@ -410,6 +412,44 @@ Siguientes pasos de la fase 1 que quedaron (9 nov), por orden:
 3. **Viñetas copiadas** en reuniones cortas (47-65 % en el stand-up; ventas bajó a 26-33 % con los títulos nuevos): con plantilla se copia más que en Auto.
 4. **Tiempo en reuniones cortas** (1,7 × Auto en el 1:1): bajar el mínimo de `template_budget` o el margen por apartado, comprobando que las tareas no vuelven a cortarse.
 5. **Desajuste:** sigue sin detectarse.
+
+## Plantillas del usuario y menú `/` (12 nov)
+
+LFM3-1.7B Q8_0, 3 semillas, pipeline por defecto. Guiones: `reunion_producto` (es, 17 min), `uno_a_uno` (es, 5 min) y `weekly_planning` (en, 64 min). Las plantillas de usuario, los hechos ampliados y las notas se generan con un script (no están en `fixtures/`); los apartados esperados de cada hecho se traducen 1 a 1 desde los de la integrada, porque las plantillas de usuario reparten igual con otras palabras.
+
+**1. Plantillas escritas por el usuario.** «Cuidada»: títulos propios y descripciones cortas, como las escribiría alguien en Ajustes (semanal: «Números · De qué hablamos · Acuerdos · Tareas», con «De qué hablamos» sin descripción; en inglés «Numbers · What we talked about · Agreements · To-dos» con descripciones en inglés; 1:1: «Ánimo y carga · Proyectos · Feedback · Acciones»). «Mínima»: los mismos títulos sin descripciones, propósito ni estilo. Notas: las de siempre de cada guion. Mediana entre paréntesis.
+
+| Reunión · plantilla | Cobertura | Tareas | Colocación | Otros temas | Notas del usuario en su apartado | s |
+|---|---|---|---|---|---|---|
+| Producto · integrada | 89 / 89 / 82 (89) | 6 / 4 / 2 de 7 | 92 / 92 / 83 (92) | 0 % | 6 / 6 / 6 de 6 | ~52 |
+| Producto · cuidada | 89 / 89 / 96 (89) | 4 / 4 / 4 | 79 / 71 / 81 (79) | 11-31 % | 6 / 4 / 6 | ~48 |
+| Producto · mínima | 93 / 86 / 96 (93) | 3 / 4 / 3 | 88 / 70 / 77 (77) | 11-23 % | **3 / 2 / 3** | ~49 |
+| 1:1 · integrada | 100 % | 4 / 5 / 4 de 5 | 71 / 86 / 71 (71) | 0 % | 3 / 5 / 3 de 5 | ~28 |
+| 1:1 · cuidada | 100 / 100 / 93 | 3 / 4 / 5 | 79 / 71 / 85 (79) | 0-10 % | 3 / 3 / 3 | ~23 |
+| 1:1 · mínima | 100 / 100 / 93 | 3 / 4 / 4 | 86 / 86 / 69 (86) | 6-12 % | 3 / 3 / 2 | ~22 |
+| Weekly · integrada | 95 / 79 / 77 (79) | 9 / 8 / 6 de 14 | 90 / 91 / 73 (90) | 0 % | 6 / 7 / 6 de 7 | ~119 |
+| Weekly · cuidada | 74 / 79 / 77 (77) | 8 / 10 / 9 | 72 / 91 / 91 (91) | 5-13 % | 6 / 7 / 6 | ~96 |
+| Weekly · mínima | 67 / 70 / 77 (70) | 6 / 10 / 9 | 76 / 83 / 79 (79) | 4-16 % | 5 / 6 / 6 | ~113 |
+
+- **Cobertura y tareas** aguantan con las plantillas del usuario, salvo la mínima en la weekly (70 % frente a 79 %, en el borde del ruido).
+- **«Otros temas» sube del 0 % a 5-31 %.** Con títulos que el modelo no conoce, una parte de las viñetas no encaja en ningún apartado. No se pierden (se ven en «Otros temas»), pero la nota queda peor organizada.
+- **La colocación baja ~10 puntos en la semanal en castellano** (92 → 77-79 %); en el 1:1 y en la weekly queda dentro del ruido.
+- **Sin descripciones, las notas del usuario se colocan peor** en la semanal (8 de 18 frente a 18 de 18): sin descripción, la nota se reparte solo por las palabras del título y de las viñetas de la IA, y acaba en «Números» o en «Otros temas». Las descripciones sí sirven: conviene que el editor anime a escribirlas.
+- «Feedback» del 1:1 se rellena en las 3 semillas con todas las plantillas, también la integrada (en la cuarta iteración, con Q4_K_M, quedaba vacío en 2 de 3).
+- 0 reintentos y 0 caídas a Auto en todas: el desajuste parcial no se detecta (igual que antes).
+
+**2. Títulos del menú `/` en otro idioma.** Notas escritas bajo los títulos `###` de la semanal integrada, como tras elegirla con «/», con los títulos en el idioma de la reunión («mismo») o en el otro («cruzado»: interfaz en inglés y reunión en castellano, o al revés). Cinco notas normales y una o dos tareas por reunión. «Respeta tu título»: notas normales que acaban en el apartado bajo el que el usuario las escribió.
+
+| Reunión · títulos | Cobertura | Colocación | Notas en un apartado aceptable | Respeta tu título | Idioma de las viñetas |
+|---|---|---|---|---|---|
+| Producto (es) · mismo | 86 / 86 / 86 | 91 / 87 / 83 (87) | 18 de 18 | **15 de 15** | es (48-63), en 0 |
+| Producto (es) · cruzado (en) | 82 / 79 / 79 | 78 / 91 / 90 (90) | 17 de 18 | **11 de 15** | es (43-61), en 0-1 |
+| Weekly (en) · mismo | 88 / 86 / 86 | 92 / 97 / 92 (92) | 21 de 21 | **15 de 15** | en (100-106), es 0-2 |
+| Weekly (en) · cruzado (es) | 86 / 84 / 91 | 86 / 89 / 87 (87) | 20 de 21 | **5 de 15** | en (99-113), es 0-2 |
+
+- **El idioma del resumen no cambia** con los títulos en otro idioma, y la cobertura y la colocación quedan dentro del ruido.
+- **Pero la nota no va donde la puso el usuario.** «Decisions» no encaja con «Decisiones» (`heading_match` compara el texto sin traducir), así que la nota se coloca por palabras en común con cada apartado. En la weekly, «Pro 19 → 24» escrita bajo «Decisiones» acaba en «Topics discussed» y el incidente escrito bajo «Métricas y estado» en «Topics discussed», en las 3 semillas. Las tareas no se ven afectadas: van siempre al apartado de tareas.
+- **Arreglo (adoptado):** al colocar una nota bajo un título del usuario, un apartado integrado se compara con su título en los seis idiomas (`templates::heading_variants` y `best_heading_alts`; test `user_headings_in_another_language`). Medido de nuevo con las mismas semillas: **respeta tu título 15 de 15 en las dos reuniones** (antes 11 y 5), notas en un apartado aceptable 18 de 18 y 21 de 21. Cobertura y colocación de la IA idénticas, porque el cambio es posterior al modelo. Las plantillas del usuario no tienen el problema: sus títulos están en un único idioma, el que escribió.
 
 ## STT: Parakeet v3 como segunda opinión (9 nov) ❌ retirado
 

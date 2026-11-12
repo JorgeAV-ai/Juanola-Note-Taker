@@ -1,6 +1,6 @@
 # Plan: plantillas en el enhance
 
-Fecha: 8 de noviembre de 2026. **Estado (10 nov):** fases 0 y 1 hechas (núcleo, las cinco plantillas integradas, tests y evaluador). La app todavía no las usa (`enhance_note` pasa `template: None`): eso es la fase 2 (§7). Lo medido está en [experimentos.md](experimentos.md), tablas «Enhance · plantillas» y «Plantillas: iteraciones».
+Fecha: 8 de noviembre de 2026. **Estado (12 nov):** fases 0 y 1 hechas (núcleo, las cinco plantillas integradas, tests y evaluador). Fases 2 y 3 hechas en la rama `feat/plantillas-app` (§7), con sus autotests en verde en la .app (12 nov). Lo medido está en [experimentos.md](experimentos.md), tablas «Enhance · plantillas» y «Plantillas: iteraciones».
 
 Objetivo: comprobar que LFM3-1.7B sirve para generar notas con plantillas (1:1, stand-up, llamada de ventas…) y que en la app falle lo menos posible. Se asume que el modelo basta; no se cambia de modelo ni se entrena.
 
@@ -214,8 +214,12 @@ Las iteraciones de la primera evaluación (8-9 nov) están en [experimentos.md](
 
 0. **Arreglo de las notas del usuario** (§4.5, paso 0), *hecho*: `user_blocks` por elemento, con tipo y énfasis, y sus tests. Va antes que todo porque afecta también a Auto, que es lo que usa hoy la app.
 1. **Núcleo y evaluación** (*hecho*; la calidad se sigue midiendo en [experimentos.md](experimentos.md)): §2, §3, §4 y §6 (tests unitarios, `--template`, fixtures en texto). Termina con la tabla de §6.3. Si no se cumplen los umbrales, se itera aquí; la app no se toca.
-2. **Conexión con la app** (*pendiente, lo siguiente*): §5.1, §5.2, §5.3 (submenú y aviso) y §5.4.
-3. **Plantillas del usuario** (*pendiente*): «Manage templates» (crear, duplicar una integrada, editar apartados con título, `hint` y tipo, borrar), `save_template` y `delete_template` con `validate`, y el menú `/` del editor. El encaje del §4.2 hace que una plantilla mal escrita por el usuario no rompa la nota.
+2. **Conexión con la app** (*hecha el 12 nov; `JUANOLA_AUTOTEST=1` en la .app: todo OK, el enhance con «Reunión semanal de equipo» tardó 9,9 s en la reunión del autotest, sin reintentos ni caída a Auto*): `repo::templates` (solo las del usuario; las integradas las combina `list_templates`) y `notes::set_template`; `list_templates(language)` y `enhance_note(id, template)`, donde `template` es «auto», un id o nada (la de la nota), porque un `Option<Option<Id>>` no distingue `null` de ausente al deserializar; el aviso va en `note://status` como `notice: "template_fallback"` y lo traduce el frontend. Submenú «Plantilla» en las opciones del resumen y paso `templateStep` en `JUANOLA_AUTOTEST=1`. En el mock, `?template=fallback` muestra el aviso.
+3. **Plantillas del usuario** (*hecha el 12 nov*): «Manage templates» (crear, duplicar una integrada, editar apartados con título, `hint` y tipo, borrar), `save_template` y `delete_template` con `validate`, y el menú `/` del editor. El encaje del §4.2 hace que una plantilla mal escrita por el usuario no rompa la nota.
+   - **Dónde:** Ajustes › Plantillas (`TemplatesSettings.tsx`), con «Gestionar plantillas…» al final del submenú. El editor repite las reglas de `validate` en el frontend para dar el error en el idioma de la interfaz; el backend vuelve a validar. Al borrar una plantilla, sus notas vuelven a Auto (los resúmenes ya hechos no cambian).
+   - **Menú `/`:** en una línea vacía de las notas, «/» y lo que siga filtra las plantillas por nombre; la elegida sustituye la línea por sus apartados como títulos `###` y queda fijada en la nota (`set_note_template`), así que «Generar resumen» la usa. Los títulos salen en el idioma de la interfaz.
+   - **Autotest:** `JUANOLA_AUTOTEST=ui` termina con `templatesFlow` (duplicar, validación, guardar, «/», borrar y limpieza), contra la base de datos real y sin modelo.
+   - El editor de notas no tenía estilo para los títulos (`#`, `##`, `###` se veían como texto normal): ahora se pintan como los del resumen.
 
 ## 8. Cómo lo hacen otros (revisado el 8 nov 2026)
 
