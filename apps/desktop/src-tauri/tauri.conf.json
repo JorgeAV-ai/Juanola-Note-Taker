@@ -39,6 +39,7 @@
     ],
     "macOS": {
       "minimumSystemVersion": "13.0",
+      "signingIdentity": "-",
       "entitlements": "entitlements.plist",
       "files": {
         "Resources/en.lproj/InfoPlist.strings": "locales/en.lproj/InfoPlist.strings",

@@ -7,9 +7,11 @@
 # La versión sale de `apps/desktop/src-tauri/tauri.conf.json`; el tag debería
 # coincidir con ella.
 #
-# Firma: sin certificado, la app sale sin firmar ni notarizar y macOS pide
-# abrirla con clic derecho › Abrir (o `xattr -dr com.apple.quarantine`). Para
-# firmar, añade los secretos APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD,
+# Firma: sin certificado, la app sale con firma ad-hoc (`signingIdentity: "-"`
+# en tauri.conf.json) y sin notarizar. Sin esa firma del bundle, macOS dice que
+# la app descargada «está dañada»; con ella, avisa de que no puede verificarla y
+# deja abrirla desde Ajustes › Privacidad y seguridad › Abrir igualmente (o con
+# `xattr -dr com.apple.quarantine`). Para firmar con Developer ID, añade los secretos APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD,
 # APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD y APPLE_TEAM_ID y pásalos en
 # el `env` del paso de tauri-action.
 name: Release
@@ -86,9 +88,10 @@ jobs:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
           releaseName: Juanola v__VERSION__
           releaseBody: |
-            Preview build for Apple Silicon Macs (macOS 14.6 or later). It is not signed yet:
-            the first time, right-click Juanola.app › Open (or run
-            `xattr -dr com.apple.quarantine /Applications/Juanola.app`).
+            Preview build for Apple Silicon Macs (macOS 14.6 or later). It is not notarized yet,
+            so the first time macOS says it can't verify the developer. Drag Juanola to
+            Applications, open it once, then go to System Settings › Privacy & Security and
+            click Open Anyway (or run `xattr -dr com.apple.quarantine /Applications/Juanola.app`).
             The models (about 3.5 GB) are downloaded from the app on first launch.
           releaseDraft: true
           prerelease: true
