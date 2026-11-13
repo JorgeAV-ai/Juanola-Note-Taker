@@ -13,8 +13,8 @@ use std::sync::OnceLock;
 use llama_cpp_2::context::params::LlamaContextParams;
 use llama_cpp_2::llama_backend::LlamaBackend;
 use llama_cpp_2::llama_batch::LlamaBatch;
-use llama_cpp_2::model::params::LlamaModelParams;
 use llama_cpp_2::model::LlamaModel;
+use llama_cpp_2::model::params::LlamaModelParams;
 use llama_cpp_2::sampling::LlamaSampler;
 
 use crate::chat_format::{join, lfm3_parts, neutralize_user_tokens, qwen_parts, strip_thinking};

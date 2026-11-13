@@ -21,10 +21,10 @@
 //!
 //! El resultado se valida contra [`crate::enhanced_notes_schema`].
 
-use juanola_core_types::{fold, Channel, Citation, Id, SectionKind, Segment, Template, TemplateSection};
+use juanola_core_types::{Channel, Citation, Id, SectionKind, Segment, Template, TemplateSection, fold};
 use juanola_llm::{ChatModel, GenOptions, Message};
 
-use crate::{enhanced_notes_schema, Bullet, EnhanceInput, EnhancedNotes, Section};
+use crate::{Bullet, EnhanceInput, EnhancedNotes, Section, enhanced_notes_schema};
 
 #[derive(Debug, thiserror::Error)]
 pub enum EnhanceError {
@@ -349,11 +349,7 @@ fn structure_lines(sections: &[TemplateSection]) -> String {
                 ("", SectionKind::Tasks) => "cada tarea: quién, qué y cuándo",
                 (h, _) => h,
             };
-            if hint.is_empty() {
-                format!("## {}", s.heading.trim())
-            } else {
-                format!("## {} — {hint}", s.heading.trim())
-            }
+            if hint.is_empty() { format!("## {}", s.heading.trim()) } else { format!("## {} — {hint}", s.heading.trim()) }
         })
         .collect::<Vec<_>>()
         .join("\n")
@@ -462,19 +458,11 @@ fn max_refs(opts: &EnhanceOptions) -> Option<usize> {
 }
 
 fn notes_for_prompt(blocks: &[UserBlock], opts: &EnhanceOptions) -> String {
-    if opts.ablate.user_notes {
-        String::new()
-    } else {
-        format_user_notes(blocks)
-    }
+    if opts.ablate.user_notes { String::new() } else { format_user_notes(blocks) }
 }
 
 fn suffix(text: String, opts: &EnhanceOptions) -> String {
-    if opts.ablate.language_suffix {
-        String::new()
-    } else {
-        text
-    }
+    if opts.ablate.language_suffix { String::new() } else { text }
 }
 
 /// Menos palabras que esto en la transcripción no da para resumir: el modelo
@@ -1235,11 +1223,7 @@ fn validator() -> Result<&'static jsonschema::Validator, EnhanceError> {
 pub fn validate(notes: &EnhancedNotes) -> Result<(), EnhanceError> {
     let value = serde_json::to_value(notes).map_err(|e| EnhanceError::Schema(e.to_string()))?;
     let errors: Vec<String> = validator()?.iter_errors(&value).map(|e| format!("{} en {}", e, e.instance_path())).collect();
-    if errors.is_empty() {
-        Ok(())
-    } else {
-        Err(EnhanceError::Schema(errors.join("; ")))
-    }
+    if errors.is_empty() { Ok(()) } else { Err(EnhanceError::Schema(errors.join("; "))) }
 }
 
 /// Ejecuta el enhance completo con las opciones por defecto.
@@ -1272,13 +1256,13 @@ pub async fn enhance_with(
         return Ok((notes, report));
     }
     let budget = if opts.ablate.auto_floor { base_budget(words, opts.max_tokens) } else { summary_budget(words, opts.max_tokens) };
-    let gen = GenOptions { max_tokens: Some(budget), seed: opts.seed, max_refs: max_refs(opts), ..Default::default() };
+    let gen_opts = GenOptions { max_tokens: Some(budget), seed: opts.seed, max_refs: max_refs(opts), ..Default::default() };
     let Some(template) = input.template else {
-        return enhance_auto(model, input, &blocks, opts, &gen, None).await;
+        return enhance_auto(model, input, &blocks, opts, &gen_opts, None).await;
     };
     if let Err(e) = template.validate() {
         trace(&format!("plantilla «{}» no válida ({e}): se usa Auto", template.name));
-        let (notes, mut report) = enhance_auto(model, input, &blocks, opts, &gen, None).await?;
+        let (notes, mut report) = enhance_auto(model, input, &blocks, opts, &gen_opts, None).await?;
         report.template_fallback = true;
         return Ok((notes, report));
     }
@@ -1287,8 +1271,8 @@ pub async fn enhance_with(
     // Con plantilla el modelo escribe más (todos los apartados, a veces con su
     // descripción en el título): con el tope de Auto se cortaba antes de llegar
     // a las tareas, que van al final (medido en el 1:1).
-    let auto_gen = gen.clone();
-    let gen = GenOptions { max_tokens: Some(template_budget(words, tpl.len(), opts.max_tokens)), ..gen };
+    let auto_gen = gen_opts.clone();
+    let gen_opts = GenOptions { max_tokens: Some(template_budget(words, tpl.len(), opts.max_tokens)), ..gen_opts };
     let mut reason: Option<String> = None;
     let mut chosen = None;
     // Las pasadas de detalle salen en el lote del primer intento y sirven
@@ -1297,8 +1281,8 @@ pub async fn enhance_with(
     for attempt in 0..2 {
         // El reintento cambia de semilla (si se fijó) y lleva el motivo del fallo.
         let grammar = opts.markdown_grammar.then(|| markdown_grammar(tpl, input.summary_language));
-        let gen = GenOptions { seed: gen.seed.map(|s| s.wrapping_add(attempt)), grammar, ..gen.clone() };
-        let main = (template_messages(input, template, &blocks, opts, reason.as_deref()), gen);
+        let gen_opts = GenOptions { seed: gen_opts.seed.map(|s| s.wrapping_add(attempt)), grammar, ..gen_opts.clone() };
+        let main = (template_messages(input, template, &blocks, opts, reason.as_deref()), gen_opts);
         let md = complete_with_details(model, main, &mut details, detail_requests(input, opts)).await?;
         trace(&format!("resumen con plantilla «{}», intento {}:\n{md}", template.name, attempt + 1));
         let fit = fit_to_template(parse_markdown(&md), tpl);
@@ -1360,8 +1344,8 @@ fn detail_requests(input: &EnhanceInput<'_>, opts: &EnhanceOptions) -> Vec<(Vec<
                 + &suffix(crate::language::prompt_suffix(input.summary_language), opts);
             // 12 datos caben en ~450 tokens, y las tareas, en otros ~150; el
             // tope corta las listas que el modelo alarga sin fin.
-            let gen = GenOptions { max_tokens: Some(600), seed: opts.seed, max_refs: max_refs(opts), ..Default::default() };
-            (vec![Message { role: "user".into(), content: prompt }], gen)
+            let gen_opts = GenOptions { max_tokens: Some(600), seed: opts.seed, max_refs: max_refs(opts), ..Default::default() };
+            (vec![Message { role: "user".into(), content: prompt }], gen_opts)
         })
         .collect()
 }
@@ -1662,12 +1646,12 @@ async fn enhance_auto(
     input: &EnhanceInput<'_>,
     blocks: &[UserBlock],
     opts: &EnhanceOptions,
-    gen: &GenOptions,
+    gen_opts: &GenOptions,
     mut details: Option<Vec<String>>,
 ) -> Result<(EnhancedNotes, EnhanceReport), EnhanceError> {
     // 1. Resumen en una pasada (da la estructura y las tareas) y 2. pasadas
     // de detalle por fragmentos, en el mismo lote.
-    let main = (auto_messages(input, blocks, opts), gen.clone());
+    let main = (auto_messages(input, blocks, opts), gen_opts.clone());
     let md = complete_with_details(model, main, &mut details, detail_requests(input, opts)).await?;
     trace(&format!("resumen:\n{md}"));
     let mut raw = merge_sections(parse_markdown(&md));
@@ -2018,7 +2002,9 @@ mod tests {
             UserBlock { id: "b0".into(), text: "precios nuevos: enero".into(), kind: BlockKind::Paragraph, emphasis: false },
             UserBlock { id: "b1".into(), text: "llamar a la gestoría".into(), kind: BlockKind::Paragraph, emphasis: false },
         ];
-        let raw = parse_markdown("## Errores\n- Citas duplicadas [3, 2, 99]\n## Precios\n- Los precios nuevos entran en enero [1]\n- Sin cita\n## Inventado\n- Nada que lo respalde\n## Próximos pasos\n- Luis llama hoy [2]\n");
+        let raw = parse_markdown(
+            "## Errores\n- Citas duplicadas [3, 2, 99]\n## Precios\n- Los precios nuevos entran en enero [1]\n- Sin cita\n## Inventado\n- Nada que lo respalde\n## Próximos pasos\n- Luis llama hoy [2]\n",
+        );
         let (notes, rep) = resolve(raw, &segs, &blocks, Id::nil(), Layout::Auto).unwrap();
         assert_eq!(notes.sections[0].heading, "Tus notas", "la nota sin coincidencias va a su sección");
         let precios = notes.sections.iter().find(|s| s.heading == "Precios").unwrap();
@@ -2400,8 +2386,10 @@ mod tests {
             is_builtin: false,
             shared_with_workspace: false,
         };
-        assert!(structure_with_outlet(&t.structure, "inglés")
-            .ends_with("## Other topics — solo si hace falta: lo que se habló y no corresponde a ninguno de los apartados anteriores"));
+        assert!(
+            structure_with_outlet(&t.structure, "inglés")
+                .ends_with("## Other topics — solo si hace falta: lo que se habló y no corresponde a ninguno de los apartados anteriores")
+        );
     }
 
     #[test]

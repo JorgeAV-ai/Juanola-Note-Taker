@@ -15,7 +15,7 @@ use juanola_stt::backends::qwen3_mlx::Qwen3AsrMlx;
 use juanola_stt::backends::silero_mlx::{SileroMlx, WINDOW};
 use juanola_stt::language_lock::LanguageLock;
 use juanola_stt::segmenter::{Action, Segmenter, SegmenterConfig, Span};
-use juanola_stt::worker::{channel_byte, read_frame, WorkerEvent, TARGET_SAMPLE_RATE};
+use juanola_stt::worker::{TARGET_SAMPLE_RATE, WorkerEvent, channel_byte, read_frame};
 
 struct ChannelState {
     channel: Channel,
@@ -185,7 +185,7 @@ fn run() -> Result<(), String> {
                             let at = c.sent;
                             c.drops.push((at, n));
                             warned += 1;
-                            if warned == 1 || warned % 200 == 0 {
+                            if warned == 1 || warned.is_multiple_of(200) {
                                 eprintln!("juanola-stt-worker: cola llena, {warned} tramas de audio descartadas");
                             }
                         }
@@ -268,12 +268,13 @@ fn run_pending(asr: &Qwen3AsrMlx, ch: &mut ChannelState, fixed: Option<&str>, lo
         let language = fixed.or(lock.locked());
         let ev = match asr.transcribe(ch.audio(span), language) {
             Ok(out) => {
-                if is_final && language.is_none() {
-                    if let Some(l) = out.language.as_deref() {
-                        let secs = (span.end - span.start) as f64 / TARGET_SAMPLE_RATE;
-                        if let Some(l) = lock.observe(l, secs) {
-                            eprintln!("juanola-stt-worker: idioma fijado en {l}");
-                        }
+                if is_final
+                    && language.is_none()
+                    && let Some(l) = out.language.as_deref()
+                {
+                    let secs = (span.end - span.start) as f64 / TARGET_SAMPLE_RATE;
+                    if let Some(l) = lock.observe(l, secs) {
+                        eprintln!("juanola-stt-worker: idioma fijado en {l}");
                     }
                 }
                 if !is_final && out.text.is_empty() {

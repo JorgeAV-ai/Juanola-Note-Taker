@@ -1,6 +1,6 @@
 //! Ajustes clave-valor de la app (valores JSON).
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 
 use crate::{Db, DbError};
 

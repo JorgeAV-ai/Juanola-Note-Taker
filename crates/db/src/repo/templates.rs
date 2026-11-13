@@ -1,7 +1,7 @@
 //! Plantillas del usuario. Las integradas viven en código (`juanola-enhance`)
 //! y la app las combina con estas; aquí solo se guardan las del usuario.
 
-use juanola_core_types::{parse_structure, Id, Template};
+use juanola_core_types::{Id, Template, parse_structure};
 use sqlx::Row;
 
 use crate::{Db, DbError};

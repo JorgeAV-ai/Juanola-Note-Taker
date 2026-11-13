@@ -2859,7 +2859,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-api-server"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -2872,7 +2872,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-audio-capture"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "block2",
@@ -2891,7 +2891,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-audio-store"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "juanola-core-types",
  "thiserror 2.0.21",
@@ -2900,7 +2900,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-calendar"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2915,7 +2915,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-core-types"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "chrono",
  "serde",
@@ -2926,7 +2926,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-db"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "chrono",
  "juanola-core-types",
@@ -2941,7 +2941,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-desktop"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2980,7 +2980,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-detect"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "objc2-core-audio",
  "objc2-core-foundation",
@@ -2989,7 +2989,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-diarize"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2999,7 +2999,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-dictation"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "juanola-audio-capture",
  "juanola-llm",
@@ -3012,7 +3012,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-embed"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3021,7 +3021,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-enhance"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3043,7 +3043,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-integrations"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3055,7 +3055,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-llm"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "async-trait",
  "futures",
@@ -3070,7 +3070,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-mcp-server"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "juanola-core-types",
@@ -3082,7 +3082,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-models"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "dirs 6.0.0",
@@ -3099,14 +3099,14 @@ dependencies = [
 
 [[package]]
 name = "juanola-prompts"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "juanola-search"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3116,7 +3116,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-speaker-tags"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "juanola-detect",
  "serde",
@@ -3126,7 +3126,7 @@ dependencies = [
 
 [[package]]
 name = "juanola-stt"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "async-trait",

@@ -11,7 +11,7 @@
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use juanola_audio_capture::{rms, AudioCapture, CaptureConfig, CpalCapture, TARGET_SAMPLE_RATE};
+use juanola_audio_capture::{AudioCapture, CaptureConfig, CpalCapture, TARGET_SAMPLE_RATE, rms};
 use juanola_core_types::Channel;
 use tokio::sync::broadcast::error::RecvError;
 

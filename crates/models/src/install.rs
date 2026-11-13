@@ -8,7 +8,7 @@
 //! (no LFS) por tamaño.
 
 use crate::{Catalog, Machine, ModelEntry};
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};

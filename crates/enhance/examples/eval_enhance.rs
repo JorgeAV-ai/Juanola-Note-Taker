@@ -33,7 +33,7 @@ use std::time::Instant;
 
 use juanola_core_types::{Channel, Citation, Note, NoteStatus, Segment, Template};
 use juanola_enhance::itn::normalize_numbers_lang;
-use juanola_enhance::pipelines::enhance::{enhance_with, EnhanceOptions, EnhanceReport};
+use juanola_enhance::pipelines::enhance::{EnhanceOptions, EnhanceReport, enhance_with};
 use juanola_enhance::templates;
 use juanola_enhance::{EnhanceInput, EnhancedNotes};
 use juanola_llm::backends::llamacpp::LlamaCpp;

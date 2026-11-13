@@ -2,11 +2,11 @@
 //! `models.toml`), si están instalados y su descarga desde Hugging Face.
 
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
-use juanola_models::install::{self, ModelStatus, Planned, APP_SLOTS};
+use juanola_models::install::{self, APP_SLOTS, ModelStatus, Planned};
 use juanola_models::{Catalog, Machine, Platform};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
@@ -65,11 +65,7 @@ impl Models {
             .map_err(|e| e.to_string())?
             .iter()
             .any(|p| slots.contains(&p.slot.as_str()) && !p.status().installed);
-        if missing {
-            Err(MISSING.into())
-        } else {
-            Ok(())
-        }
+        if missing { Err(MISSING.into()) } else { Ok(()) }
     }
 
     /// Carpeta del modelo de un slot.
@@ -147,11 +143,7 @@ impl Models {
                 failed.push(format!("{}: {e}", planned.slot));
             }
         }
-        if failed.is_empty() {
-            Ok(())
-        } else {
-            Err(failed.join("; "))
-        }
+        if failed.is_empty() { Ok(()) } else { Err(failed.join("; ")) }
     }
 }
 
@@ -159,10 +151,10 @@ impl Models {
 fn ram_gb() -> u64 {
     #[cfg(target_os = "macos")]
     {
-        if let Ok(out) = std::process::Command::new("sysctl").args(["-n", "hw.memsize"]).output() {
-            if let Ok(bytes) = String::from_utf8_lossy(&out.stdout).trim().parse::<u64>() {
-                return bytes >> 30;
-            }
+        if let Ok(out) = std::process::Command::new("sysctl").args(["-n", "hw.memsize"]).output()
+            && let Ok(bytes) = String::from_utf8_lossy(&out.stdout).trim().parse::<u64>()
+        {
+            return bytes >> 30;
         }
     }
     8

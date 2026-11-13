@@ -612,12 +612,12 @@ pub async fn notification_take_notes(app: AppHandle, state: State<'_, AppState>)
             repo::notes::create(&state.db, ws, "").await.map_err(e)?
         }
     };
-    if n.kind == NotificationKind::Calendar {
-        if let Some(url) = n.event.as_ref().and_then(|ev| ev.conference_url.clone()).filter(|u| juanola_calendar::is_conference_url(u)) {
-            use tauri_plugin_opener::OpenerExt;
-            if let Err(err) = app.opener().open_url(url, None::<&str>) {
-                tracing::warn!(error = %err, "no se pudo abrir la videollamada");
-            }
+    if n.kind == NotificationKind::Calendar
+        && let Some(url) = n.event.as_ref().and_then(|ev| ev.conference_url.clone()).filter(|u| juanola_calendar::is_conference_url(u))
+    {
+        use tauri_plugin_opener::OpenerExt;
+        if let Err(err) = app.opener().open_url(url, None::<&str>) {
+            tracing::warn!(error = %err, "no se pudo abrir la videollamada");
         }
     }
     state.detection.set_origin(match &n.app {
@@ -677,11 +677,7 @@ pub async fn open_privacy_settings(kind: String) -> Res<()> {
     .await
     .map_err(e)?
     .map_err(e)?;
-    if out.success() {
-        Ok(())
-    } else {
-        Err(format!("open terminó con {out}"))
-    }
+    if out.success() { Ok(()) } else { Err(format!("open terminó con {out}")) }
 }
 
 /// Sin caracteres de control ni separadores Unicode: no se pueden falsificar

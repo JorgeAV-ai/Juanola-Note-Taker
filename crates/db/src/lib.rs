@@ -1,7 +1,7 @@
 //! Persistencia local en SQLite (sqlx) con migraciones embebidas.
 
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::SqlitePool;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::path::Path;
 
 #[derive(Debug, thiserror::Error)]

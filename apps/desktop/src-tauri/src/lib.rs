@@ -57,10 +57,10 @@ pub fn run() {
         })
         // El indicador flotante solo sale cuando la ventana principal no tiene el foco.
         .on_window_event(|w, ev| {
-            if let tauri::WindowEvent::Focused(focused) = ev {
-                if w.label() == "main" {
-                    indicator::on_main_focus(w.app_handle(), *focused);
-                }
+            if let tauri::WindowEvent::Focused(focused) = ev
+                && w.label() == "main"
+            {
+                indicator::on_main_focus(w.app_handle(), *focused);
             }
         })
         .invoke_handler(tauri::generate_handler![

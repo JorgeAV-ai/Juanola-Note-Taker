@@ -12,10 +12,10 @@ use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use juanola_audio_capture::{rms, AudioCapture, CaptureConfig, CpalCapture};
+use juanola_audio_capture::{AudioCapture, CaptureConfig, CpalCapture, rms};
 use juanola_core_types::{Channel, Id, Segment};
-use juanola_db::{repo, Db};
-use juanola_stt::context::{parse_glossary, AsrContext};
+use juanola_db::{Db, repo};
+use juanola_stt::context::{AsrContext, parse_glossary};
 use juanola_stt::worker::{SttWorker, WorkerConfig, WorkerEvent};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
@@ -103,11 +103,7 @@ fn quiet_step(quiet: Duration, limit: Duration, warn: Duration, warned: bool, re
     } else if quiet >= limit {
         Quiet::Stop
     } else if quiet + warn >= limit {
-        if warned {
-            Quiet::Nothing
-        } else {
-            Quiet::Warn
-        }
+        if warned { Quiet::Nothing } else { Quiet::Warn }
     } else if warned {
         Quiet::Clear
     } else {

@@ -58,13 +58,13 @@ pub fn join(parts: &[Part<'_>]) -> String {
 pub fn lfm3_parts(messages: &[Message]) -> Vec<Part<'_>> {
     let mut out = vec![tpl(LFM3_BOS)];
     let mut rest = messages;
-    if let Some(first) = messages.first() {
-        if first.role == "system" {
-            if !first.content.is_empty() {
-                out.extend([tpl("<|im_start|>system\n"), content(&first.content), tpl("<|im_end|>\n")]);
-            }
-            rest = &messages[1..];
+    if let Some(first) = messages.first()
+        && first.role == "system"
+    {
+        if !first.content.is_empty() {
+            out.extend([tpl("<|im_start|>system\n"), content(&first.content), tpl("<|im_end|>\n")]);
         }
+        rest = &messages[1..];
     }
     for m in rest {
         out.extend([tpl("<|im_start|>"), tpl(&m.role), tpl("\n")]);
