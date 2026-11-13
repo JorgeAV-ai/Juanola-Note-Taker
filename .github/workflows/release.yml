@@ -94,4 +94,4 @@ jobs:
             click Open Anyway (or run `xattr -dr com.apple.quarantine /Applications/Juanola.app`).
             The models (about 3.5 GB) are downloaded from the app on first launch.
           releaseDraft: true
-          prerelease: true
+          prerelease: false
