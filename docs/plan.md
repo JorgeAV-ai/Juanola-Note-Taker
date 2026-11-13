@@ -299,14 +299,14 @@ Componentes:
 
 ## 12. Roadmap por fases
 
-Estado a 11 nov: ✅ hecho · 🟡 en parte · ⬜ sin empezar. Todo lo hecho es en Mac; Windows y Linux están sin empezar.
+Estado a 13 nov: ✅ hecho · 🟡 en parte · ⬜ sin empezar. Todo lo hecho es en Mac; Windows y Linux están sin empezar.
 
-**Fase 0 — Cimientos** 🟡 workspace, esquema SQLite, gestor de modelos con descarga desde HF, CI y releases hechos; firma, notarización y `tauri-specta`, pendientes.
+**Fase 0 — Cimientos** 🟡 workspace, esquema SQLite, gestor de modelos con descarga desde HF, CI, releases y firma ad-hoc hechos; firma con Developer ID, notarización y `tauri-specta`, pendientes.
 - Workspace Rust + Tauri v2; CI para macOS (y más adelante Windows y Linux); firma y notarización.
 - Esquema SQLite inicial, gestor de modelos con `models.toml`.
 - Elección y medición de los modelos por slot.
 
-**Fase 1 — MVP que graba y resume** ✅ en Mac (captura dual, STT en dos canales, editor, resumen con citas, Inicio, papelera, ajustes y modelos), salvo la parada automática por silencio y el respaldo con ScreenCaptureKit.
+**Fase 1 — MVP que graba y resume** ✅ en Mac (captura dual, STT en dos canales, editor, resumen con citas, Inicio, papelera, ajustes y modelos), con parada automática tras 15 min sin voz (desactivable); falta el respaldo con ScreenCaptureKit.
 - Captura dual en macOS y Windows; niveles.
 - STT streaming en dos canales con VAD; transcripción Yo / Ellos; Pausar / Reanudar.
 - Editor TipTap con Markdown ligero e imágenes.
@@ -314,17 +314,17 @@ Estado a 11 nov: ✅ hecho · 🟡 en parte · ⬜ sin empezar. Todo lo hecho es
 - Inicio con notas por día; nota nueva; papelera.
 - Ajustes: Modelos, idioma, preferencias básicas.
 
-**Fase 2 — Calendario y detección** 🟡 detección de llamadas, calendario de macOS (EventKit), agenda, avisos y «Tomar notas» hechos; Google y Microsoft directos, indicador flotante y tray, pendientes.
+**Fase 2 — Calendario y detección** 🟡 detección de llamadas, calendario de macOS (EventKit), agenda, avisos, «Tomar notas», indicador flotante de grabación y menú en la barra hechos; Google y Microsoft directos, pendientes.
 - Google y Microsoft Calendar, avisos propios, asociación evento↔nota, recurrentes.
 - Detección del micrófono en uso y de apps de videollamada.
 - Indicador flotante y tray.
 
-**Fase 3 — Plantillas, chat y prompts guardados** 🟡 núcleo de plantillas y cinco integradas hechos, sin conectar a la app ([plantillas.md](plantillas.md)); búsqueda ⌘K por texto hecha; chat, prompts guardados y embeddings sin empezar.
+**Fase 3 — Plantillas, chat y prompts guardados** 🟡 plantillas en la app: cinco integradas y las del usuario, elegir y regenerar, menú «/» ([plantillas.md](plantillas.md)); búsqueda ⌘K por texto hecha; el chat solo tiene la interfaz (sin modelo); prompts guardados y embeddings sin empezar.
 - Elegir plantilla y regenerar; gestionar plantillas; `/` en la nota.
 - FTS + embeddings; chat por nota, carpeta o historial, con citas e historial.
 - Prompts guardados.
 
-**Fase 4 — Organización** 🟡 carpetas y papelera hechas; lo demás sin empezar.
+**Fase 4 — Organización** 🟡 carpetas, papelera, copiar el resumen y exportar la nota a Markdown/HTML hechos; lo demás sin empezar.
 - Subcarpetas, auto-añadir recurrentes a una carpeta, multiselección.
 - Personas desde los asistentes.
 - Exportar Markdown/HTML/CSV; retención y borrado automático.

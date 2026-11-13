@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AudioLines, BellRing, BookA, Boxes, CalendarDays, ChevronLeft, FolderOpen, Globe, HardDrive, House, Info, Languages, LayoutTemplate, Mic, SlidersHorizontal, Speaker } from "lucide-react";
+import { AudioLines, BellRing, CircleStop, BookA, Boxes, CalendarDays, ChevronLeft, FolderOpen, Globe, HardDrive, House, Info, Languages, LayoutTemplate, Mic, SlidersHorizontal, Speaker } from "lucide-react";
 import type { Route } from "@/App";
 import { ipc, type AudioDevice, type CalendarAccess, type DetectionSettings, type Permission } from "@/lib/ipc";
 import { LANGUAGES, languageLabel, saveLanguage, savedLanguage } from "@/lib/language";
@@ -162,6 +162,15 @@ function Preferences() {
             disabled={!detection.settings}
             onCheckedChange={(v) => detection.update({ meetings: v })}
             aria-label={t("settings.detect")}
+          />
+        </Row>
+        <Row icon={<CircleStop />} title={t("settings.autoStop")} desc={t("settings.autoStopDesc")}>
+          <Switch
+            className="auto-stop"
+            checked={detection.settings?.auto_stop ?? false}
+            disabled={!detection.settings}
+            onCheckedChange={(v) => detection.update({ auto_stop: v })}
+            aria-label={t("settings.autoStop")}
           />
         </Row>
       </Group>

@@ -105,6 +105,8 @@ export interface DetectionSettings {
   meetings: boolean;
   /** Avisar 1 minuto antes de los eventos del calendario. */
   calendar_reminders: boolean;
+  /** Parar la grabación tras 15 minutos sin voz. */
+  auto_stop: boolean;
 }
 
 export interface MeetingEnded {
@@ -126,6 +128,22 @@ export interface MeetingNotice {
   app: DetectedApp | null;
   event: CalendarEvent | null;
 }
+
+/** Sesión en curso para la barra de menús y el indicador flotante. */
+export type IndicatorSnapshot = { note_id: string; phase: "starting" | "recording" | "paused"; secs: number };
+export type TrayLabels = {
+  open: string;
+  new_note: string;
+  go_to_note: string;
+  pause: string;
+  resume: string;
+  stop: string;
+  recording: string;
+  paused: string;
+  quit: string;
+};
+
+export type ExportLabels = { untitled: string; summary: string; my_notes: string; transcript: string; me: string; them: string };
 
 export type RecordingState = "starting" | "recording" | "paused" | "finishing" | "stopped" | "error" | "warning";
 
@@ -214,6 +232,14 @@ export const ipc = {
   notificationTakeNotes: () => invoke<void>("notification_take_notes"),
   notificationDismiss: () => invoke<void>("notification_dismiss"),
   simulateDetection: (kind: "adhoc" | "calendar") => invoke<void>("simulate_detection", { kind }),
+  indicatorState: () => invoke<IndicatorSnapshot | null>("indicator_state"),
+  indicatorOpen: () => invoke<void>("indicator_open"),
+  indicatorPause: (pause: boolean) => invoke<void>("indicator_pause", { pause }),
+  indicatorStop: () => invoke<void>("indicator_stop"),
+  setTrayLabels: (labels: TrayLabels) => invoke<void>("set_tray_labels", { labels }),
+  noteSummaryMarkdown: (id: string) => invoke<string>("note_summary_markdown", { id }),
+  /** Abre el diálogo de guardar y escribe la nota; devuelve la ruta o `null` si se canceló. */
+  exportNote: (id: string, format: "markdown" | "html", labels: ExportLabels) => invoke<string | null>("export_note", { id, format, labels }),
   trashNote: (id: string) => invoke<void>("trash_note", { id }),
   restoreNote: (id: string) => invoke<void>("restore_note", { id }),
   listTrashedNotes: () => invoke<Note[]>("list_trashed_notes"),
@@ -246,6 +272,16 @@ export const events = {
     listen<{ note_id: string }>("detect://take-notes", (e) => cb(e.payload)),
   /** La llamada que se grababa terminó: hay que parar la grabación de `note_id`. */
   meetingEnded: (cb: (e: MeetingEnded) => void): Promise<UnlistenFn> => listen<MeetingEnded>("detect://meeting-ended", (e) => cb(e.payload)),
+  /** El indicador o la barra de menús piden parar la grabación de `note_id`. */
+  stopRequested: (cb: (e: { note_id: string }) => void): Promise<UnlistenFn> =>
+    listen<{ note_id: string }>("recording://stop-requested", (e) => cb(e.payload)),
+  /** El indicador o la barra de menús piden abrir la nota que se graba. */
+  indicatorOpenNote: (cb: (e: { note_id: string }) => void): Promise<UnlistenFn> =>
+    listen<{ note_id: string }>("indicator://open-note", (e) => cb(e.payload)),
+  indicatorUpdate: (cb: (e: IndicatorSnapshot | null) => void): Promise<UnlistenFn> =>
+    listen<IndicatorSnapshot | null>("indicator://update", (e) => cb(e.payload)),
+  /** «Grabar una nota nueva» en la barra de menús. */
+  trayNewNote: (cb: () => void): Promise<UnlistenFn> => listen("tray://new-note", () => cb()),
   notificationUpdate: (cb: (e: MeetingNotice) => void): Promise<UnlistenFn> =>
     listen<MeetingNotice>("notification://update", (e) => cb(e.payload)),
   modelsProgress: (cb: (e: ModelProgress) => void): Promise<UnlistenFn> => listen<ModelProgress>("models://progress", (e) => cb(e.payload)),

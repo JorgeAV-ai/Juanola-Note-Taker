@@ -8,7 +8,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
 import { events, ipc, type EnhancedNotes, type NoteStatusEvent, type RecordingState } from "../lib/ipc";
-import { t } from "../lib/i18n";
+import { t, tBackend } from "../lib/i18n";
 
 const log = (line: string) => invoke("autotest_log", { line }).catch(() => {});
 const say = (text: string) => invoke("autotest_say", { text, voice: "Mónica" });
@@ -93,6 +93,7 @@ export async function runAutotest(mode: string) {
     else if (mode === "detect-live") await detectLiveFlow();
     else if (mode === "detect-calendar") await detectCalendarFlow();
     else if (mode === "context") await contextFlow();
+    else if (mode === "autostop") await autoStopFlow();
     else await flow();
   } catch (e) {
     check(false, "excepción", String(e));
@@ -100,6 +101,40 @@ export async function runAutotest(mode: string) {
   log(failures ? `FIN: ${failures} fallos` : "FIN: todo OK");
   await sleep(500);
   invoke("autotest_quit").catch(() => {});
+}
+
+// JUANOLA_AUTOTEST=autostop (con JUANOLA_AUTO_STOP_SECS corto, p. ej. 15):
+// graba sin hablar y espera el aviso y la parada sola, con resumen.
+async function autoStopFlow() {
+  const settings = await ipc.detectionSettings();
+  check(settings.auto_stop, "parada por silencio activada por defecto", JSON.stringify(settings));
+  let state: RecordingState | null = null;
+  let notice: string | null = null;
+  const un = events.recordingState((e) => {
+    if (e.state === "warning") notice = e.message ?? null;
+    else state = e.state;
+  });
+  try {
+    const newNote = await waitFor("botón New note", () => document.querySelector<HTMLButtonElement>(".new-note"), 15_000);
+    newNote?.click();
+    const noteEl = await waitFor("vista de nota", () => document.querySelector<HTMLElement>(".note[data-note-id]"), 10_000);
+    const id = noteEl?.dataset.noteId;
+    if (!id) return;
+    await ipc.setNoteTitle(id, `Autotest silencio ${new Date().toLocaleString()}`);
+    button(".pill-btn", t("rec.start"))?.click();
+    const started = await waitFor("grabación en marcha", () => (state === "recording" ? true : state === "error" ? "error" : null), 150_000);
+    if (!check(started === true, "arranca la grabación", String(state))) return;
+    const soon = await waitFor("aviso de parada por silencio", () => (tBackend(notice) === t("backend.autoStopSoon") ? true : null), 60_000);
+    check(!!soon, "avisa antes de parar por silencio", String(notice));
+    const stopped = await waitFor("parada sola", () => (state === "stopped" ? true : null), 60_000);
+    check(!!stopped, "la grabación para sola tras el silencio");
+    check(tBackend(notice) === t("backend.autoStopped"), "explica por qué paró", String(notice));
+    await sleep(1000);
+    await waitFor("enhance terminado", () => !document.querySelector(".enhancing") || null, 120_000);
+    await ipc.trashNote(id).catch((e) => log(`     no se pudo borrar la nota: ${e}`));
+  } finally {
+    un.then((f) => f());
+  }
 }
 
 // JUANOLA_AUTOTEST=context: graba dos veces el WAV de JUANOLA_AUTOTEST_AUDIO
@@ -190,6 +225,9 @@ async function flow() {
     check(false, "arranque de la grabación", document.querySelector(".pill-msg")?.textContent ?? "");
     return;
   }
+  // Barra de menús e indicador: ven la sesión de esta nota.
+  const ind = await ipc.indicatorState();
+  check(ind?.note_id === id && ind.phase === "recording", "el indicador ve la grabación", JSON.stringify(ind));
   await sleep(1500);
   await say(SESSION_1);
   const them = await waitFor("frase final de Them en el drawer", () => document.querySelector(".bubble.them:not(.partial)"), 8_000);
@@ -200,6 +238,10 @@ async function flow() {
   // Pause / Resume dentro de la sesión.
   button(".pill-btn", t("rec.pause"))?.click();
   check(!!(await waitFor("en pausa", () => document.querySelector(".pill-label")?.textContent === t("rec.paused"), 5_000)), t("rec.pause"));
+  const p1 = await ipc.indicatorState();
+  await sleep(2100);
+  const p2 = await ipc.indicatorState();
+  check(p1?.phase === "paused" && !!p2 && p2.secs === p1.secs && p1.secs > 0, "el reloj del indicador se para en pausa", `${JSON.stringify(p1)} → ${JSON.stringify(p2)}`);
   button(".pill-btn", t("rec.resume"))?.click();
   check(!!(await waitFor("reanudada", () => button(".pill-btn", t("rec.pause")), 5_000)), "Resume tras Pause");
   await sleep(2000);
@@ -218,6 +260,23 @@ async function flow() {
 
   if (!(await checkEnhanced(id))) return;
 
+  // Copiar el resumen y exportar (con JUANOLA_AUTOTEST_EXPORT_DIR, sin diálogo).
+  const md = await ipc.noteSummaryMarkdown(id);
+  check(/^## .+\n\n- /.test(md), "resumen en Markdown para copiar", md.slice(0, 120));
+  if (await invoke<string | null>("autotest_env", { key: "JUANOLA_AUTOTEST_EXPORT_DIR" })) {
+    document.querySelector<HTMLButtonElement>(".note-more")?.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    const item = await waitFor("menú «Exportar en HTML»", () => document.querySelector<HTMLElement>(".export-html"), 3_000);
+    item?.click();
+    const saved = await waitFor("aviso de exportación", () => {
+      const n = document.querySelector(".note-notice")?.textContent ?? "";
+      return n.includes(".html") ? n : null;
+    }, 5_000);
+    check(!!saved, "exportar en HTML desde el menú", String(saved));
+    const path = await ipc.exportNote(id, "markdown", { untitled: "Sin título", summary: "Resumen", my_notes: "Mis notas", transcript: "Transcripción", me: "Yo", them: "Ellos" });
+    check(!!path?.endsWith(".md"), "exportar en Markdown", String(path));
+    log(`EXPORTADO ${path}`);
+  }
+
   // 7. Segunda grabación en la misma nota (el fallo de antes).
   const resume = await waitFor("botón Resume de la píldora", () => button(".pill-btn", t("rec.resume")), 10_000);
   resume?.click();
@@ -233,10 +292,12 @@ async function flow() {
   await sleep(1500);
   await say(SESSION_2);
   await sleep(3000);
-  button(".pill-btn.stop", t("rec.stop"))?.click();
+  // Esta vez se para desde el indicador (lo mismo que la barra de menús).
+  await ipc.indicatorStop();
   // Las notas están editadas: al parar no se regeneran sin preguntar.
   const ask = await waitFor("aviso al parar con notas editadas", () => button(".note-confirm button", t("note.regenerate")), 120_000);
   check(!!ask, "al parar, pregunta antes de regenerar las notas editadas");
+  check((await ipc.indicatorState()) === null, "el indicador suelta la sesión al parar");
   ask?.click();
   await waitFor("segundo enhance empezado", () => document.querySelector(".enhancing"), 10_000);
   await waitFor("segundo enhance terminado", () => !document.querySelector(".enhancing") && document.querySelector(".enhanced .ProseMirror"), 180_000);

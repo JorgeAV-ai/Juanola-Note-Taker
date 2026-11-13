@@ -31,6 +31,8 @@ pub struct AppState {
     pub models: Arc<Models>,
     /// Detección de reuniones, avisos y caché del calendario.
     pub detection: Detection,
+    /// Barra de menús e indicador flotante de grabación.
+    pub indicator: Arc<crate::indicator::Indicator>,
 }
 
 impl AppState {
@@ -46,6 +48,7 @@ impl AppState {
             llm: tokio::sync::Mutex::new(None),
             models,
             detection: Detection::new(detection),
+            indicator: Arc::new(crate::indicator::Indicator::new()),
         }
     }
 

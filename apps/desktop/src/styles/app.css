@@ -82,6 +82,32 @@
 @keyframes licorice-twist { from { translate: -8px 0; } to { translate: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .rec-diamond, .licorice i { animation: none; } }
 
+/* Indicador flotante de grabación: una píldora oscura de regaliz, del tamaño de
+   la ventana (esquinas y sombra las pone macOS). */
+html.indicator-window, html.indicator-window body, html.indicator-window #root { background: transparent; overflow: hidden; }
+.live-indicator {
+  box-sizing: border-box; height: 100vh; display: flex; align-items: center; gap: 2px;
+  padding: 0 6px 0 14px; border-radius: 22px;
+  background: var(--licorice); color: #f3efe6; box-shadow: inset 0 0 0 1px rgba(255,255,255,.09);
+  -webkit-user-select: none; user-select: none; cursor: default;
+}
+.li-drag { flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 10px; }
+.li-diamond {
+  width: 9px; height: 14px; flex-shrink: 0; background: var(--leaf);
+  clip-path: polygon(50% 0, 100% 49%, 52% 100%, 0 51%); transition: transform 80ms linear;
+}
+.li-diamond.paused { background: #8f8a80; }
+.li-time { font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; letter-spacing: .01em; }
+.li-state { font-size: 12.5px; color: #b9b3a7; }
+.li-btn {
+  width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  border-radius: 999px; color: #e6e0d4;
+}
+.li-btn:hover { background: rgba(255,255,255,.12); }
+.li-btn:disabled { opacity: .4; }
+.li-btn.stop { color: #f0a58f; }
+@media (prefers-reduced-motion: reduce) { .li-diamond { transition: none; transform: none !important; } }
+
 /* Ventana de aviso de reunión (transparente; la tarjeta deja margen para la sombra) */
 html.notification-window, html.notification-window body, html.notification-window #root { background: transparent; overflow: hidden; }
 .meeting-notice {

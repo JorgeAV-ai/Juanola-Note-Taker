@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlignLeft, CalendarDays, Check, ChevronDown, Ellipsis, Folder, FolderMinus, FolderPlus, LayoutTemplate, Sparkles, Trash2, UsersRound } from "lucide-react";
+import { AlignLeft, CalendarDays, Check, ChevronDown, ClipboardCopy, Ellipsis, FileCode, FileDown, Folder, FolderMinus, FolderPlus, LayoutTemplate, Sparkles, Trash2, UsersRound } from "lucide-react";
 import { events, ipc, type CalendarEvent, type Note, type Template, type TemplateChoice, MODELS_MISSING } from "@/lib/ipc";
 import { useModels } from "@/state/models";
 import { dayLabel, timeLabel } from "@/lib/dates";
@@ -106,6 +106,29 @@ export function NoteView({ id, autostart, onTrashed, onManageTemplates }: { id: 
       await ipc.setNoteFolder(id, folderId);
       setFolder(folderId);
       await reloadFolders();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+  const copySummary = async () => {
+    try {
+      await navigator.clipboard.writeText(await ipc.noteSummaryMarkdown(id));
+      setNotice(t("note.copied"));
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+  const exportAs = async (format: "markdown" | "html") => {
+    try {
+      const path = await ipc.exportNote(id, format, {
+        untitled: t("note.untitled"),
+        summary: t("note.enhanced"),
+        my_notes: t("nav.myNotes"),
+        transcript: t("note.transcript"),
+        me: t("common.me"),
+        them: t("common.them"),
+      });
+      if (path) setNotice(t("note.exported", { path }));
     } catch (e) {
       setError(String(e));
     }
@@ -247,6 +270,16 @@ export function NoteView({ id, autostart, onTrashed, onManageTemplates }: { id: 
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
+            <DropdownMenuItem className="copy-summary" disabled={!hasEnhanced} onSelect={copySummary}>
+              <ClipboardCopy /> {t("note.copySummary")}
+            </DropdownMenuItem>
+            <DropdownMenuItem className="export-md" onSelect={() => exportAs("markdown")}>
+              <FileDown /> {t("note.exportMarkdown")}
+            </DropdownMenuItem>
+            <DropdownMenuItem className="export-html" onSelect={() => exportAs("html")}>
+              <FileCode /> {t("note.exportHtml")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem destructive title={t("note.moveToTrash")} onSelect={trash}>
               <Trash2 /> {t("note.moveToTrash")}
             </DropdownMenuItem>

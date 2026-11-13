@@ -581,7 +581,8 @@ pub async fn set_detection_settings(app: AppHandle, state: State<'_, AppState>, 
     state.detection.set_settings(settings);
     detect::close_disabled(&app, settings);
     repo::settings::set(&state.db, detect::KEY_MEETINGS, &settings.meetings).await.map_err(e)?;
-    repo::settings::set(&state.db, detect::KEY_REMINDERS, &settings.calendar_reminders).await.map_err(e)
+    repo::settings::set(&state.db, detect::KEY_REMINDERS, &settings.calendar_reminders).await.map_err(e)?;
+    repo::settings::set(&state.db, detect::KEY_AUTO_STOP, &settings.auto_stop).await.map_err(e)
 }
 
 /// Lo que muestra la ventana de aviso al abrirse.
@@ -767,4 +768,85 @@ pub async fn autotest_say(text: String, voice: Option<String>) -> Res<()> {
     })
     .await
     .map_err(e)?
+}
+
+// ---------------------------------------------------------------- indicador
+
+/// Sesión que muestran la barra de menús y el indicador flotante.
+#[tauri::command]
+pub fn indicator_state(state: State<'_, AppState>) -> Option<crate::indicator::Snapshot> {
+    state.indicator.snapshot()
+}
+
+/// Indicador: trae la ventana principal con la nota que se graba.
+#[tauri::command]
+pub fn indicator_open(app: AppHandle) {
+    crate::indicator::open_note(&app);
+}
+
+/// Indicador: pausar (`true`) o reanudar (`false`).
+#[tauri::command]
+pub fn indicator_pause(app: AppHandle, pause: bool) {
+    crate::indicator::pause(&app, pause);
+}
+
+/// Indicador: pide a la ventana principal que pare (y resuma).
+#[tauri::command]
+pub fn indicator_stop(app: AppHandle) {
+    crate::indicator::request_stop(&app);
+}
+
+/// Textos del menú de la barra en el idioma de la interfaz.
+#[tauri::command]
+pub fn set_tray_labels(app: AppHandle, labels: crate::indicator::Labels) {
+    crate::indicator::set_labels(&app, labels);
+}
+
+// ------------------------------------------------------------------ exportar
+
+fn enhanced_of(note: &Note) -> Option<EnhancedNotes> {
+    note.enhanced_doc.clone().and_then(|v| serde_json::from_value(v).ok())
+}
+
+/// El resumen de la nota en Markdown, para copiarlo (vacío si no hay).
+#[tauri::command]
+pub async fn note_summary_markdown(state: State<'_, AppState>, id: Id) -> Res<String> {
+    let note = repo::notes::get(&state.db, id).await.map_err(e)?.ok_or("la nota no existe")?;
+    Ok(enhanced_of(&note).map(|n| crate::export::summary_markdown(&n)).unwrap_or_default())
+}
+
+/// Exporta la nota: pide dónde guardarla (diálogo del sistema) y la escribe.
+/// La ruta la elige el usuario en el diálogo, nunca el webview. Devuelve la
+/// ruta, o `None` si se canceló.
+#[tauri::command]
+pub async fn export_note(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    id: Id,
+    format: crate::export::Format,
+    labels: crate::export::Labels,
+) -> Res<Option<String>> {
+    use tauri_plugin_dialog::DialogExt;
+    let note = repo::notes::get(&state.db, id).await.map_err(e)?.ok_or("la nota no existe")?;
+    let segments = repo::segments::list(&state.db, id).await.map_err(e)?;
+    let enhanced = enhanced_of(&note);
+    let doc = crate::export::document(&note, enhanced.as_ref(), &segments, &labels, format);
+    let (name, ext) = (crate::export::file_name(&note, &labels, format), format.extension());
+    let filter = if format == crate::export::Format::Html { "HTML" } else { "Markdown" };
+    // El autotest no puede contestar al diálogo: escribe en esta carpeta.
+    let mut path =
+        if let Some(dir) = std::env::var_os("JUANOLA_AUTOTEST_EXPORT_DIR").filter(|_| std::env::var_os("JUANOLA_AUTOTEST").is_some()) {
+            std::path::PathBuf::from(dir).join(name)
+        } else {
+            let dialog = app.dialog().file().set_file_name(name).add_filter(filter, &[ext]);
+            let picked = tauri::async_runtime::spawn_blocking(move || dialog.blocking_save_file()).await.map_err(e)?;
+            let Some(path) = picked else { return Ok(None) };
+            path.into_path().map_err(e)?
+        };
+    if path.extension().and_then(|x| x.to_str()) != Some(ext) {
+        path.set_extension(ext);
+    }
+    std::fs::write(&path, doc).map_err(e)?;
+    tracing::info!(path = %path.display(), ?format, "nota exportada");
+    Ok(Some(path.display().to_string()))
 }

@@ -2,6 +2,8 @@
 
 mod commands;
 mod detect;
+mod export;
+mod indicator;
 mod models;
 mod recording;
 mod state;
@@ -20,8 +22,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        // El aviso de reunión se coloca solo; restaurarlo lo enseñaría y activaría la app.
-        .plugin(tauri_plugin_window_state::Builder::new().with_denylist(&[detect::WINDOW]).build())
+        // El aviso de reunión y el indicador se colocan solos; restaurarlo lo enseñaría y activaría la app.
+        .plugin(tauri_plugin_window_state::Builder::new().with_denylist(&[detect::WINDOW, indicator::WINDOW]).build())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -36,6 +38,7 @@ pub fn run() {
                 detect::DetectionSettings {
                     meetings: get(detect::KEY_MEETINGS).await.ok().flatten().unwrap_or(true),
                     calendar_reminders: get(detect::KEY_REMINDERS).await.ok().flatten().unwrap_or(true),
+                    auto_stop: get(detect::KEY_AUTO_STOP).await.ok().flatten().unwrap_or(true),
                 }
             });
             let state = state::AppState::new(db, data_dir, settings);
@@ -49,7 +52,16 @@ pub fn run() {
             }
             app.manage(state);
             detect::spawn(app.handle().clone());
+            indicator::setup(app.handle())?;
             Ok(())
+        })
+        // El indicador flotante solo sale cuando la ventana principal no tiene el foco.
+        .on_window_event(|w, ev| {
+            if let tauri::WindowEvent::Focused(focused) = ev {
+                if w.label() == "main" {
+                    indicator::on_main_focus(w.app_handle(), *focused);
+                }
+            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::app_info,
@@ -109,6 +121,13 @@ pub fn run() {
             commands::notification_take_notes,
             commands::notification_dismiss,
             commands::simulate_detection,
+            commands::indicator_state,
+            commands::indicator_open,
+            commands::indicator_pause,
+            commands::indicator_stop,
+            commands::set_tray_labels,
+            commands::note_summary_markdown,
+            commands::export_note,
         ])
         .build(tauri::generate_context!())
         .expect("error al arrancar Juanola")
@@ -118,8 +137,10 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit = event {
                 use tauri::Manager;
-                if let Some(w) = app.get_webview_window(detect::WINDOW) {
-                    detect::restore_class(&w);
+                for label in [detect::WINDOW, indicator::WINDOW] {
+                    if let Some(w) = app.get_webview_window(label) {
+                        detect::restore_class(&w);
+                    }
                 }
             }
             if let tauri::RunEvent::Exit = event {

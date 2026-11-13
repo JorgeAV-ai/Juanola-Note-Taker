@@ -13,6 +13,7 @@ import { TopBar } from "@/components/TopBar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useLibrary } from "@/state/library";
 import { events, ipc } from "@/lib/ipc";
+import { t, useI18n } from "@/lib/i18n";
 
 export type Route =
   | { kind: "home" }
@@ -39,16 +40,50 @@ export default function App() {
   // para aquí (la nota abierta lo hace ella, y lanza además el enhance).
   const routeRef = useRef(route);
   routeRef.current = route;
+  // Lo mismo cuando se pide parar desde el indicador o la barra de menús.
   useEffect(() => {
-    const un = events.meetingEnded((e) => {
+    const stopElsewhere = (e: { note_id: string }) => {
       const r = routeRef.current;
       if (r.kind === "note" && r.id === e.note_id) return;
       ipc.stopRecording().catch((err) => console.error("no se pudo parar la grabación", err));
-    });
-    return () => {
-      un.then((f) => f());
     };
+    const subs = [events.meetingEnded(stopElsewhere), events.stopRequested(stopElsewhere)];
+    return () => subs.forEach((p) => p.then((f) => f()));
   }, []);
+
+  // Indicador y barra de menús: ir a la nota que se graba o grabar una nueva.
+  useEffect(() => {
+    const subs = [
+      events.indicatorOpenNote((e) => {
+        const r = routeRef.current;
+        if (!(r.kind === "note" && r.id === e.note_id)) setRoute({ kind: "note", id: e.note_id });
+      }),
+      events.trayNewNote(async () => {
+        const n = await ipc.createNote();
+        reload();
+        setRoute({ kind: "note", id: n.id, autostart: Date.now() });
+      }),
+    ];
+    return () => subs.forEach((p) => p.then((f) => f()));
+  }, [reload]);
+
+  // Textos del menú de la barra en el idioma de la interfaz.
+  const lang = useI18n((s) => s.lang);
+  useEffect(() => {
+    ipc
+      .setTrayLabels({
+        open: t("tray.open"),
+        new_note: t("tray.newNote"),
+        go_to_note: t("tray.goToNote"),
+        pause: t("rec.pause"),
+        resume: t("rec.resume"),
+        stop: t("tray.stop"),
+        recording: t("rec.recording"),
+        paused: t("rec.paused"),
+        quit: t("tray.quit"),
+      })
+      .catch(() => {});
+  }, [lang]);
 
   // «Take Notes» en un aviso de reunión: abre la nota y empieza a grabar.
   useEffect(() => {

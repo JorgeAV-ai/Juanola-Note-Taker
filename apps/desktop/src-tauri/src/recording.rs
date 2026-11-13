@@ -18,7 +18,7 @@ use juanola_db::{repo, Db};
 use juanola_stt::context::{parse_glossary, AsrContext};
 use juanola_stt::worker::{SttWorker, WorkerConfig, WorkerEvent};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 enum Ctl {
     Pause,
@@ -68,9 +68,61 @@ const MIC_ASK: &str = "macOS pide permiso para usar el micrófono: acéptalo par
 const MIC_UNANSWERED: &str = "No se respondió al permiso de micrófono. Vuelve a pulsar Start o actívalo en Ajustes del Sistema.";
 const MIC_SILENT: &str = "El micrófono solo da silencio. Si no lo tienes silenciado, revisa el permiso de micrófono de Juanola.";
 const SYSTEM_SILENT: &str = "El audio del sistema llega en silencio aunque algo suena. Revisa que Juanola tenga permiso en Ajustes del Sistema → Privacidad y seguridad → Grabación de pantalla y audio del sistema.";
+const AUTO_STOP_SOON: &str = "Nadie habla desde hace un rato: si sigue el silencio, la grabación se parará sola en un minuto.";
+const AUTO_STOPPED: &str = "La grabación se paró sola porque nadie habló en 15 minutos.";
+/// Sin voz en ningún canal durante este tiempo (sin contar pausas), la
+/// grabación se para sola si el ajuste está activo. `JUANOLA_AUTO_STOP_SECS`
+/// lo acorta para el autotest.
+pub const AUTO_STOP_AFTER: Duration = Duration::from_secs(15 * 60);
+/// Antelación del aviso previo.
+const AUTO_STOP_WARN: Duration = Duration::from_secs(60);
+
+/// Plazo de la parada por silencio y antelación de su aviso.
+fn auto_stop_limits() -> (Duration, Duration) {
+    match std::env::var("JUANOLA_AUTO_STOP_SECS").ok().and_then(|s| s.parse::<u64>().ok()) {
+        Some(secs) => (Duration::from_secs(secs), Duration::from_secs(secs / 3)),
+        None => (AUTO_STOP_AFTER, AUTO_STOP_WARN),
+    }
+}
+
+/// Qué toca hacer con la parada por silencio tras `quiet` sin voz.
+#[derive(Debug, PartialEq, Eq)]
+enum Quiet {
+    Nothing,
+    Warn,
+    /// Volvió a hablar alguien tras el aviso: retirarlo.
+    Clear,
+    Stop,
+}
+
+/// Decide la parada por silencio. `warned` y `requested` son lo que ya se hizo
+/// en esta racha de silencio.
+fn quiet_step(quiet: Duration, limit: Duration, warn: Duration, warned: bool, requested: bool) -> Quiet {
+    if requested {
+        Quiet::Nothing
+    } else if quiet >= limit {
+        Quiet::Stop
+    } else if quiet + warn >= limit {
+        if warned {
+            Quiet::Nothing
+        } else {
+            Quiet::Warn
+        }
+    } else if warned {
+        Quiet::Clear
+    } else {
+        Quiet::Nothing
+    }
+}
+
 /// Segundos de audio (y de reloj) solo con ceros antes de avisar.
 const SILENT_MIC_SECS: f32 = 4.0;
 const SILENT_SYSTEM_SECS: f32 = 6.0;
+
+#[derive(Serialize, Clone)]
+struct StopRequest {
+    note_id: Id,
+}
 
 #[derive(Serialize, Clone)]
 struct Levels {
@@ -123,6 +175,7 @@ fn emit_state(app: &AppHandle, note_id: Id, state: &str, message: Option<String>
 
 fn emit_notice(app: &AppHandle, note_id: Id, state: &str, message: Option<String>, action: Option<&'static str>) {
     let _ = app.emit("recording://state", StateEvent { note_id, state, message, action });
+    crate::indicator::on_state(app, note_id, state);
 }
 
 impl Active {
@@ -184,12 +237,15 @@ struct Sink<'a> {
     saved: usize,
     partials: usize,
     finals: usize,
+    /// Último segmento (parcial o final) de cualquier canal: hay voz.
+    last_speech: Instant,
 }
 
 impl Sink<'_> {
     fn handle(&mut self, ev: WorkerEvent) {
         match ev {
             WorkerEvent::Segment { channel, id, start, end, text, is_final, .. } => {
+                self.last_speech = Instant::now();
                 if is_final {
                     self.finals += 1;
                     tracing::info!(?channel, start, end, text = %text, "segmento final");
@@ -364,7 +420,7 @@ fn run(
         .map_err(|e| e.to_string())?;
     let session = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
     tracing::info!(%note_id, offset, "grabación iniciada");
-    let mut sink = Sink { app, db, note_id, offset, session, saved: 0, partials: 0, finals: 0 };
+    let mut sink = Sink { app, db, note_id, offset, session, saved: 0, partials: 0, finals: 0, last_speech: Instant::now() };
 
     let mut capture = CpalCapture::new();
     let mut frames = capture
@@ -386,14 +442,21 @@ fn run(
     // antes del audio real.
     let (mut mic_warned, mut sys_warned) = (false, false);
     let mut sys_first: Option<Instant> = None;
+    // Parada por silencio: la pausa no cuenta, y aviso y petición son una vez
+    // por racha de silencio.
+    let (quiet_limit, quiet_warn) = auto_stop_limits();
+    let (mut paused, mut quiet_warned, mut stop_requested) = (false, false, false);
     loop {
         match ctl.try_recv() {
             Ok(Ctl::Stop) | Err(mpsc::TryRecvError::Disconnected) => break,
             Ok(Ctl::Pause) => {
+                paused = true;
                 let _ = capture.pause();
                 emit_state(app, note_id, "paused", None);
             }
             Ok(Ctl::Resume) => {
+                paused = false;
+                sink.last_speech = Instant::now();
                 let _ = capture.resume();
                 emit_state(app, note_id, "recording", None);
             }
@@ -450,6 +513,28 @@ fn run(
         for ev in worker.events().try_iter() {
             sink.handle(ev);
         }
+        let auto_stop = !paused && app.state::<crate::state::AppState>().detection.settings().auto_stop;
+        if auto_stop {
+            match quiet_step(sink.last_speech.elapsed(), quiet_limit, quiet_warn, quiet_warned, stop_requested) {
+                Quiet::Nothing => {}
+                Quiet::Warn => {
+                    quiet_warned = true;
+                    tracing::info!("silencio largo: aviso de parada");
+                    emit_notice(app, note_id, "warning", Some(AUTO_STOP_SOON.into()), None);
+                }
+                Quiet::Clear => {
+                    quiet_warned = false;
+                    emit_notice(app, note_id, "warning", None, None);
+                }
+                Quiet::Stop => {
+                    // Como el botón de parar: la ventana principal para y resume.
+                    stop_requested = true;
+                    tracing::info!("silencio largo: se pide parar");
+                    emit_notice(app, note_id, "warning", Some(AUTO_STOPPED.into()), None);
+                    let _ = app.emit_to("main", "recording://stop-requested", StopRequest { note_id });
+                }
+            }
+        }
     }
 
     tracing::info!(
@@ -501,4 +586,27 @@ fn run(
     }
     tracing::info!(saved = sink.saved, finals = sink.finals, partials = sink.partials, "transcripción terminada");
     Ok(sink.saved)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const MIN: Duration = Duration::from_secs(60);
+
+    #[test]
+    fn quiet_warns_then_stops_once() {
+        let (limit, warn) = (15 * MIN, MIN);
+        assert_eq!(quiet_step(5 * MIN, limit, warn, false, false), Quiet::Nothing);
+        assert_eq!(quiet_step(14 * MIN, limit, warn, false, false), Quiet::Warn);
+        assert_eq!(quiet_step(14 * MIN, limit, warn, true, false), Quiet::Nothing);
+        assert_eq!(quiet_step(15 * MIN, limit, warn, true, false), Quiet::Stop);
+        // Ya pedida la parada, no se repite.
+        assert_eq!(quiet_step(20 * MIN, limit, warn, true, true), Quiet::Nothing);
+    }
+
+    #[test]
+    fn speech_after_warning_clears_it() {
+        assert_eq!(quiet_step(Duration::from_secs(3), 15 * MIN, MIN, true, false), Quiet::Clear);
+    }
 }
