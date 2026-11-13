@@ -52,7 +52,7 @@ site/                  Landing page (GitHub Pages)
 
 ## Requirements
 
-- macOS 14.6+ on Apple Silicon (16 GB of RAM recommended). Windows and Linux are not supported yet.
+- macOS 26+ on Apple Silicon (16 GB of RAM recommended). Windows and Linux are not supported yet.
 - Rust stable (1.95+), Node 22+, pnpm 11, CMake, Xcode Command Line Tools.
 
 ## Development

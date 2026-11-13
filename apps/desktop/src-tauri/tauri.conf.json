@@ -39,7 +39,7 @@
       "icons/icon.png"
     ],
     "macOS": {
-      "minimumSystemVersion": "13.0",
+      "minimumSystemVersion": "26.0",
       "signingIdentity": "-",
       "entitlements": "entitlements.plist",
       "files": {

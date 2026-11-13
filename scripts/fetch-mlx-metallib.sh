@@ -2,6 +2,7 @@
 # Descarga el mlx.metallib precompilado de la wheel oficial `mlx-metal` de PyPI,
 # en la misma versión de MLX que trae third_party/mlxrs-sys, y verifica su SHA-256
 # (fijado aquí: el de la API de PyPI vendría del mismo sitio que la URL).
+# La wheel es la de macOS 26: de ahí el `minimumSystemVersion` de tauri.conf.json.
 set -euo pipefail
 VERSION="0.32.2"
 WHEEL="mlx_metal-${VERSION}-py3-none-macosx_26_0_arm64.whl"
