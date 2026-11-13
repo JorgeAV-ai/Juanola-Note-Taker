@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { MeetingNotification } from "./components/MeetingNotification";
+import { LiveIndicator } from "./components/LiveIndicator";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./styles/tokens.css";
 import { invoke } from "@tauri-apps/api/core";
@@ -11,6 +12,12 @@ function render() {
   if (location.hash.startsWith("#/notification")) {
     document.documentElement.classList.add("notification-window");
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(<MeetingNotification />);
+    return;
+  }
+  // El indicador flotante de grabación, igual.
+  if (location.hash.startsWith("#/indicator")) {
+    document.documentElement.classList.add("indicator-window");
+    ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(<LiveIndicator />);
     return;
   }
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

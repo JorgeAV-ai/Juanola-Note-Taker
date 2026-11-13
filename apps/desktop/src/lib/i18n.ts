@@ -87,6 +87,8 @@ const BACKEND: Record<string, Key> = {
   [es["backend.noteTrashed"]]: "backend.noteTrashed",
   [es["backend.noteMissing"]]: "backend.noteMissing",
   [es["backend.badEvent"]]: "backend.badEvent",
+  [es["backend.autoStopSoon"]]: "backend.autoStopSoon",
+  [es["backend.autoStopped"]]: "backend.autoStopped",
   // Estos dos dicen «Start» en el backend; en `es` se muestran con «Empezar».
   "Juanola no tiene permiso para usar el micrófono. Actívalo en Ajustes del Sistema → Privacidad y seguridad → Micrófono y vuelve a pulsar Start.": "backend.micDenied",
   "No se respondió al permiso de micrófono. Vuelve a pulsar Start o actívalo en Ajustes del Sistema.": "backend.micUnanswered",

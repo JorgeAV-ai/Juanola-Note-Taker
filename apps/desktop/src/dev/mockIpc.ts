@@ -107,7 +107,7 @@ const calendarEvents: CalendarEvent[] = [
   mkEvent("apple:f", "Retro", at(3, 16, 0), 60, ["Laura", "Luis"], null),
 ];
 const eventOf = new Map<string, string>();
-let detection: DetectionSettings = { meetings: true, calendar_reminders: true };
+let detection: DetectionSettings = { meetings: true, calendar_reminders: true, auto_stop: true };
 let glossary = "";
 const sampleNotice: MeetingNotice = {
   kind: new URLSearchParams(location.search).get("notice") === "calendar" ? "calendar" : "adhoc",
@@ -365,6 +365,11 @@ export function installMockIpc() {
         case "notification_dismiss":
         case "simulate_detection":
           return null;
+        case "indicator_state":
+          // Para ver el indicador en el navegador: /#/indicator?phase=paused
+          return location.hash.startsWith("#/indicator")
+            ? { note_id: notes[0]?.id ?? "mock", phase: new URLSearchParams(location.hash.split("?")[1]).get("phase") ?? "recording", secs: 754 }
+            : null;
         case "app_info":
           return { version: "dev", data_dir: "/mock" };
         default:

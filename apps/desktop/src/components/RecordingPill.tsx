@@ -124,14 +124,15 @@ export function RecordingPill({ noteId, autostart, onStopped, askBar }: { noteId
   stateRef.current = state;
   const stopRef = useRef(stop);
   stopRef.current = stop;
+  // Igual si se pide parar desde el indicador o la barra de menús.
   useEffect(() => {
-    const un = events.meetingEnded((e) => {
+    const onStop = (e: { note_id: string }) => {
       if (e.note_id !== noteId) return;
-      if (stateRef.current === "recording" || stateRef.current === "paused") stopRef.current();
-    });
-    return () => {
-      un.then((f) => f());
+      const s = stateRef.current;
+      if (s === "recording" || s === "paused" || s === "starting") stopRef.current();
     };
+    const subs = [events.meetingEnded(onStop), events.stopRequested(onStop)];
+    return () => subs.forEach((p) => p.then((f) => f()));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteId]);
 

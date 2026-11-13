@@ -47,6 +47,7 @@ const POLL_AHEAD: chrono::Duration = chrono::Duration::hours(2);
 /// Claves en la tabla `settings`.
 pub const KEY_MEETINGS: &str = "detect.meetings";
 pub const KEY_REMINDERS: &str = "detect.calendar_reminders";
+pub const KEY_AUTO_STOP: &str = "recording.auto_stop";
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DetectionSettings {
@@ -54,6 +55,14 @@ pub struct DetectionSettings {
     pub meetings: bool,
     /// Avisar 1 minuto antes de los eventos del calendario.
     pub calendar_reminders: bool,
+    /// Parar la grabación cuando nadie habla durante un buen rato
+    /// (`recording::AUTO_STOP_AFTER`).
+    #[serde(default = "default_true")]
+    pub auto_stop: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -105,6 +114,7 @@ pub struct TakeNotes {
 pub struct Detection {
     meetings: AtomicBool,
     reminders: AtomicBool,
+    auto_stop: AtomicBool,
     /// Aviso visible ahora mismo.
     current: Mutex<Option<Notification>>,
     /// Llamada que se está grabando (si la grabación salió de un aviso).
@@ -120,6 +130,7 @@ impl Detection {
         Self {
             meetings: AtomicBool::new(settings.meetings),
             reminders: AtomicBool::new(settings.calendar_reminders),
+            auto_stop: AtomicBool::new(settings.auto_stop),
             current: Mutex::new(None),
             origin: Mutex::new(Origin::None),
             events: Mutex::new(Vec::new()),
@@ -128,12 +139,17 @@ impl Detection {
     }
 
     pub fn settings(&self) -> DetectionSettings {
-        DetectionSettings { meetings: self.meetings.load(Ordering::Relaxed), calendar_reminders: self.reminders.load(Ordering::Relaxed) }
+        DetectionSettings {
+            meetings: self.meetings.load(Ordering::Relaxed),
+            calendar_reminders: self.reminders.load(Ordering::Relaxed),
+            auto_stop: self.auto_stop.load(Ordering::Relaxed),
+        }
     }
 
     pub fn set_settings(&self, s: DetectionSettings) {
         self.meetings.store(s.meetings, Ordering::Relaxed);
         self.reminders.store(s.calendar_reminders, Ordering::Relaxed);
+        self.auto_stop.store(s.auto_stop, Ordering::Relaxed);
     }
 
     pub fn current(&self) -> Option<Notification> {
@@ -260,7 +276,7 @@ pub fn show(app: &AppHandle, n: Notification) {
     match built {
         Ok(w) => {
             #[cfg(target_os = "macos")]
-            float_over_fullscreen(&w);
+            float_over_fullscreen(&w, RADIUS);
             let _ = w.set_size(LogicalSize::new(WIDTH, HEIGHT));
             let _ = w.set_position(LogicalPosition::new(x, y));
             let main_focused = app.get_webview_window("main").and_then(|m| m.is_focused().ok());
@@ -294,7 +310,7 @@ pub fn show(app: &AppHandle, n: Notification) {
 static TAO_CLASS: std::sync::atomic::AtomicPtr<objc2::runtime::AnyClass> = std::sync::atomic::AtomicPtr::new(std::ptr::null_mut());
 
 #[cfg(target_os = "macos")]
-fn float_over_fullscreen(w: &tauri::WebviewWindow) {
+pub fn float_over_fullscreen(w: &tauri::WebviewWindow, radius: f64) {
     let win = w.clone();
     let _ = w.run_on_main_thread(move || {
         let Ok(ptr) = win.ns_window() else { return };
@@ -319,7 +335,7 @@ fn float_over_fullscreen(w: &tauri::WebviewWindow) {
         if let Some(view) = ns.contentView() {
             view.setWantsLayer(true);
             if let Some(layer) = view.layer() {
-                layer.setCornerRadius(RADIUS);
+                layer.setCornerRadius(radius);
                 layer.setMasksToBounds(true);
             }
         }
@@ -344,13 +360,32 @@ fn float_over_fullscreen(w: &tauri::WebviewWindow) {
 /// Trae al frente el aviso ya abierto (al actualizarlo), sin activar la app.
 #[cfg(target_os = "macos")]
 fn raise(app: &AppHandle) {
-    let Some(w) = app.get_webview_window(WINDOW) else { return };
+    if let Some(w) = app.get_webview_window(WINDOW) {
+        order_front(&w);
+    }
+}
+
+/// Trae al frente un panel (ver [`float_over_fullscreen`]) sin activar la app.
+#[cfg(target_os = "macos")]
+pub fn order_front(w: &tauri::WebviewWindow) {
     let win = w.clone();
     let _ = w.run_on_main_thread(move || {
         let Ok(ptr) = win.ns_window() else { return };
         // SAFETY: NSWindow viva, hilo principal.
         let ns: &objc2_app_kit::NSWindow = unsafe { &*(ptr as *const objc2_app_kit::NSWindow) };
         ns.orderFrontRegardless();
+    });
+}
+
+/// Oculta un panel sin cerrarlo (cerrarlo exige devolverle su clase antes).
+#[cfg(target_os = "macos")]
+pub fn order_out(w: &tauri::WebviewWindow) {
+    let win = w.clone();
+    let _ = w.run_on_main_thread(move || {
+        let Ok(ptr) = win.ns_window() else { return };
+        // SAFETY: NSWindow viva, hilo principal.
+        let ns: &objc2_app_kit::NSWindow = unsafe { &*(ptr as *const objc2_app_kit::NSWindow) };
+        ns.orderOut(None);
     });
 }
 
