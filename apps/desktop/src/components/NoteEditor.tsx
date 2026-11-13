@@ -98,7 +98,10 @@ export function NoteEditor({
     content: emptyDoc(initial) ? "" : (initial as object),
     onUpdate: ({ editor }) => {
       window.clearTimeout(timer.current);
-      timer.current = window.setTimeout(() => onChange(editor.getJSON()), 600);
+      timer.current = window.setTimeout(() => {
+        timer.current = undefined;
+        onChange(editor.getJSON());
+      }, 600);
     },
     onTransaction: ({ editor }) => update(editor),
     onBlur: () => setSlash(null),
@@ -145,6 +148,22 @@ export function NoteEditor({
   };
   live.current = { slash, items, active, pick };
 
+  // El foco está en el editor: es él quien anuncia el menú y la opción activa.
+  const activeId = slash && items[active] ? `slash-option-${items[active].id}` : null;
+  useEffect(() => {
+    if (!editor || !slash) return;
+    const dom = editor.view.dom;
+    dom.setAttribute("aria-controls", "slash-menu");
+    dom.setAttribute("aria-expanded", "true");
+    if (activeId) dom.setAttribute("aria-activedescendant", activeId);
+    else dom.removeAttribute("aria-activedescendant");
+    return () => {
+      dom.removeAttribute("aria-controls");
+      dom.removeAttribute("aria-expanded");
+      dom.removeAttribute("aria-activedescendant");
+    };
+  }, [editor, slash, activeId]);
+
   // Guardar lo pendiente al salir de la nota.
   useEffect(
     () => () => {
@@ -186,7 +205,10 @@ export function NoteEditor({
               aria-selected={i === active}
               data-template-id={tpl.id}
               className={cn("flex cursor-default items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[14px]", i === active && "bg-hover")}
-              onMouseEnter={() => setActive(i)}
+              onMouseEnter={() => {
+                setActive(i);
+                navigated.current = true;
+              }}
               onClick={() => pick(tpl)}
             >
               <LayoutTemplate className="size-4 shrink-0 text-ink-2" />

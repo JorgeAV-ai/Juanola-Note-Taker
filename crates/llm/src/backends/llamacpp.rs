@@ -17,7 +17,7 @@ use llama_cpp_2::model::params::LlamaModelParams;
 use llama_cpp_2::model::LlamaModel;
 use llama_cpp_2::sampling::LlamaSampler;
 
-use crate::chat_format::{join, lfm3_parts, qwen_parts, strip_thinking};
+use crate::chat_format::{join, lfm3_parts, neutralize_user_tokens, qwen_parts, strip_thinking};
 use crate::{GenOptions, LlmError, Message};
 
 const TEMPERATURE: f32 = 0.1;
@@ -117,7 +117,11 @@ impl LlamaCpp {
             // (`<|im_start|>user\n` de una vez), para no cambiar los merges.
             let tokens: Vec<_> = parts
                 .chunk_by(|a, b| a.special == b.special)
-                .flat_map(|g| vocab.tokenize(join(g).as_bytes(), false, g[0].special))
+                .flat_map(|g| {
+                    let text = join(g);
+                    let text = if g[0].special { text } else { neutralize_user_tokens(&text).into_owned() };
+                    vocab.tokenize(text.as_bytes(), false, g[0].special)
+                })
                 .collect();
             let max_new = opts.max_tokens.unwrap_or(2048) as usize;
             if tokens.len() + max_new > self.n_ctx as usize {

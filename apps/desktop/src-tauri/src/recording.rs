@@ -178,13 +178,25 @@ fn emit_notice(app: &AppHandle, note_id: Id, state: &str, message: Option<String
     crate::indicator::on_state(app, note_id, state);
 }
 
-/// Quita del slot la grabación de este hilo (si sigue ahí). Soltar el `Active`
-/// solo desacopla el `JoinHandle`: el hilo termina justo después.
+/// Quita del slot la grabación de este hilo (si sigue ahí, es que nadie llamó
+/// a `stop_recording`). Soltar el `Active` solo desacopla el `JoinHandle`: el
+/// hilo termina justo después.
 fn release_slot(app: &AppHandle) {
     let Some(state) = app.try_state::<crate::state::AppState>() else { return };
     let mut slot = state.recording.lock().unwrap_or_else(|p| p.into_inner());
     if slot.as_ref().is_some_and(|a| a.handle.thread().id() == std::thread::current().id()) {
         slot.take();
+        // Como `stop_recording`: que la llamada anterior no pare la siguiente.
+        state.detection.set_origin(crate::detect::Origin::None);
+    }
+}
+
+/// Libera el slot al salir del hilo, también si la captura acaba sola o hay pánico.
+struct ReleaseOnExit(AppHandle);
+
+impl Drop for ReleaseOnExit {
+    fn drop(&mut self) {
+        release_slot(&self.0);
     }
 }
 
@@ -201,6 +213,7 @@ impl Active {
         let handle = std::thread::Builder::new()
             .name("recording".into())
             .spawn(move || {
+                let _release = ReleaseOnExit(app.clone());
                 let res = run(&app, &db, &paths, worker_path, note_id, language, ctl_rx);
                 match &res {
                     Ok(_) => emit_state(&app, note_id, "stopped", None),

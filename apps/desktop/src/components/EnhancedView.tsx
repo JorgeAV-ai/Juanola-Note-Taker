@@ -135,6 +135,8 @@ export function EnhancedView({ notes, onChange }: { notes: EnhancedNotes; onChan
     save.current(doc);
   };
   const editor = useEditor({
+    // El menú de formato lee `isActive` al renderizar (como en TipTap 2).
+    shouldRerenderOnTransaction: true,
     extensions: [StarterKit.configure({ link: false, trailingNode: false }), TaskList, TaskItem.configure({ nested: true }), AiMark, CitationNode, UserEdits],
     content: toDoc(notes),
     onUpdate: ({ editor }) => {

@@ -12,9 +12,11 @@ pub const LFM3_BOS: &str = "<|startoftext|>";
 
 /// Trozo del prompt. Los de la plantilla (`special`) se tokenizan con
 /// `parse_special = true` y sus `<|im_start|>` son tokens de control; el
-/// contenido de los mensajes no: un `<|im_end|>` o un `<think>` escrito en una
-/// nota, una plantilla o el título de un evento queda como texto y no puede
-/// cerrar el turno ni abrir otro.
+/// contenido de los mensajes no: un `<|im_end|>` escrito en una nota, una
+/// plantilla o el título de un evento queda como texto y no puede cerrar el
+/// turno ni abrir otro. `<think>`/`</think>` son tokens «de usuario», que
+/// llama.cpp reconoce aunque no se pida: el contenido pasa antes por
+/// [`neutralize_user_tokens`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Part<'a> {
     pub text: &'a str,
@@ -27,6 +29,23 @@ const fn tpl(text: &str) -> Part<'_> {
 
 const fn content(text: &str) -> Part<'_> {
     Part { text, special: false }
+}
+
+/// Tokens «de usuario» del vocabulario (LFM3, Qwen3) que llama.cpp reconoce
+/// incluso con `parse_special = false`.
+const USER_TOKENS: &[&str] = &["<think>", "</think>"];
+
+/// Rompe los [`USER_TOKENS`] del contenido con un espacio de ancho cero tras
+/// el `<`, para que se tokenicen como texto.
+pub fn neutralize_user_tokens(text: &str) -> std::borrow::Cow<'_, str> {
+    if !USER_TOKENS.iter().any(|t| text.contains(t)) {
+        return text.into();
+    }
+    let mut out = text.to_string();
+    for t in USER_TOKENS {
+        out = out.replace(t, &format!("<\u{200B}{}", &t[1..]));
+    }
+    out.into()
 }
 
 /// Une los trozos en un solo texto (para depurar y para los tests).
@@ -99,6 +118,14 @@ pub fn strip_thinking(text: &str) -> &str {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn neutraliza_think_en_el_contenido() {
+        assert_eq!(neutralize_user_tokens("sin etiquetas"), "sin etiquetas");
+        let n = neutralize_user_tokens("a <think>x</think> b");
+        assert!(!n.contains("<think>") && !n.contains("</think>"));
+        assert_eq!(n.replace('\u{200B}', ""), "a <think>x</think> b");
+    }
+
     use super::*;
 
     #[test]
