@@ -17,7 +17,7 @@ use llama_cpp_2::model::params::LlamaModelParams;
 use llama_cpp_2::model::LlamaModel;
 use llama_cpp_2::sampling::LlamaSampler;
 
-use crate::chat_format::{lfm3_parts, qwen_parts, strip_thinking};
+use crate::chat_format::{join, lfm3_parts, qwen_parts, strip_thinking};
 use crate::{GenOptions, LlmError, Message};
 
 const TEMPERATURE: f32 = 0.1;
@@ -113,7 +113,12 @@ impl LlamaCpp {
             let parts = if self.qwen { qwen_parts(msgs) } else { lfm3_parts(msgs) };
             // El de LFM3 ya trae `<|startoftext|>`, y Qwen no usa BOS: no añadir otro.
             // Solo la plantilla se lee con tokens especiales (ver `chat_format::Part`).
-            let tokens: Vec<_> = parts.iter().flat_map(|p| vocab.tokenize(p.text.as_bytes(), false, p.special)).collect();
+            // Los trozos seguidos del mismo tipo se tokenizan juntos, como antes
+            // (`<|im_start|>user\n` de una vez), para no cambiar los merges.
+            let tokens: Vec<_> = parts
+                .chunk_by(|a, b| a.special == b.special)
+                .flat_map(|g| vocab.tokenize(join(g).as_bytes(), false, g[0].special))
+                .collect();
             let max_new = opts.max_tokens.unwrap_or(2048) as usize;
             if tokens.len() + max_new > self.n_ctx as usize {
                 return Err(LlmError::ContextExceeded(tokens.len() + max_new));
