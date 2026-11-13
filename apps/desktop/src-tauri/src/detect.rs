@@ -13,14 +13,14 @@
 //! derecha), no notificaciones del sistema. Un solo hilo hace todo el sondeo.
 
 use std::collections::HashSet;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use chrono::{DateTime, Utc};
 use juanola_calendar::Access;
 use juanola_core_types::CalendarEvent;
-use juanola_detect::{holds_mic, notification_title, DetectEvent, DetectedApp, EndTracker, MicWatcher, WatcherConfig};
+use juanola_detect::{DetectEvent, DetectedApp, EndTracker, MicWatcher, WatcherConfig, holds_mic, notification_title};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, WebviewUrl, WebviewWindowBuilder};
 
@@ -557,16 +557,16 @@ fn run(app: AppHandle) {
         }
 
         // Aviso de calendario: cuenta atrás y caducidad.
-        if let Some(n) = det.current().filter(|n| n.kind == NotificationKind::Calendar) {
-            if let Some(e) = &n.event {
-                let at = Utc::now();
-                if at > e.start + CALENDAR_NOTICE_TTL {
-                    close(&app);
-                } else {
-                    let fresh = calendar_notification(e, at);
-                    if fresh.body != n.body {
-                        show(&app, fresh);
-                    }
+        if let Some(n) = det.current().filter(|n| n.kind == NotificationKind::Calendar)
+            && let Some(e) = &n.event
+        {
+            let at = Utc::now();
+            if at > e.start + CALENDAR_NOTICE_TTL {
+                close(&app);
+            } else {
+                let fresh = calendar_notification(e, at);
+                if fresh.body != n.body {
+                    show(&app, fresh);
                 }
             }
         }

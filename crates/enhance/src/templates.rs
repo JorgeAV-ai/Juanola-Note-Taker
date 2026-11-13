@@ -83,12 +83,26 @@ const BUILTINS: &[Builtin] = &[
     },
     Builtin {
         id: WEEKLY_TEAM,
-        name: ["Reunión semanal de equipo", "Weekly team meeting", "Reunião semanal de equipe", "Réunion d'équipe hebdomadaire", "Wöchentliches Team-Meeting", "Riunione settimanale del team"],
+        name: [
+            "Reunión semanal de equipo",
+            "Weekly team meeting",
+            "Reunião semanal de equipe",
+            "Réunion d'équipe hebdomadaire",
+            "Wöchentliches Team-Meeting",
+            "Riunione settimanale del team",
+        ],
         purpose: "reunión semanal del equipo para revisar el estado y decidir",
         style: "conciso, con las cifras exactas",
         sections: &[
             (
-                ["Métricas y estado", "Metrics and status", "Métricas e status", "Indicateurs et état", "Kennzahlen und Status", "Metriche e stato"],
+                [
+                    "Métricas y estado",
+                    "Metrics and status",
+                    "Métricas e status",
+                    "Indicateurs et état",
+                    "Kennzahlen und Status",
+                    "Metriche e stato",
+                ],
                 "cifras, resultados y cómo van los proyectos",
                 SectionKind::Topics,
             ),
@@ -103,27 +117,62 @@ const BUILTINS: &[Builtin] = &[
     },
     Builtin {
         id: CUSTOMER_INTERVIEW,
-        name: ["Entrevista con cliente", "Customer interview", "Entrevista com cliente", "Entretien client", "Kundeninterview", "Intervista al cliente"],
+        name: [
+            "Entrevista con cliente",
+            "Customer interview",
+            "Entrevista com cliente",
+            "Entretien client",
+            "Kundeninterview",
+            "Intervista al cliente",
+        ],
         purpose: "entrevista para entender a un cliente o usuario",
         style: "fiel a lo que dijo el cliente",
         sections: &[
             (
-                ["Contexto del cliente", "Customer context", "Contexto do cliente", "Contexte du client", "Kontext des Kunden", "Contesto del cliente"],
+                [
+                    "Contexto del cliente",
+                    "Customer context",
+                    "Contexto do cliente",
+                    "Contexte du client",
+                    "Kontext des Kunden",
+                    "Contesto del cliente",
+                ],
                 "quién es, su empresa, su función y su situación",
                 SectionKind::Topics,
             ),
             (
-                ["Problemas y necesidades", "Problems and needs", "Problemas e necessidades", "Problèmes et besoins", "Probleme und Bedürfnisse", "Problemi ed esigenze"],
+                [
+                    "Problemas y necesidades",
+                    "Problems and needs",
+                    "Problemas e necessidades",
+                    "Problèmes et besoins",
+                    "Probleme und Bedürfnisse",
+                    "Problemi ed esigenze",
+                ],
                 "qué le cuesta al cliente y qué necesita resolver",
                 SectionKind::Topics,
             ),
             (
-                ["Lo que usan hoy", "What they use today", "O que usam hoje", "Ce qu'ils utilisent aujourd'hui", "Was sie heute nutzen", "Cosa usano oggi"],
+                [
+                    "Lo que usan hoy",
+                    "What they use today",
+                    "O que usam hoje",
+                    "Ce qu'ils utilisent aujourd'hui",
+                    "Was sie heute nutzen",
+                    "Cosa usano oggi",
+                ],
                 "herramientas, procesos o competidores que usa ahora",
                 SectionKind::Topics,
             ),
             (
-                ["Citas destacables", "Notable quotes", "Citações de destaque", "Citations marquantes", "Bemerkenswerte Zitate", "Citazioni notevoli"],
+                [
+                    "Citas destacables",
+                    "Notable quotes",
+                    "Citações de destaque",
+                    "Citations marquantes",
+                    "Bemerkenswerte Zitate",
+                    "Citazioni notevoli",
+                ],
                 "frases del cliente que vale la pena recordar",
                 SectionKind::Topics,
             ),
@@ -140,17 +189,38 @@ const BUILTINS: &[Builtin] = &[
             // cliente sobre la oferta iban a contexto y sus problemas a objeciones
             // (colocación 71 % frente a 100 %).
             (
-                ["Situación del cliente", "Customer situation", "Situação do cliente", "Situation du client", "Situation des Kunden", "Situazione del cliente"],
+                [
+                    "Situación del cliente",
+                    "Customer situation",
+                    "Situação do cliente",
+                    "Situation du client",
+                    "Situation des Kunden",
+                    "Situazione del cliente",
+                ],
                 "a qué se dedica el cliente, cómo trabaja hoy, qué le cuesta y qué objetivo tiene",
                 SectionKind::Topics,
             ),
             (
-                ["Dudas y reparos", "Concerns and objections", "Dúvidas e objeções", "Doutes et réserves", "Bedenken und Einwände", "Dubbi e riserve"],
+                [
+                    "Dudas y reparos",
+                    "Concerns and objections",
+                    "Dúvidas e objeções",
+                    "Doutes et réserves",
+                    "Bedenken und Einwände",
+                    "Dubbi e riserve",
+                ],
                 "lo que preocupa al cliente de la solución que se le ofrece: integración, datos, adopción por su equipo o la competencia",
                 SectionKind::Topics,
             ),
             (
-                ["Presupuesto y plazos", "Budget and timeline", "Orçamento e prazos", "Budget et délais", "Budget und Zeitplan", "Budget e tempistiche"],
+                [
+                    "Presupuesto y plazos",
+                    "Budget and timeline",
+                    "Orçamento e prazos",
+                    "Budget et délais",
+                    "Budget und Zeitplan",
+                    "Budget e tempistiche",
+                ],
                 "presupuesto, precios, quién decide y fechas",
                 SectionKind::Topics,
             ),
@@ -192,7 +262,8 @@ pub fn builtin_template(id: Id, language: &str) -> Option<Template> {
 /// de ellos en cualquier idioma. El menú `/` escribe los títulos en el idioma
 /// de la interfaz y el resumen usa el de la reunión: así se reconocen igual.
 pub fn heading_variants(heading: &str) -> Option<&'static [&'static str; 6]> {
-    BUILTINS.iter().flat_map(|b| b.sections.iter()).map(|(h, _, _)| h).find(|h| h.contains(&heading))
+    let key = juanola_core_types::fold(heading);
+    BUILTINS.iter().flat_map(|b| b.sections.iter()).map(|(h, _, _)| h).find(|h| h.iter().any(|v| juanola_core_types::fold(v) == key))
 }
 
 pub fn is_builtin(id: Id) -> bool {

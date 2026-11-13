@@ -39,33 +39,58 @@ pub fn is_meeting(ev: &CalendarEvent) -> bool {
 }
 
 /// Dominios de videollamada que se reconocen en la URL, el lugar o las notas.
-const CONFERENCE_HOSTS: &[&str] = &[
-    "meet.google.com/",
-    "zoom.us/j/",
-    "zoom.us/my/",
-    "zoom.us/w/",
-    "teams.microsoft.com/l/meetup-join",
-    "teams.microsoft.com/meet/",
-    "teams.live.com/meet/",
-    "webex.com/",
-    "whereby.com/",
-    "meet.jit.si/",
-    "around.co/",
-    "facetime.apple.com/",
-    "app.slack.com/huddle",
+/// Servicios de videollamada: host (o dominio padre, p. ej. `acme.zoom.us`) y
+/// prefijo de la ruta.
+const CONFERENCE_HOSTS: &[(&str, &str)] = &[
+    ("meet.google.com", "/"),
+    ("zoom.us", "/j/"),
+    ("zoom.us", "/my/"),
+    ("zoom.us", "/w/"),
+    ("teams.microsoft.com", "/l/meetup-join"),
+    ("teams.microsoft.com", "/meet/"),
+    ("teams.live.com", "/meet/"),
+    ("webex.com", "/"),
+    ("whereby.com", "/"),
+    ("meet.jit.si", "/"),
+    ("around.co", "/"),
+    ("facetime.apple.com", "/"),
+    ("app.slack.com", "/huddle"),
 ];
+
+/// `true` si `url` es `https://` a uno de [`CONFERENCE_HOSTS`]. Se compara el
+/// host entero (o un sufijo con punto), no una subcadena: un enlace
+/// `https://otro.example/?r=meet.google.com/x` no cuenta.
+pub fn is_conference_url(url: &str) -> bool {
+    let Some(rest) = url.strip_prefix("https://") else { return false };
+    let split = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    let (authority, path) = rest.split_at(split);
+    // Sin userinfo ni puerto, sin espacios ni controles (el navegador los quita
+    // y cambia el host) y sin `..` que saque la ruta del prefijo.
+    if authority.contains(['@', '\\', ':'])
+        || url.chars().any(|c| c.is_whitespace() || c.is_control())
+        || path.contains('\\')
+        || path.split(['/', '?', '#']).any(|seg| {
+            let seg = seg.to_ascii_lowercase().replace("%2e", ".");
+            seg == "." || seg == ".."
+        })
+    {
+        return false;
+    }
+    let host = authority.to_ascii_lowercase();
+    CONFERENCE_HOSTS.iter().any(|(h, prefix)| {
+        let host_ok = host == *h || host.strip_suffix(h).is_some_and(|sub| sub.ends_with('.') && sub.len() > 1);
+        host_ok && path.starts_with(prefix)
+    })
+}
 
 /// Primer enlace de videollamada en los textos del evento (URL, lugar, notas).
 pub fn find_conference_url<'a>(texts: impl IntoIterator<Item = &'a str>) -> Option<String> {
     for text in texts {
-        for (i, _) in text.match_indices("http") {
+        for (i, _) in text.match_indices("https://") {
             let rest = &text[i..];
-            if !(rest.starts_with("https://") || rest.starts_with("http://")) {
-                continue;
-            }
             let end = rest.find(|c: char| c.is_whitespace() || matches!(c, '<' | '>' | '"' | '\'' | ')' | ']' | '|')).unwrap_or(rest.len());
             let url = rest[..end].trim_end_matches(['.', ',', ';']);
-            if CONFERENCE_HOSTS.iter().any(|h| url.contains(h)) {
+            if is_conference_url(url) {
                 return Some(url.to_string());
             }
         }
@@ -150,6 +175,21 @@ mod tests {
             Some("https://acme.zoom.us/j/123456789?pwd=x")
         );
         assert_eq!(find_conference_url(["https://example.com/agenda", "Sala 3"]), None);
+        // El host se compara entero: ni subcadenas, ni userinfo, ni http.
+        assert_eq!(find_conference_url(["https://evil.example/login?r=meet.google.com/abc"]), None);
+        assert_eq!(find_conference_url(["https://meet.google.com.evil.example/abc"]), None);
+        assert_eq!(find_conference_url(["https://meet.google.com@evil.example/abc"]), None);
+        assert_eq!(find_conference_url(["https://notzoom.us/j/1"]), None);
+        assert_eq!(find_conference_url(["http://meet.google.com/abc"]), None);
+        assert_eq!(find_conference_url(["https://zoom.us/j/../../x"]), None);
+        assert_eq!(find_conference_url(["https://zoom.us/j/%2E%2e/x"]), None);
+        assert_eq!(find_conference_url(["https://meet.google.com:8443/abc"]), None);
+        assert!(!is_conference_url("https://meet.google.com\t/abc"));
+        assert!(is_conference_url("https://acme.zoom.us/j/123?pwd=a.b"));
+        assert_eq!(
+            find_conference_url(["mal: https://x.example/?u=zoom.us/j/1 bien: https://Meet.Google.com/abc"]).as_deref(),
+            Some("https://Meet.Google.com/abc")
+        );
     }
 
     #[test]

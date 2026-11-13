@@ -11,8 +11,8 @@ use std::path::PathBuf;
 use std::time::Instant;
 
 use juanola_core_types::{Channel, Citation, Note, NoteStatus, Segment};
-use juanola_enhance::pipelines::enhance::{build_messages, enhance, user_blocks, EnhanceOptions};
 use juanola_enhance::EnhanceInput;
+use juanola_enhance::pipelines::enhance::{EnhanceOptions, build_messages, enhance, user_blocks};
 use juanola_llm::backends::llamacpp::LlamaCpp;
 
 #[derive(serde::Deserialize)]

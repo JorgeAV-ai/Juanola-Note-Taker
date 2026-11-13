@@ -132,9 +132,11 @@ pub fn setup(app: &AppHandle) -> tauri::Result<()> {
     let app = app.clone();
     std::thread::Builder::new()
         .name("juanola-indicator".into())
-        .spawn(move || loop {
-            std::thread::sleep(Duration::from_secs(1));
-            tick(&app);
+        .spawn(move || {
+            loop {
+                std::thread::sleep(Duration::from_secs(1));
+                tick(&app);
+            }
         })
         .map_err(|e| tauri::Error::Anyhow(e.into()))?;
     Ok(())
@@ -363,11 +365,7 @@ fn hide_pill(app: &AppHandle) {
 /// `m:ss` hasta la hora y `h:mm:ss` después.
 pub fn clock(secs: u64) -> String {
     let (h, m, s) = (secs / 3600, secs / 60 % 60, secs % 60);
-    if h > 0 {
-        format!("{h}:{m:02}:{s:02}")
-    } else {
-        format!("{m}:{s:02}")
-    }
+    if h > 0 { format!("{h}:{m:02}:{s:02}") } else { format!("{m}:{s:02}") }
 }
 
 /// El rombo del logo como icono de plantilla (negro sobre transparente; macOS

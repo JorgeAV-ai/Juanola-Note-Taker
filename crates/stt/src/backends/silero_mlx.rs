@@ -3,8 +3,8 @@
 
 use std::path::Path;
 
-use mlxrs::audio::vad::models::silero_vad::{SileroVadModel, SileroVadState};
 use mlxrs::Array;
+use mlxrs::audio::vad::models::silero_vad::{SileroVadModel, SileroVadState};
 
 use crate::SttError;
 

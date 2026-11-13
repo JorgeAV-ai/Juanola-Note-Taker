@@ -15,7 +15,7 @@ mod permissions;
 mod resample;
 
 pub use cpal_backend::CpalCapture;
-pub use permissions::{mic_permission, request_mic_permission, Permission};
+pub use permissions::{Permission, mic_permission, request_mic_permission};
 pub use resample::MonoResampler;
 
 /// Frecuencia a la que se entregan los frames a los modelos.

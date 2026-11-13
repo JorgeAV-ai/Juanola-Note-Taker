@@ -33,11 +33,7 @@ async fn main() -> anyhow::Result<()> {
         let dir = exe.parent().unwrap();
         // Dentro de la .app el worker va al lado; en target/, un nivel arriba.
         let side = dir.join("juanola-stt-worker");
-        if side.exists() {
-            side
-        } else {
-            dir.parent().unwrap().join("juanola-stt-worker")
-        }
+        if side.exists() { side } else { dir.parent().unwrap().join("juanola-stt-worker") }
     });
     let mut worker = SttWorker::spawn(&WorkerConfig {
         program,

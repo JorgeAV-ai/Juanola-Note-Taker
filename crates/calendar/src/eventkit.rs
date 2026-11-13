@@ -16,7 +16,7 @@ use objc2::sel;
 use objc2_event_kit::{EKAuthorizationStatus, EKEntityType, EKEvent, EKEventStore, EKParticipant, EKParticipantStatus};
 use objc2_foundation::{NSDate, NSError, NSObjectProtocol};
 
-use crate::{find_conference_url, Access};
+use crate::{Access, find_conference_url};
 
 pub const PROVIDER: &str = "apple";
 

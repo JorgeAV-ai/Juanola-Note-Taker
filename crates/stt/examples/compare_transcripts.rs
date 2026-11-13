@@ -11,8 +11,8 @@
 //! `JUANOLA_SIN_CIFRAS=1` compara sin pasar a dígitos las cifras dichas con letras.
 
 use juanola_core_types::Channel;
-use juanola_stt::crosscheck::{align, char_errors, diffs, edit_errors, merge, touches, words_with, Word};
 use juanola_stt::Transcript;
+use juanola_stt::crosscheck::{Word, align, char_errors, diffs, edit_errors, merge, touches, words_with};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -23,11 +23,7 @@ struct RefTurn {
 }
 
 fn show(ws: &[Word], r: &std::ops::Range<usize>) -> String {
-    if r.is_empty() {
-        "∅".into()
-    } else {
-        ws[r.clone()].iter().map(|w| w.text.as_str()).collect::<Vec<_>>().join(" ")
-    }
+    if r.is_empty() { "∅".into() } else { ws[r.clone()].iter().map(|w| w.text.as_str()).collect::<Vec<_>>().join(" ") }
 }
 
 fn label(path: &str) -> String {
@@ -86,11 +82,7 @@ fn main() -> anyhow::Result<()> {
             for i in 0..d.len() {
                 picks[i] = true;
                 let e = edit_errors(&rw, &merge(x, y, &d, |k| picks[k]));
-                if e < best {
-                    best = e
-                } else {
-                    picks[i] = false
-                }
+                if e < best { best = e } else { picks[i] = false }
             }
             let ow = merge(x, y, &d, |k| picks[k]);
             we[n] += best;

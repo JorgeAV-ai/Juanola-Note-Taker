@@ -6,8 +6,8 @@
 //! escribe el mismo JSON que produce `transformers`: el test lo compara con uno
 //! generado por él.
 
-use anyhow::{anyhow, Context, Result};
-use serde_json::{json, Map, Value};
+use anyhow::{Context, Result, anyhow};
+use serde_json::{Map, Value, json};
 use std::path::Path;
 
 /// Regex de pre-tokenización de Qwen2 (la misma que `Qwen2TokenizerFast`).

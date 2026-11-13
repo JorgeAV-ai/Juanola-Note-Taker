@@ -1,20 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permisos de la ventana principal",
-  "windows": ["main"],
+  "description": "Permisos de la ventana principal: el frontend no llama a plugins desde JS (notificaciones, atajos, store, etc. se usan desde Rust), así que solo se concede arrastrar la ventana.",
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
-    "core:window:allow-start-dragging",
-    "core:window:allow-set-position",
-    "core:window:allow-set-always-on-top",
-    "opener:default",
-    "notification:default",
-    "global-shortcut:allow-register",
-    "global-shortcut:allow-unregister",
-    "store:default",
-    "dialog:default",
-    "clipboard-manager:allow-write-text",
-    "autostart:default"
+    "core:window:allow-start-dragging"
   ]
 }

@@ -1,7 +1,7 @@
 //! Persistencia local en SQLite (sqlx) con migraciones embebidas.
 
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::SqlitePool;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::path::Path;
 
 #[derive(Debug, thiserror::Error)]
@@ -206,6 +206,14 @@ mod tests {
         repo::templates::delete(&db, t.id).await.unwrap();
         assert!(repo::templates::get(&db, t.id).await.unwrap().is_none());
         assert_eq!(repo::notes::get(&db, n.id).await.unwrap().unwrap().template_id, None);
+
+        // Asignar una plantilla del usuario que ya no existe no toca la nota.
+        assert!(!repo::notes::set_user_template(&db, n.id, t.id).await.unwrap());
+        assert_eq!(repo::notes::get(&db, n.id).await.unwrap().unwrap().template_id, None);
+        repo::templates::upsert(&db, &t).await.unwrap();
+        assert!(repo::notes::set_user_template(&db, n.id, t.id).await.unwrap());
+        assert_eq!(repo::notes::get(&db, n.id).await.unwrap().unwrap().template_id, Some(t.id));
+        assert!(!repo::notes::set_user_template(&db, uuid::Uuid::new_v4(), t.id).await.unwrap());
         std::fs::remove_dir_all(&dir).ok();
     }
 }

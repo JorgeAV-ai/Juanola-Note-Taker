@@ -87,6 +87,10 @@ const BACKEND: Record<string, Key> = {
   [es["backend.noteTrashed"]]: "backend.noteTrashed",
   [es["backend.noteMissing"]]: "backend.noteMissing",
   [es["backend.badEvent"]]: "backend.badEvent",
+  [es["backend.templateMissing"]]: "backend.templateMissing",
+  [es["backend.templateName"]]: "backend.templateName",
+  [es["backend.builtinEdit"]]: "backend.builtinEdit",
+  [es["backend.builtinDelete"]]: "backend.builtinDelete",
   [es["backend.autoStopSoon"]]: "backend.autoStopSoon",
   [es["backend.autoStopped"]]: "backend.autoStopped",
   // Estos dos dicen «Start» en el backend; en `es` se muestran con «Empezar».

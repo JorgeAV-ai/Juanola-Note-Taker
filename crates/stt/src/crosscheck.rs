@@ -39,11 +39,7 @@ pub fn words_with(text: &str, numbers: bool) -> Vec<Word> {
             }
         }
     }
-    if numbers {
-        join_numbers(raw)
-    } else {
-        raw
-    }
+    if numbers { join_numbers(raw) } else { raw }
 }
 
 /// Valor de una palabra numérica en español; `None` si no lo es.
@@ -310,11 +306,7 @@ pub fn merge(a: &[Word], b: &[Word], diffs: &[Diff], pick: impl Fn(usize) -> boo
 /// ¿Se tocan dos rangos de índices? Un rango vacío (hueco) toca a otro si cae
 /// dentro o justo en su borde.
 pub fn touches(x: &Range<usize>, y: &Range<usize>) -> bool {
-    if x.is_empty() || y.is_empty() {
-        x.start <= y.end && y.start <= x.end
-    } else {
-        x.start < y.end && y.start < x.end
-    }
+    if x.is_empty() || y.is_empty() { x.start <= y.end && y.start <= x.end } else { x.start < y.end && y.start < x.end }
 }
 
 #[cfg(test)]

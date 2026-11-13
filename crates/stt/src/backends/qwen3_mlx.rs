@@ -19,8 +19,9 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use mlxrs::Array;
 use mlxrs::audio::load::apply_quantization;
-use mlxrs::audio::stt::models::qwen3_asr::{sanitize, AudioEncoder, AudioEncoderConfig, Qwen3AsrTextConfig, Qwen3AsrTextModel};
+use mlxrs::audio::stt::models::qwen3_asr::{AudioEncoder, AudioEncoderConfig, Qwen3AsrTextConfig, Qwen3AsrTextModel, sanitize};
 use mlxrs::audio::stt::models::whisper::audio::log_mel_spectrogram_whisper;
 use mlxrs::lm::cache::KvCache;
 use mlxrs::ops::misc::argmax;
@@ -28,7 +29,6 @@ use mlxrs::ops::quantized::quantized_matmul;
 use mlxrs::ops::reduction::{logsumexp, max};
 use mlxrs::ops::shape::{concatenate, expand_dims_axes, transpose_axes};
 use mlxrs::tokenizer::Tokenizer;
-use mlxrs::Array;
 
 use crate::SttError;
 

@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /apps/desktop
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # Los @tiptap/* exigen la misma versión entre sí: un PR para todos.
+    groups:
+      tiptap:
+        patterns: ["@tiptap/*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

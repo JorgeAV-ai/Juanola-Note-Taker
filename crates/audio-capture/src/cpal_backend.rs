@@ -16,7 +16,7 @@
 //!   (para que los dos canales sigan alineados en el tiempo) y publican `AudioFrame`.
 
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{mpsc, Arc};
+use std::sync::{Arc, mpsc};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 

@@ -356,6 +356,8 @@ pub async fn save_template(state: State<'_, AppState>, template: Template) -> Re
     let mut t = template;
     t.is_builtin = false;
     t.name = t.name.trim().to_owned();
+    t.purpose = t.purpose.trim().to_owned();
+    t.style = t.style.trim().to_owned();
     if t.name.is_empty() {
         return Err("la plantilla necesita un nombre".into());
     }
@@ -380,12 +382,18 @@ pub async fn delete_template(state: State<'_, AppState>, id: Id) -> Res<()> {
 /// `None` es Auto.
 #[tauri::command]
 pub async fn set_note_template(state: State<'_, AppState>, id: Id, template_id: Option<Id>) -> Res<()> {
-    if let Some(tid) = template_id {
-        if !is_builtin(tid) && repo::templates::get(&state.db, tid).await.map_err(e)?.is_none() {
-            return Err("la plantilla no existe".into());
-        }
+    if repo::notes::get(&state.db, id).await.map_err(e)?.is_none() {
+        return Err("la nota no existe".into());
     }
-    repo::notes::set_template(&state.db, id, template_id).await.map_err(e)
+    match template_id {
+        Some(tid) if !is_builtin(tid) => {
+            if !repo::notes::set_user_template(&state.db, id, tid).await.map_err(e)? {
+                return Err("la plantilla no existe".into());
+            }
+            Ok(())
+        }
+        _ => repo::notes::set_template(&state.db, id, template_id).await.map_err(e),
+    }
 }
 
 /// La plantilla `id` lista para el enhance, o `None` si ya no existe (borrada).
@@ -604,12 +612,12 @@ pub async fn notification_take_notes(app: AppHandle, state: State<'_, AppState>)
             repo::notes::create(&state.db, ws, "").await.map_err(e)?
         }
     };
-    if n.kind == NotificationKind::Calendar {
-        if let Some(url) = n.event.as_ref().and_then(|ev| ev.conference_url.clone()) {
-            use tauri_plugin_opener::OpenerExt;
-            if let Err(err) = app.opener().open_url(url, None::<&str>) {
-                tracing::warn!(error = %err, "no se pudo abrir la videollamada");
-            }
+    if n.kind == NotificationKind::Calendar
+        && let Some(url) = n.event.as_ref().and_then(|ev| ev.conference_url.clone()).filter(|u| juanola_calendar::is_conference_url(u))
+    {
+        use tauri_plugin_opener::OpenerExt;
+        if let Err(err) = app.opener().open_url(url, None::<&str>) {
+            tracing::warn!(error = %err, "no se pudo abrir la videollamada");
         }
     }
     state.detection.set_origin(match &n.app {
@@ -669,11 +677,7 @@ pub async fn open_privacy_settings(kind: String) -> Res<()> {
     .await
     .map_err(e)?
     .map_err(e)?;
-    if out.success() {
-        Ok(())
-    } else {
-        Err(format!("open terminó con {out}"))
-    }
+    if out.success() { Ok(()) } else { Err(format!("open terminó con {out}")) }
 }
 
 /// Sin caracteres de control ni separadores Unicode: no se pueden falsificar
@@ -710,7 +714,9 @@ pub async fn reveal_data_dir(state: State<'_, AppState>) -> Res<()> {
 // Sirve para probar la .app con permisos reales sin tocar la ventana.
 
 fn autotest_enabled() -> bool {
-    std::env::var_os("JUANOLA_AUTOTEST").is_some_and(|v| v != "0")
+    // Los comandos `autotest_*` leen el entorno y lanzan `say`/`afplay`: en
+    // release no se activan aunque alguien ponga la variable.
+    cfg!(debug_assertions) && std::env::var_os("JUANOLA_AUTOTEST").is_some_and(|v| v != "0")
 }
 
 /// Cierra la app por el camino normal (como ⌘Q) al acabar el autotest, si
@@ -733,7 +739,7 @@ pub fn autotest_config() -> Option<String> {
 /// Variable de entorno para el autotest (`None` fuera de él).
 #[tauri::command]
 pub fn autotest_env(key: String) -> Option<String> {
-    autotest_enabled().then(|| std::env::var(key).ok()).flatten()
+    (autotest_enabled() && key.starts_with("JUANOLA_")).then(|| std::env::var(key).ok()).flatten()
 }
 
 #[tauri::command]
@@ -764,7 +770,7 @@ pub async fn autotest_say(text: String, voice: Option<String>) -> Res<()> {
         if let Some(v) = voice {
             cmd.arg("-v").arg(v);
         }
-        cmd.arg(text).status().map_err(e).map(|_| ())
+        cmd.arg("--").arg(text).status().map_err(e).map(|_| ())
     })
     .await
     .map_err(e)?

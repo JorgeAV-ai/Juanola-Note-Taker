@@ -12,10 +12,10 @@ use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use juanola_audio_capture::{rms, AudioCapture, CaptureConfig, CpalCapture};
+use juanola_audio_capture::{AudioCapture, CaptureConfig, CpalCapture, rms};
 use juanola_core_types::{Channel, Id, Segment};
-use juanola_db::{repo, Db};
-use juanola_stt::context::{parse_glossary, AsrContext};
+use juanola_db::{Db, repo};
+use juanola_stt::context::{AsrContext, parse_glossary};
 use juanola_stt::worker::{SttWorker, WorkerConfig, WorkerEvent};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
@@ -103,11 +103,7 @@ fn quiet_step(quiet: Duration, limit: Duration, warn: Duration, warned: bool, re
     } else if quiet >= limit {
         Quiet::Stop
     } else if quiet + warn >= limit {
-        if warned {
-            Quiet::Nothing
-        } else {
-            Quiet::Warn
-        }
+        if warned { Quiet::Nothing } else { Quiet::Warn }
     } else if warned {
         Quiet::Clear
     } else {
@@ -178,6 +174,28 @@ fn emit_notice(app: &AppHandle, note_id: Id, state: &str, message: Option<String
     crate::indicator::on_state(app, note_id, state);
 }
 
+/// Quita del slot la grabación de este hilo (si sigue ahí, es que nadie llamó
+/// a `stop_recording`). Soltar el `Active` solo desacopla el `JoinHandle`: el
+/// hilo termina justo después.
+fn release_slot(app: &AppHandle) {
+    let Some(state) = app.try_state::<crate::state::AppState>() else { return };
+    let mut slot = state.recording.lock().unwrap_or_else(|p| p.into_inner());
+    if slot.as_ref().is_some_and(|a| a.handle.thread().id() == std::thread::current().id()) {
+        slot.take();
+        // Como `stop_recording`: que la llamada anterior no pare la siguiente.
+        state.detection.set_origin(crate::detect::Origin::None);
+    }
+}
+
+/// Libera el slot al salir del hilo, también si la captura acaba sola o hay pánico.
+struct ReleaseOnExit(AppHandle);
+
+impl Drop for ReleaseOnExit {
+    fn drop(&mut self) {
+        release_slot(&self.0);
+    }
+}
+
 impl Active {
     pub fn start(app: AppHandle, db: Db, paths: Paths, note_id: Id, language: Option<String>) -> Result<Self, String> {
         let worker_path = paths.worker();
@@ -191,11 +209,15 @@ impl Active {
         let handle = std::thread::Builder::new()
             .name("recording".into())
             .spawn(move || {
+                let _release = ReleaseOnExit(app.clone());
                 let res = run(&app, &db, &paths, worker_path, note_id, language, ctl_rx);
                 match &res {
                     Ok(_) => emit_state(&app, note_id, "stopped", None),
                     Err(f) => {
                         tracing::error!(%note_id, error = %f.message, "la grabación terminó con error");
+                        // Nadie va a llamar a `stop_recording`: liberar el slot
+                        // para que se pueda volver a grabar.
+                        release_slot(&app);
                         emit_notice(&app, note_id, "error", Some(f.message.clone()), f.action);
                     }
                 }

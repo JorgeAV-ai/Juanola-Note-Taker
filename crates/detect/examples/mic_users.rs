@@ -3,7 +3,7 @@
 
 use std::time::{Duration, Instant};
 
-use juanola_detect::{classify, mic_users, MicWatcher, WatcherConfig};
+use juanola_detect::{MicWatcher, WatcherConfig, classify, mic_users};
 
 fn main() {
     let t0 = Instant::now();

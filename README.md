@@ -21,7 +21,7 @@ Juanola is an open-source, local-first meeting note taker: it listens to your me
 - 🚀 **Fastest** — Live speech-to-text on MLX and local LLM inference on llama.cpp + Metal: draft text appears as people talk and each sentence is finalised a few seconds later, and an hour-long meeting is enhanced in about two minutes on an M4 Pro.
 - 🔒 **Safest** — Everything runs on your device. No accounts, no uploads, no telemetry. You choose the models.
 - 🧠 **Smart** — Summaries that keep your words apart from the AI's, with every line linked to the moment in the transcript. Chat, recipes and briefs are on the roadmap.
-- 🔌 **Open** — Local MCP server and REST API so your own tools and agents can use your notes.
+- 🔌 **Open** — Local MCP server and REST API so your own tools and agents can use your notes (planned; not available yet).
 
 ## Project layout
 
@@ -43,8 +43,8 @@ crates/detect          Meeting detection and mic-in-use detection
 crates/speaker-tags    Speaker names via Accessibility APIs
 crates/dictation       Voice typing
 crates/models          models.toml catalog, downloads, GPU backends
-crates/mcp-server      Local MCP server
-crates/api-server      Local REST API
+crates/mcp-server      Local MCP server (stub)
+crates/api-server      Local REST API (stub)
 crates/integrations    Slack, Notion, CRMs, Zapier, Gmail
 models.toml            Model catalog per slot
 site/                  Landing page (GitHub Pages)
@@ -52,7 +52,7 @@ site/                  Landing page (GitHub Pages)
 
 ## Requirements
 
-- macOS 14.6+ on Apple Silicon (16 GB of RAM recommended). Windows and Linux are not supported yet.
+- macOS 26+ on Apple Silicon (16 GB of RAM recommended). Windows and Linux are not supported yet.
 - Rust stable (1.95+), Node 22+, pnpm 11, CMake, Xcode Command Line Tools.
 
 ## Development
@@ -73,7 +73,7 @@ Checks run by CI: `cargo fmt --all --check`, `cargo clippy --workspace --all-tar
 
 ## Status
 
-Early preview, macOS only. Working today: dual audio capture, live transcription, summaries with citations, call detection and Apple Calendar, folders, search and trash. Next: templates in the app, chat, echo cancellation and Windows.
+Early preview, macOS only. Working today: dual audio capture, live transcription, summaries with citations, templates (built-in and your own, with the `/` menu in notes), call detection and Apple Calendar, folders, search and trash. Next: chat, MCP server and REST API, echo cancellation and Windows.
 
 Documentation (in Spanish) lives in [docs/](docs/README.md): current state in [HANDOFF.md](docs/HANDOFF.md), the roadmap in [plan.md](docs/plan.md) and every measured experiment in [experimentos.md](docs/experimentos.md).
 

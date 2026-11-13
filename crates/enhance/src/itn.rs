@@ -232,15 +232,16 @@ pub fn normalize_numbers(text: &str) -> String {
             let num_start =
                 body.char_indices().rev().find(|(_, c)| !(c.is_ascii_digit() || *c == ',')).map_or(0, |(i, c)| i + c.len_utf8());
             let digits = &body[num_start..];
-            if let Ok(v) = digits.replace(',', ".").parse::<f64>() {
-                if !digits.is_empty() && !digits.starts_with(',') {
-                    let mult = if words[0] == Word::Thousand { 1e3 } else { 1e6 };
-                    out.push_str(&body[..num_start]);
-                    out.push_str(&format!("{}", (v * mult).round() as u64));
-                    emitted = word_idx[w] + 1;
-                    w += 1;
-                    continue;
-                }
+            if let Ok(v) = digits.replace(',', ".").parse::<f64>()
+                && !digits.is_empty()
+                && !digits.starts_with(',')
+            {
+                let mult = if words[0] == Word::Thousand { 1e3 } else { 1e6 };
+                out.push_str(&body[..num_start]);
+                out.push_str(&format!("{}", (v * mult).round() as u64));
+                emitted = word_idx[w] + 1;
+                w += 1;
+                continue;
             }
             // «millones» a secas no es una cifra («millones de usuarios»);
             // «mil» suelto sí («cuesta mil») y sigue por `value`.
