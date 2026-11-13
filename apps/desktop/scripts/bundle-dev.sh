@@ -12,7 +12,14 @@ echo "1/3 Worker de STT (sidecar, release)…"
 
 echo "2/3 App (debug)…"
 cd "$APP_DIR"
-pnpm -s tauri build --debug --bundles app 2>&1 | grep -E "error|Error|Finished|Bundling" || true
+LOG="$(mktemp)"
+trap 'rm -f "$LOG"' EXIT
+if ! pnpm -s tauri build --debug --bundles app >"$LOG" 2>&1; then
+  cat "$LOG" >&2
+  echo "falló tauri build" >&2
+  exit 1
+fi
+grep -E "warning|Finished|Bundling" "$LOG" || true
 APP="$ROOT/target/debug/bundle/macos/Juanola.app"
 [ -x "$APP/Contents/MacOS/juanola-stt-worker" ] || { echo "falló el bundle (falta el sidecar)" >&2; exit 1; }
 

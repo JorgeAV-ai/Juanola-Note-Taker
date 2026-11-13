@@ -303,7 +303,12 @@ export function NoteView({ id, autostart, onTrashed, onManageTemplates }: { id: 
           <NoteEditor
             key={`${id}-${t("note.writeNotes")}`}
             initial={note.raw_doc}
-            onChange={(doc) => ipc.setNoteRawDoc(id, doc).catch((e) => setError(String(e)))}
+            onChange={(doc) => {
+              // El editor se vuelve a montar al volver de «Enhanced»: si `raw_doc`
+              // no se actualiza, arranca con el documento viejo y lo guarda encima.
+              setNote((n) => (n && n.id === id ? { ...n, raw_doc: doc } : n));
+              ipc.setNoteRawDoc(id, doc).catch((e) => setError(String(e)));
+            }}
             templates={templates}
             onPickTemplate={(tpl) =>
               ipc

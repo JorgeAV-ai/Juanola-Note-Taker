@@ -148,6 +148,10 @@ export const en = {
   "backend.noteTrashed": "The note is in the trash: restore it before recording.",
   "backend.noteMissing": "The note doesn’t exist.",
   "backend.badEvent": "Invalid event.",
+  "backend.templateMissing": "The template doesn’t exist.",
+  "backend.templateName": "Give the template a name.",
+  "backend.builtinEdit": "Built-in templates can’t be edited; duplicate it.",
+  "backend.builtinDelete": "Built-in templates can’t be deleted.",
 
   // aviso de reunión
   "notice.meeting": "Meeting detected",
@@ -441,6 +445,10 @@ export const es: Record<Key, string> = {
   "backend.noteTrashed": "la nota está en la papelera: restáurala antes de grabar",
   "backend.noteMissing": "la nota no existe",
   "backend.badEvent": "evento no válido",
+  "backend.templateMissing": "la plantilla no existe",
+  "backend.templateName": "la plantilla necesita un nombre",
+  "backend.builtinEdit": "las plantillas integradas no se pueden editar; duplícala",
+  "backend.builtinDelete": "las plantillas integradas no se pueden borrar",
 
   "notice.meeting": "Reunión detectada",
   "notice.huddle": "Huddle detectado",

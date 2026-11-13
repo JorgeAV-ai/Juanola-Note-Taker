@@ -1,6 +1,6 @@
 //! Backend llama.cpp (`llama-cpp-2`) para GGUF local, con Metal en Mac.
 //!
-//! Pensado para LFM3-1.7B: prompt con `chat_format::lfm3_prompt` (razonamiento
+//! Pensado para LFM3-1.7B: prompt con `chat_format::lfm3_parts` (razonamiento
 //! desactivado), muestreo recomendado por Liquid AI (temperatura 0,1, top-k 50,
 //! penalización de repetición 1,1; son también los `general.sampling.*` del
 //! GGUF) y, si se pide JSON Schema, una gramática GBNF generada por llama.cpp
@@ -17,7 +17,7 @@ use llama_cpp_2::model::params::LlamaModelParams;
 use llama_cpp_2::model::LlamaModel;
 use llama_cpp_2::sampling::LlamaSampler;
 
-use crate::chat_format::{lfm3_prompt, qwen_prompt, strip_thinking};
+use crate::chat_format::{lfm3_parts, qwen_parts, strip_thinking};
 use crate::{GenOptions, LlmError, Message};
 
 const TEMPERATURE: f32 = 0.1;
@@ -91,7 +91,7 @@ impl LlamaCpp {
     }
 
     pub fn count_tokens(&self, text: &str) -> usize {
-        self.model.vocab().tokenize(text.as_bytes(), false, true).len()
+        self.model.vocab().tokenize(text.as_bytes(), false, false).len()
     }
 
     /// Generación completa, bloqueante.
@@ -110,9 +110,10 @@ impl LlamaCpp {
         let vocab = self.model.vocab();
         let mut prepared = Vec::with_capacity(reqs.len());
         for (msgs, opts) in reqs {
-            let prompt = if self.qwen { qwen_prompt(msgs) } else { lfm3_prompt(msgs) };
+            let parts = if self.qwen { qwen_parts(msgs) } else { lfm3_parts(msgs) };
             // El de LFM3 ya trae `<|startoftext|>`, y Qwen no usa BOS: no añadir otro.
-            let tokens = vocab.tokenize(prompt.as_bytes(), false, true);
+            // Solo la plantilla se lee con tokens especiales (ver `chat_format::Part`).
+            let tokens: Vec<_> = parts.iter().flat_map(|p| vocab.tokenize(p.text.as_bytes(), false, p.special)).collect();
             let max_new = opts.max_tokens.unwrap_or(2048) as usize;
             if tokens.len() + max_new > self.n_ctx as usize {
                 return Err(LlmError::ContextExceeded(tokens.len() + max_new));

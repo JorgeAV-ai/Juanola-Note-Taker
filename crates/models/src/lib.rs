@@ -35,6 +35,9 @@ pub struct ModelEntry {
     /// Carpeta de instalación relativa a la raíz de modelos (por defecto
     /// `<slot>/<name>-<format>`).
     pub dir: Option<String>,
+    /// Commit del repo de Hugging Face del que se baja (por defecto `main`).
+    /// Fijarlo hace que los ficheros y sus SHA-256 de LFS no cambien por debajo.
+    pub revision: Option<String>,
     pub sha256: Option<String>,
     pub size_mb: Option<u64>,
     #[serde(default)]

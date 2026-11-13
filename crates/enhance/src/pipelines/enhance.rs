@@ -2200,6 +2200,11 @@ mod tests {
         assert_eq!(first("Decisiones"), Some("MRR sube"), "por título, no por palabras («MRR» está en Métricas)");
         assert_eq!(crate::templates::heading_variants("Decisions").map(|v| v[0]), Some("Decisiones"));
         assert_eq!(crate::templates::heading_variants("Riesgos"), None);
+        assert_eq!(crate::templates::heading_variants("decisiones").map(|v| v[0]), Some("Decisiones"));
+        assert_eq!(
+            crate::templates::heading_variants(" PRÓXIMOS pasos ").map(|v| v[0]),
+            crate::templates::heading_variants("Próximos pasos").map(|v| v[0])
+        );
     }
 
     #[test]

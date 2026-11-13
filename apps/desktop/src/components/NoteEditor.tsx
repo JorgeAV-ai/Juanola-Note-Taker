@@ -34,7 +34,9 @@ type Slash = { query: string; before: number; after: number; left: number; top: 
 function detectSlash(editor: Editor): Slash | null {
   const { selection } = editor.state;
   const { $from } = selection;
-  if (!selection.empty || $from.parent.type.name !== "paragraph" || $from.parentOffset !== $from.parent.content.size) return null;
+  // Solo en párrafos de primer nivel: en una lista o cita, los títulos de la
+  // plantilla quedarían anidados donde el esquema no los admite.
+  if (!selection.empty || $from.depth !== 1 || $from.parent.type.name !== "paragraph" || $from.parentOffset !== $from.parent.content.size) return null;
   const m = /^\/([^\s/]{0,40})$/.exec($from.parent.textContent);
   if (!m) return null;
   const coords = editor.view.coordsAtPos($from.start());
@@ -59,6 +61,9 @@ export function NoteEditor({
   const timer = useRef<number | undefined>(undefined);
   const [slash, setSlash] = useState<Slash | null>(null);
   const [active, setActive] = useState(0);
+  // Con «/» a secas, Enter/Tab solo eligen si antes se movió la selección con
+  // las flechas: si no, un Enter al escribir «/» pondría la primera plantilla.
+  const navigated = useRef(false);
   // Párrafo donde se cerró el menú con Escape: no se vuelve a abrir ahí
   // hasta que deje de ser «/…».
   const dismissed = useRef<number | null>(null);
@@ -72,7 +77,10 @@ export function NoteEditor({
     const s = detectSlash(editor);
     if (!s) dismissed.current = null;
     const open = s && dismissed.current !== s.before ? s : null;
-    if (open && live.current.slash?.query !== open.query) setActive(0);
+    if (!open || live.current.slash?.query !== open.query) {
+      setActive(0);
+      navigated.current = false;
+    }
     setSlash(open);
   };
 
@@ -98,9 +106,10 @@ export function NoteEditor({
         if (!slash) return false;
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
           if (items.length) setActive((active + (event.key === "ArrowDown" ? 1 : items.length - 1)) % items.length);
+          navigated.current = true;
           return true;
         }
-        if ((event.key === "Enter" || event.key === "Tab") && items[active]) {
+        if ((event.key === "Enter" || event.key === "Tab") && items[active] && (slash.query || navigated.current)) {
           pick(items[active]);
           return true;
         }
@@ -152,16 +161,25 @@ export function NoteEditor({
         <div
           className="slash-menu fixed z-50 w-[280px] overflow-hidden rounded-2xl border border-line bg-popover p-1.5 text-popover-foreground shadow-[0_12px_32px_rgba(0,0,0,0.10)]"
           style={{ left: slash.left, top: slash.top }}
+          id="slash-menu"
           role="listbox"
           aria-label={t("note.slashTemplates")}
+          aria-activedescendant={items[active] ? `slash-option-${items[active].id}` : undefined}
           // Sin esto, el clic quita el foco al editor (onBlur cierra el menú) antes de elegir.
           onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="px-2.5 py-1.5 text-[12px] font-medium text-muted">{t("note.slashTemplates")}</div>
-          {items.length === 0 && <div className="px-2.5 py-1.5 text-[13.5px] text-muted">{t("note.slashNone")}</div>}
+          <div role="presentation" className="px-2.5 py-1.5 text-[12px] font-medium text-muted">
+            {t("note.slashTemplates")}
+          </div>
+          {items.length === 0 && (
+            <div role="status" className="px-2.5 py-1.5 text-[13.5px] text-muted">
+              {t("note.slashNone")}
+            </div>
+          )}
           {items.map((tpl, i) => (
             <div
               key={tpl.id}
+              id={`slash-option-${tpl.id}`}
               role="option"
               aria-selected={i === active}
               data-template-id={tpl.id}

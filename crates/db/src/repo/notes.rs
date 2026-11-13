@@ -133,6 +133,20 @@ pub async fn set_template(db: &Db, id: Id, template_id: Option<Id>) -> Result<()
     touch(db, "UPDATE notes SET template_id = ? WHERE id = ?", id, template_id.map(|t| t.to_string())).await
 }
 
+/// Pone a la nota una plantilla del usuario solo si existe, en la misma
+/// sentencia: un `delete_template` a la vez no puede dejarla apuntando a una
+/// plantilla borrada. `false` si la nota o la plantilla no existen.
+pub async fn set_user_template(db: &Db, id: Id, template_id: Id) -> Result<bool, DbError> {
+    let r = sqlx::query(
+        "UPDATE notes SET template_id = ?1 WHERE id = ?2 AND EXISTS (SELECT 1 FROM templates WHERE id = ?1 AND is_builtin = 0)",
+    )
+    .bind(template_id.to_string())
+    .bind(id.to_string())
+    .execute(db.pool())
+    .await?;
+    Ok(r.rows_affected() > 0)
+}
+
 pub async fn set_status(db: &Db, id: Id, status: NoteStatus) -> Result<(), DbError> {
     touch(db, "UPDATE notes SET status = ? WHERE id = ?", id, Some(status_str(status).to_owned())).await
 }

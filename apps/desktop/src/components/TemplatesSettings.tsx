@@ -66,8 +66,11 @@ export function TemplatesSettings() {
   const reload = () =>
     ipc
       .listTemplates(uiLang)
-      .then(setTemplates)
-      .catch((e) => setError(String(e)));
+      .then((list) => {
+        setTemplates(list);
+        setError(null);
+      })
+      .catch((e) => setError(tBackend(String(e))));
   useEffect(() => {
     reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,7 +100,7 @@ export function TemplatesSettings() {
       await ipc.deleteTemplate(tpl.id);
       await reload();
     } catch (e) {
-      setError(String(e));
+      setError(tBackend(String(e)));
     }
   };
 
@@ -196,18 +199,31 @@ const input =
 function TemplateEditor({ initial, isNew, onCancel, onSaved }: { initial: Template; isNew: boolean; onCancel: () => void; onSaved: () => void }) {
   const t = useT();
   const [tpl, setTpl] = useState(initial);
+  // Claves estables de los apartados: con el índice, al reordenar o quitar uno
+  // React reutilizaría los inputs (foco y cursor) del apartado equivocado.
+  const [keys, setKeys] = useState(() => initial.structure.map(() => crypto.randomUUID()));
+  const addSection = (s: TemplateSection) => {
+    setKeys((k) => [...k, crypto.randomUUID()]);
+    patch({ structure: [...tpl.structure, s] });
+  };
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const patch = (p: Partial<Template>) => setTpl((x) => ({ ...x, ...p }));
   const patchSection = (i: number, p: Partial<TemplateSection>) =>
     setTpl((x) => ({ ...x, structure: x.structure.map((s, j) => (j === i ? { ...s, ...p } : s)) }));
-  const move = (i: number, d: -1 | 1) =>
+  const move = (i: number, d: -1 | 1) => {
+    setKeys((k) => {
+      const c = [...k];
+      [c[i], c[i + d]] = [c[i + d], c[i]];
+      return c;
+    });
     setTpl((x) => {
       const s = [...x.structure];
       [s[i], s[i + d]] = [s[i + d], s[i]];
       return { ...x, structure: s };
     });
+  };
   const hasTasks = tpl.structure.some((s) => s.kind === "tasks");
 
   const save = async () => {
@@ -250,7 +266,7 @@ function TemplateEditor({ initial, isNew, onCancel, onSaved }: { initial: Templa
         <h2 className="mb-2.5 text-[14px] text-muted">{t("tpl.sections")}</h2>
         <div className="divide-y divide-line rounded-[20px] border border-line bg-card">
           {tpl.structure.map((s, i) => (
-            <div key={i} className="template-section flex gap-3 px-5 py-4">
+            <div key={keys[i] ?? i} className="template-section flex gap-3 px-5 py-4">
               <span className="mt-2 w-5 shrink-0 text-right text-[13px] tabular-nums text-faint">{i + 1}</span>
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex gap-2">
@@ -295,7 +311,10 @@ function TemplateEditor({ initial, isNew, onCancel, onSaved }: { initial: Templa
                   variant="ghost"
                   aria-label={t("tpl.removeSection")}
                   disabled={tpl.structure.length === 1}
-                  onClick={() => setTpl((x) => ({ ...x, structure: x.structure.filter((_, j) => j !== i) }))}
+                  onClick={() => {
+                    setKeys((k) => k.filter((_, j) => j !== i));
+                    setTpl((x) => ({ ...x, structure: x.structure.filter((_, j) => j !== i) }));
+                  }}
                 >
                   <X />
                 </Button>
@@ -304,11 +323,11 @@ function TemplateEditor({ initial, isNew, onCancel, onSaved }: { initial: Templa
           ))}
         </div>
         <div className="mt-3 flex gap-2">
-          <Button className="add-section" disabled={tpl.structure.length >= MAX_SECTIONS} onClick={() => patch({ structure: [...tpl.structure, section("")] })}>
+          <Button className="add-section" disabled={tpl.structure.length >= MAX_SECTIONS} onClick={() => addSection(section(""))}>
             <Plus /> {t("tpl.addSection")}
           </Button>
           {!hasTasks && (
-            <Button disabled={tpl.structure.length >= MAX_SECTIONS} onClick={() => patch({ structure: [...tpl.structure, section(t("tpl.defaultNextSteps"), "tasks")] })}>
+            <Button disabled={tpl.structure.length >= MAX_SECTIONS} onClick={() => addSection(section(t("tpl.defaultNextSteps"), "tasks"))}>
               <ListChecks /> {t("tpl.addTasks")}
             </Button>
           )}

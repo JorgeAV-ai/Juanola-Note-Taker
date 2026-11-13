@@ -174,15 +174,28 @@ pub enum TemplateError {
     TooManyTasks,
     #[error("la descripción de «{0}» pasa de {MAX_HINT_CHARS} caracteres o tiene saltos de línea")]
     HintLength(String),
+    #[error("el nombre de la plantilla debe tener de 1 a {MAX_TEMPLATE_NAME_CHARS} caracteres")]
+    NameLength,
+    #[error("el propósito y el estilo pueden tener hasta {MAX_HINT_CHARS} caracteres cada uno")]
+    TextLength,
 }
 
 pub const MAX_TEMPLATE_SECTIONS: usize = 10;
 pub const MAX_HEADING_CHARS: usize = 60;
 pub const MAX_HINT_CHARS: usize = 200;
+pub const MAX_TEMPLATE_NAME_CHARS: usize = 80;
 
 impl Template {
     /// Reglas para guardar una plantilla y antes de usarla en el enhance.
     pub fn validate(&self) -> Result<(), TemplateError> {
+        // Todo va al prompt del enhance: sin límites, una plantilla llenaría el contexto.
+        let name = self.name.trim().chars().count();
+        if name == 0 || name > MAX_TEMPLATE_NAME_CHARS {
+            return Err(TemplateError::NameLength);
+        }
+        if self.purpose.chars().count() > MAX_HINT_CHARS || self.style.chars().count() > MAX_HINT_CHARS {
+            return Err(TemplateError::TextLength);
+        }
         let n = self.structure.len();
         if n == 0 || n > MAX_TEMPLATE_SECTIONS {
             return Err(TemplateError::SectionCount(n));
@@ -284,6 +297,11 @@ mod template_tests {
         assert_eq!(tpl(&[("A", "", Tasks), ("B", "", Tasks)]).validate(), Err(TemplateError::TooManyTasks));
         let hint = "x".repeat(201);
         assert!(matches!(tpl(&[("A", &hint, Topics)]).validate(), Err(TemplateError::HintLength(_))));
+        let ok = tpl(&[("A", "", Topics)]);
+        assert_eq!(Template { name: " ".into(), ..ok.clone() }.validate(), Err(TemplateError::NameLength));
+        assert_eq!(Template { name: "n".repeat(81), ..ok.clone() }.validate(), Err(TemplateError::NameLength));
+        assert_eq!(Template { purpose: "p".repeat(201), ..ok.clone() }.validate(), Err(TemplateError::TextLength));
+        assert_eq!(Template { style: "s".repeat(201), ..ok }.validate(), Err(TemplateError::TextLength));
     }
 
     #[test]

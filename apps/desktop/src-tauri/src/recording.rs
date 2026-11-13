@@ -178,6 +178,16 @@ fn emit_notice(app: &AppHandle, note_id: Id, state: &str, message: Option<String
     crate::indicator::on_state(app, note_id, state);
 }
 
+/// Quita del slot la grabación de este hilo (si sigue ahí). Soltar el `Active`
+/// solo desacopla el `JoinHandle`: el hilo termina justo después.
+fn release_slot(app: &AppHandle) {
+    let Some(state) = app.try_state::<crate::state::AppState>() else { return };
+    let mut slot = state.recording.lock().unwrap_or_else(|p| p.into_inner());
+    if slot.as_ref().is_some_and(|a| a.handle.thread().id() == std::thread::current().id()) {
+        slot.take();
+    }
+}
+
 impl Active {
     pub fn start(app: AppHandle, db: Db, paths: Paths, note_id: Id, language: Option<String>) -> Result<Self, String> {
         let worker_path = paths.worker();
@@ -196,6 +206,9 @@ impl Active {
                     Ok(_) => emit_state(&app, note_id, "stopped", None),
                     Err(f) => {
                         tracing::error!(%note_id, error = %f.message, "la grabación terminó con error");
+                        // Nadie va a llamar a `stop_recording`: liberar el slot
+                        // para que se pueda volver a grabar.
+                        release_slot(&app);
                         emit_notice(&app, note_id, "error", Some(f.message.clone()), f.action);
                     }
                 }

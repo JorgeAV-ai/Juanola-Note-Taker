@@ -91,6 +91,10 @@ impl Catalog {
 }
 
 impl ModelEntry {
+    fn revision(&self) -> &str {
+        self.revision.as_deref().unwrap_or("main")
+    }
+
     /// Carpeta de instalación relativa a la raíz de modelos.
     pub fn install_dir(&self, slot: &str) -> String {
         self.dir.clone().unwrap_or_else(|| format!("{slot}/{}-{}", self.name, self.format))
@@ -178,7 +182,7 @@ pub async fn install(planned: &Planned<'_>, cancel: &AtomicBool, mut on_progress
         // `recursive` hace falta para los ficheros en subcarpetas (`onnx/…`);
         // la API además pagina por cabeceras `Link: …; rel="next"`.
         let mut tree: Vec<TreeEntry> = Vec::new();
-        let mut next = Some(format!("{HF}/api/models/{}/tree/main?recursive=true", entry.repo));
+        let mut next = Some(format!("{HF}/api/models/{}/tree/{}?recursive=true", entry.repo, entry.revision()));
         while let Some(url) = next.take() {
             let resp = tokio::time::timeout(HEADERS_TIMEOUT, client.get(&url).send())
                 .await
@@ -206,7 +210,7 @@ pub async fn install(planned: &Planned<'_>, cancel: &AtomicBool, mut on_progress
         let total: u64 = jobs.iter().map(|j| j.1).sum();
         let mut done_before = 0;
         for (file, size, sha) in jobs {
-            let url = format!("{HF}/{}/resolve/main/{file}", entry.repo);
+            let url = format!("{HF}/{}/resolve/{}/{file}", entry.repo, entry.revision());
             let dest = planned.dir.join(file);
             if let Some(parent) = dest.parent() {
                 tokio::fs::create_dir_all(parent).await?;
