@@ -1,9 +1,10 @@
-import { BubbleMenu, type Editor } from "@tiptap/react";
+import type { Editor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import { Bold, Italic, Strikethrough, Underline } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
 // Menú flotante al seleccionar texto (negrita, cursiva, subrayado, tachado).
-// El BubbleMenu de TipTap mueve su elemento fuera del árbol de React (a tippy);
+// El BubbleMenu de TipTap mueve su elemento fuera del árbol de React (con floating-ui);
 // va dentro de un contenedor propio para que, al desmontar, React quite el
 // contenedor y no ese elemento (si no: «removeChild… not a child» y la app
 // entera se desmonta).
@@ -18,7 +19,7 @@ export function FormatMenu({ editor }: { editor: Editor | null }) {
   ];
   return (
     <div className="contents">
-    <BubbleMenu editor={editor} tippyOptions={{ duration: 100, placement: "top-start" }} className="bubble-menu">
+    <BubbleMenu editor={editor} options={{ placement: "top-start" }} className="bubble-menu">
       {items.map((it) => (
         <button key={it.name} type="button" title={it.label} aria-label={it.label} className={editor.isActive(it.name) ? "on" : ""} onClick={it.run}>
           {it.icon}

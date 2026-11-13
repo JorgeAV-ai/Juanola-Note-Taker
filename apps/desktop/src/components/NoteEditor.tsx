@@ -5,7 +5,6 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Image from "@tiptap/extension-image";
-import Underline from "@tiptap/extension-underline";
 import { LayoutTemplate } from "lucide-react";
 import { FormatMenu } from "@/components/FormatMenu";
 import type { Template } from "@/lib/ipc";
@@ -85,9 +84,12 @@ export function NoteEditor({
   };
 
   const editor = useEditor({
+    // El menú de formato lee `isActive` al renderizar (como en TipTap 2).
+    shouldRerenderOnTransaction: true,
     extensions: [
-      StarterKit,
-      Underline,
+      // TipTap 3 trae subrayado en StarterKit; enlaces y párrafo final se
+      // quitan para que un clic no navegue el webview ni cambien los documentos.
+      StarterKit.configure({ link: false, trailingNode: false }),
       Placeholder.configure({ placeholder: t("note.writeNotes") }),
       TaskList,
       TaskItem.configure({ nested: true }),

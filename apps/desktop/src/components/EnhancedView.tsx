@@ -4,7 +4,6 @@ import { Plugin } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
-import Underline from "@tiptap/extension-underline";
 import { ZoomIn } from "lucide-react";
 import type { Citation, EnhancedNotes } from "@/lib/ipc";
 import { fromDoc, toDoc } from "@/lib/enhancedDoc";
@@ -136,7 +135,7 @@ export function EnhancedView({ notes, onChange }: { notes: EnhancedNotes; onChan
     save.current(doc);
   };
   const editor = useEditor({
-    extensions: [StarterKit, Underline, TaskList, TaskItem.configure({ nested: true }), AiMark, CitationNode, UserEdits],
+    extensions: [StarterKit.configure({ link: false, trailingNode: false }), TaskList, TaskItem.configure({ nested: true }), AiMark, CitationNode, UserEdits],
     content: toDoc(notes),
     onUpdate: ({ editor }) => {
       window.clearTimeout(timer.current);
@@ -150,7 +149,7 @@ export function EnhancedView({ notes, onChange }: { notes: EnhancedNotes; onChan
   useEffect(() => {
     if (!editor || shown.current === notes) return;
     shown.current = notes;
-    editor.chain().setMeta("fromLoad", true).setContent(toDoc(notes), false).run();
+    editor.chain().setMeta("fromLoad", true).setContent(toDoc(notes), { emitUpdate: false }).run();
   }, [editor, notes]);
   useEffect(
     () => () => {
