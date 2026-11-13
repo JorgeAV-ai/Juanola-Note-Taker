@@ -257,6 +257,22 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .js .reveal { opacity: 1; transform: none; }
 }
+/* instalar: tres pasos y el comando con botón de copiar */
+.install-steps { padding: 0; display: grid; grid-template-columns: 1fr 1fr 1.7fr; gap: 20px; margin-top: 48px; counter-reset: step; }
+@media (max-width: 860px) { .install-steps { grid-template-columns: 1fr; } }
+.install-steps li { list-style: none; position: relative; padding: 26px 24px 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); min-width: 0; }
+.install-steps li::before { counter-increment: step; content: counter(step); display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--licorice); color: #f6f3ec; font: 600 13px/1 var(--sans); margin-bottom: 14px; }
+.install-steps h3 { margin: 0 0 6px; font: 600 17px/1.3 var(--sans); }
+.install-steps p { margin: 0; color: var(--ink-2); font-size: 15px; }
+.install-steps a { color: var(--olive-ink); }
+.cmd { display: flex; align-items: center; gap: 8px; margin: 14px 0 10px; padding: 6px 6px 6px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 12.5px/1.6 var(--mono); color: var(--ink); scrollbar-width: none; }
+.cmd code::-webkit-scrollbar { display: none; }
+.copy { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 0; border-radius: 9px; background: var(--licorice); color: #f6f3ec; font: 600 13px/1 var(--sans); cursor: pointer; }
+.copy:hover { opacity: .9; }
+.copy[data-done] { background: var(--olive); }
+.install-steps .alt { font-size: 13.5px; color: var(--muted); }
+.why { margin-top: 22px; font-size: 14.5px; color: var(--muted); max-width: 44em; }
 </style>
 </head>
 <body>
@@ -270,6 +286,7 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
       <a class="hide-sm" href="#privacy">Privacy</a>
       <a class="hide-sm" href="#verify">Verify it</a>
       <a class="hide-sm" href="#models">Models</a>
+      <a class="hide-sm" href="#install">Install</a>
       <a href="https://github.com/JorgeAV-ai/Juanola-Note-Taker">GitHub</a>
     </nav>
   </div>
@@ -288,7 +305,7 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
         </a>
         <a class="btn btn-ghost" href="https://github.com/JorgeAV-ai/Juanola-Note-Taker">View the source</a>
       </div>
-      <p class="fine">Preview · Apple Silicon · macOS 14.6+ · MIT</p>
+      <p class="fine">Preview · Apple Silicon · macOS 14.6+ · MIT · <a href="#install">How to install</a></p>
     </div>
 
     <div class="window" role="img" aria-label="A Juanola note: your notes in black, the AI's additions in grey, with a citation open on the transcript">
@@ -454,6 +471,35 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
     </div>
   </section>
 
+  <section id="install" style="padding-top:0">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="kicker">Install</div>
+        <h2 class="big">Three steps, <em>one</em> of them only once.</h2>
+      </div>
+      <ol class="install-steps reveal">
+        <li>
+          <h3>Download the .dmg</h3>
+          <p>From the <a href="https://github.com/JorgeAV-ai/Juanola-Note-Taker/releases">latest release</a> on GitHub. Apple Silicon, macOS 14.6 or later.</p>
+        </li>
+        <li>
+          <h3>Drag it into Applications</h3>
+          <p>Open the .dmg and drop Juanola on the Applications folder. Then eject the .dmg.</p>
+        </li>
+        <li>
+          <h3>First time only: allow it</h3>
+          <p>macOS can't verify the app yet, so run this in Terminal:</p>
+          <div class="cmd">
+            <code id="xattr-cmd">xattr -dr com.apple.quarantine /Applications/Juanola.app</code>
+            <button class="copy" type="button" data-copy="xattr-cmd" aria-label="Copy the command">Copy</button>
+          </div>
+          <p class="alt">Or open it once, then System Settings › Privacy &amp; Security › Open Anyway.</p>
+        </li>
+      </ol>
+      <p class="why reveal">Why the extra step? The preview builds aren't notarised by Apple yet, so macOS asks before opening them. On first launch Juanola downloads its models (about 3.5 GB); after that it works offline.</p>
+    </div>
+  </section>
+
   <section style="padding-top:0">
     <div class="wrap">
       <div class="reveal">
@@ -467,14 +513,15 @@ table.vs td:last-child::before { content: "◆ "; font-size: 10px; color: var(--
             <li>Live transcription of mic and system audio</li>
             <li>Summaries with citations to the transcript</li>
             <li>Call detection and calendar reminders</li>
-            <li>Folders, search, trash, editable notes</li>
+            <li>Templates (1:1, stand-up, sales call…) and your own</li>
+            <li>Recording indicator and menu bar controls</li>
+            <li>Folders, search, trash, editable notes, export to Markdown or HTML</li>
             <li>Notes in the meeting's language: best in English and Spanish</li>
           </ul>
         </div>
         <div class="card">
           <h3><span class="dot" style="background:var(--faint)"></span> Coming next</h3>
           <ul>
-            <li>Templates (1:1, stand-up, sales call…) in the app</li>
             <li>Chat over all your meetings</li>
             <li>Echo cancellation for calls without headphones</li>
             <li>Windows</li>
@@ -511,6 +558,26 @@ cd apps/desktop &amp;&amp; pnpm install &amp;&amp; pnpm tauri dev</pre>
     for (const e of es) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
   }, { rootMargin: '0px 0px -10% 0px' }) : null;
   document.querySelectorAll('.reveal').forEach((el) => io ? io.observe(el) : el.classList.add('in'));
+
+  // Copiar el comando de instalación. Sin la API del portapapeles (http, o
+  // navegador antiguo), se selecciona el texto para copiarlo a mano.
+  document.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const el = document.getElementById(btn.dataset.copy);
+      try {
+        await navigator.clipboard.writeText(el.textContent.trim());
+        btn.textContent = 'Copied';
+        btn.dataset.done = '';
+        setTimeout(() => { btn.textContent = 'Copy'; delete btn.dataset.done; }, 1800);
+      } catch {
+        const r = document.createRange();
+        r.selectNodeContents(el);
+        const sel = getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    });
+  });
 </script>
 </body>
 </html>

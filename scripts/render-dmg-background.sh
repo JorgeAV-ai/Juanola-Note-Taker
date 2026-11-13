@@ -16,7 +16,7 @@ trap 'rm -rf "$TMP"' EXIT
 
 for scale in 1 2; do
   "$CHROME" --headless=new --disable-gpu --hide-scrollbars --virtual-time-budget=4000 \
-    --window-size=660,400 --force-device-scale-factor="$scale" \
+    --window-size=660,440 --force-device-scale-factor="$scale" \
     --screenshot="$TMP/bg@${scale}x.png" "file://$PWD/$DIR/background.html" 2>/dev/null
 done
 
