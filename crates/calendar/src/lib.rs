@@ -64,10 +64,19 @@ pub fn is_conference_url(url: &str) -> bool {
     let Some(rest) = url.strip_prefix("https://") else { return false };
     let split = rest.find(['/', '?', '#']).unwrap_or(rest.len());
     let (authority, path) = rest.split_at(split);
-    if authority.contains(['@', '\\']) {
+    // Sin userinfo ni puerto, sin espacios ni controles (el navegador los quita
+    // y cambia el host) y sin `..` que saque la ruta del prefijo.
+    if authority.contains(['@', '\\', ':'])
+        || url.chars().any(|c| c.is_whitespace() || c.is_control())
+        || path.contains('\\')
+        || path.split(['/', '?', '#']).any(|seg| {
+            let seg = seg.to_ascii_lowercase().replace("%2e", ".");
+            seg == "." || seg == ".."
+        })
+    {
         return false;
     }
-    let host = authority.split(':').next().unwrap_or("").to_ascii_lowercase();
+    let host = authority.to_ascii_lowercase();
     CONFERENCE_HOSTS.iter().any(|(h, prefix)| {
         let host_ok = host == *h || host.strip_suffix(h).is_some_and(|sub| sub.ends_with('.') && sub.len() > 1);
         host_ok && path.starts_with(prefix)
@@ -172,6 +181,11 @@ mod tests {
         assert_eq!(find_conference_url(["https://meet.google.com@evil.example/abc"]), None);
         assert_eq!(find_conference_url(["https://notzoom.us/j/1"]), None);
         assert_eq!(find_conference_url(["http://meet.google.com/abc"]), None);
+        assert_eq!(find_conference_url(["https://zoom.us/j/../../x"]), None);
+        assert_eq!(find_conference_url(["https://zoom.us/j/%2E%2e/x"]), None);
+        assert_eq!(find_conference_url(["https://meet.google.com:8443/abc"]), None);
+        assert!(!is_conference_url("https://meet.google.com\t/abc"));
+        assert!(is_conference_url("https://acme.zoom.us/j/123?pwd=a.b"));
         assert_eq!(
             find_conference_url(["mal: https://x.example/?u=zoom.us/j/1 bien: https://Meet.Google.com/abc"]).as_deref(),
             Some("https://Meet.Google.com/abc")

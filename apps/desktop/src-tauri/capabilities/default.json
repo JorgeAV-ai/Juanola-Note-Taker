@@ -1,14 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permisos de la ventana principal: el frontend no llama a plugins desde JS (notificaciones, atajos, store, etc. se usan desde Rust), así que solo se conceden los de la ventana.",
+  "description": "Permisos de la ventana principal: el frontend no llama a plugins desde JS (notificaciones, atajos, store, etc. se usan desde Rust), así que solo se concede arrastrar la ventana.",
   "windows": [
     "main"
   ],
   "permissions": [
     "core:default",
-    "core:window:allow-start-dragging",
-    "core:window:allow-set-position",
-    "core:window:allow-set-always-on-top"
+    "core:window:allow-start-dragging"
   ]
 }

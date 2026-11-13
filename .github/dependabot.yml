@@ -10,6 +10,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Los @tiptap/* exigen la misma versión entre sí: un PR para todos.
+    groups:
+      tiptap:
+        patterns: ["@tiptap/*"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

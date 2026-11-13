@@ -66,8 +66,8 @@ jobs:
           key: release
 
       # Código de llama.cpp y kernels de MLX precompilados: no están en git y
-      # los scripts comprueban su SHA-256 fijado. Sin caché: la release no se
-      # fía de nada que no haya verificado en esta misma ejecución.
+      # los scripts comprueban su SHA-256 fijado. Se bajan siempre (sin caché de
+      # actions) para verificarlos en esta misma ejecución.
       - name: Bajar llama.cpp y el metallib de MLX
         run: |
           scripts/fetch-llama-cpp.sh
@@ -128,7 +128,20 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG: v${{ needs.macos.outputs.version }}
           VERSION: ${{ needs.macos.outputs.version }}
+          EVENT: ${{ github.event_name }}
         run: |
+          # Nunca reutilizar una release (borradores incluidos) ni, a mano, un tag existente: colgaría
+          # binarios nuevos de otro commit. En push de tag, el tag tiene que existir.
+          if gh release list --limit 200 --json tagName -q '.[].tagName' | grep -Fxq "$TAG"; then
+            echo "::error::ya hay una release $TAG: bórrala o sube la versión"; exit 1
+          fi
+          if [ "$EVENT" = push ]; then
+            verify=--verify-tag
+          elif gh api "repos/$GH_REPO/git/ref/tags/$TAG" >/dev/null 2>&1; then
+            echo "::error::el tag $TAG ya existe: sube la versión en tauri.conf.json"; exit 1
+          else
+            verify=
+          fi
           cat > notes.md <<'NOTES'
           Preview build for Apple Silicon Macs (macOS 14.6 or later). It is not notarized yet,
           so the first time macOS says it can't verify the developer. Drag Juanola to
@@ -136,4 +149,4 @@ jobs:
           click Open Anyway (or run `xattr -dr com.apple.quarantine /Applications/Juanola.app`).
           The models (about 3.5 GB) are downloaded from the app on first launch.
           NOTES
-          gh release create "$TAG" dist-release/* --draft --target "$GITHUB_SHA" --title "Juanola v$VERSION" --notes-file notes.md
+          gh release create "$TAG" dist-release/* ${verify:+"$verify"} --draft --target "$GITHUB_SHA" --title "Juanola v$VERSION" --notes-file notes.md
